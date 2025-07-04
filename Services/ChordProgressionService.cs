@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System; // Required for Random and Console.WriteLine
+using System.Text.RegularExpressions; // For parsing Roman numerals
 
 namespace ChordProgressionQuiz.Services
 {
@@ -15,55 +16,58 @@ namespace ChordProgressionQuiz.Services
         private readonly IWebHostEnvironment _env;
         private readonly Random _random;
 
-        // MIDI note values for C Major scale (C4 to B4)
-        // C=0, C#=1, D=2, D#=3, E=4, F=5, F#=6, G=7, G#=8, A=9, A#=10, B=11 (relative to C)
-        private readonly Dictionary<string, int> _noteToMidi = new Dictionary<string, int>
+        // MIDI note values for C (0) to B (11)
+        private readonly Dictionary<string, int> _noteNameToSemitonesFromC = new Dictionary<string, int>
         {
             {"C", 0}, {"C#", 1}, {"Db", 1}, {"D", 2}, {"D#", 3}, {"Eb", 3}, {"E", 4}, {"F", 5}, {"F#", 6}, {"Gb", 6},
             {"G", 7}, {"G#", 8}, {"Ab", 8}, {"A", 9}, {"A#", 10}, {"Bb", 10}, {"B", 11}
         };
 
-        // Intervals for major scale degrees relative to the root (in semitones)
-        // Each array represents [Root_interval, Third_interval, Fifth_interval, (Seventh_interval)]
-        // All intervals are relative to the *key's tonic* (e.g., C for C Major)
-        private readonly Dictionary<string, int[]> _romanToIntervalsMajor = new Dictionary<string, int[]>
+        // Intervals for scale degrees relative to the *tonic of the key* (e.g., C for C Major)
+        // This maps "I", "ii", "bIII", etc., to their semitone distance from the tonic.
+        private readonly Dictionary<string, int> _romanDegreeToSemitones = new Dictionary<string, int>
         {
-            #warning Todo: Add more common Roman numerals and their intervals as needed Chromatic alterations (simplified, might need more robust parsing for complex cases)
-            {"I", new[] {0, 4, 7}},      // Major Triad (Root, Major 3rd, Perfect 5th)
-            {"ii", new[] {2, 5, 9}},     // Minor Triad (Root, Minor 3rd, Perfect 5th)
-            {"iii", new[] {4, 7, 11}},   // Minor Triad
-            {"IV", new[] {5, 9, 0}},     // Major Triad (0 is octave higher)
-            {"V", new[] {7, 11, 2}},     // Major Triad
-            {"vi", new[] {9, 0, 4}},     // Minor Triad
-            {"vii", new[] {11, 2, 5}},   // Diminished Triad (Root, Minor 3rd, Diminished 5th)
-            {"I7", new[] {0, 4, 7, 10}}, // Major 7th
-            {"V7", new[] {7, 11, 2, 5}}, // Dominant 7th
-            {"ii7", new[] {2, 5, 9, 0}}, // Minor 7th
-            {"vi7", new[] {9, 0, 4, 7}}, // Minor 7th
-            {"iii7", new[] {4, 7, 11, 2}}, // Minor 7th
-            {"III", new[] {4, 8, 11}},   // Major III (e.g., E Major in C Major)
-            {"III7", new[] {4, 8, 11, 2}}, // E7 in C Major (secondary dominant V7/vi) - E-G#-B-D
-            {"bIII", new[] {3, 7, 10}},  // Minor bIII (e.g., Eb Major in C Major)
-            {"bVII", new[] {10, 2, 5}},  // Major bVII (e.g., Bb Major in C Major)
-            {"bVI", new[] {8, 0, 3}},    // Major bVI (e.g., Ab Major in C Major)
-            {"iv", new[] {5, 8, 0}},     // Minor iv (e.g., Fm in C Major)
-            {"i", new[] {0, 3, 7}},      // Minor i (e.g., Cm in C Major)
-            {"v", new[] {7, 10, 2}},     // Minor v (e.g., Gm in C Major)
-            {"bII", new[] {1, 5, 8}},    // Neapolitan chord (Major chord on bII)
-            {"II", new[] {2, 6, 9}},     // Major II (e.g., D Major in C Major, often V/V)
-            {"II7", new[] {2, 6, 9, 0}}, // D7 in C Major (secondary dominant V7/V)
-            {"VI", new[] {9, 1, 4}},     // Major VI (e.g., A Major in C Major, often V/ii)
-            {"VI7", new[] {9, 1, 4, 7}}, // Dominant 7th on VI
-            {"#Vaug", new[] {8, 0, 4}}, // Augmented chord on #V (e.g., G#aug in C) - this is relative to C, so G# is 8 semitones from C.
-            {"Imaj7", new[] {0, 4, 7, 11}}, // Major 7th
-            {"Iaug", new[] {0, 4, 8}},   // Augmented Triad
-            {"#Idim", new[] {1, 4, 7}},  // Diminished chord on #I (e.g., C#dim in C)
-            {"#vidim", new[] {10, 1, 4}}, // Diminished chord on #vi (e.g., F#dim in A) - *Note: This is relative to A, not C. Needs careful handling if root changes.*
-            {"bVI7", new[] {8, 0, 3, 6}}, // Dominant 7th on bVI
-            {"VII", new[] {11, 3, 6}}, // Major VII (e.g., B Major in C Major, a highly chromatic chord)
-                                       // This is a temporary fix for the "B" in "Poupée de cire".
-                                       // A more robust solution would involve parsing qualities (e.g., "VIImaj", "vii°").
+            {"I", 0}, {"ii", 2}, {"iii", 4}, {"IV", 5}, {"V", 7}, {"vi", 9}, {"vii", 11},
+            {"II", 2}, {"III", 4}, {"VI", 9}, {"VII", 11}, // Major versions (often secondary dominants or borrowed)
+            {"bII", 1}, {"bIII", 3}, {"bIV", 4}, {"bV", 6}, {"bVI", 8}, {"bVII", 10}, // Flat versions
+            {"#I", 1}, {"#II", 3}, {"#IV", 6}, {"#V", 8}, {"#VI", 10}, // Sharp versions (less common as roots)
+            // For minor keys, these are relative to the *major* tonic for consistency,
+            // e.g., 'i' in A minor is 'vi' in C Major, but its root is A, 9 semitones from C.
+            // When parsing 'i', 'iv', 'v' etc. in a modal context, we'll need to adjust the root calculation.
         };
+
+        // Chord qualities and their intervals *relative to the chord's root*
+        private readonly Dictionary<string, int[]> _chordQualityIntervals = new Dictionary<string, int[]>
+        {
+            {"", new[] {0, 4, 7}},          // Major Triad (default if no suffix)
+            {"maj", new[] {0, 4, 7}},       // Major Triad (explicit)
+            {"m", new[] {0, 3, 7}},         // Minor Triad
+            {"dim", new[] {0, 3, 6}},       // Diminished Triad
+            {"aug", new[] {0, 4, 8}},       // Augmented Triad
+
+            {"7", new[] {0, 4, 7, 10}},     // Dominant 7th
+            {"m7", new[] {0, 3, 7, 10}},    // Minor 7th
+            {"Maj7", new[] {0, 4, 7, 11}},  // Major 7th
+            {"dim7", new[] {0, 3, 6, 9}},   // Diminished 7th
+            {"m7b5", new[] {0, 3, 6, 10}},  // Half-diminished 7th (Minor 7th flat 5)
+
+            {"sus2", new[] {0, 2, 7}},      // Suspend 2nd
+            {"sus4", new[] {0, 5, 7}},      // Suspend 4th
+
+            {"add9", new[] {0, 4, 7, 14}},  // Major triad with added 9 (octave + 2)
+            {"add#9", new[] {0, 4, 7, 15}}, // Major triad with added #9 (octave + 3)
+            {"maj7#11", new[] {0, 4, 7, 11, 18}}, // Major 7th with #11 (octave + 6)
+            // Add more as needed, e.g., "9", "11", "13", "m9", "m11", "m13", "Maj9", etc.
+        };
+
+        // Regex to parse Roman numerals:
+        // Group 1: Optional flat/sharp (b, #)
+        // Group 2: Roman numeral (I, V, ii, etc.)
+        // Group 3: Optional quality/extension (m, Maj7, 7, dim, aug, etc.)
+        private static readonly Regex _romanNumeralRegex = new Regex(
+            @"^(b|#)?(I|II|III|IV|V|VI|VII|i|ii|iii|iv|v|vi|vii)(m7b5|m7|Maj7|dim7|dim|aug|sus2|sus4|add9|add#9|maj7#11|7|maj|m)?$",
+            RegexOptions.IgnoreCase | RegexOptions.Compiled
+        );
 
 
         public ChordProgressionService(IWebHostEnvironment env)
@@ -112,95 +116,118 @@ namespace ChordProgressionQuiz.Services
         public AbsoluteChordProgression ConvertToAbsoluteMidiProgression(ChordProgression progression, int defaultOctave = 4)
         {
             var absoluteChords = new List<MidiChord>();
-            string romanNumerals = null;
+            string romanNumeralsString = null;
             string relativeTo = null;
 
             // Prioritize tonal, then modal if tonal is not present or relevant
             if (progression.Tonal != null && !string.IsNullOrEmpty(progression.Tonal.RomanNumerals))
             {
-                romanNumerals = progression.Tonal.RomanNumerals;
+                romanNumeralsString = progression.Tonal.RomanNumerals;
                 relativeTo = progression.Tonal.RelativeTo;
             }
             else if (progression.Modal != null && progression.Modal.Any())
             {
                 // For simplicity, take the first modal entry
-                romanNumerals = progression.Modal.First().RomanNumerals;
+                romanNumeralsString = progression.Modal.First().RomanNumerals;
                 relativeTo = progression.Modal.First().RelativeTo;
             }
 
-            if (string.IsNullOrEmpty(romanNumerals) || string.IsNullOrEmpty(relativeTo))
+            if (string.IsNullOrEmpty(romanNumeralsString) || string.IsNullOrEmpty(relativeTo))
             {
                 Console.WriteLine($"Warning: Could not convert progression '{progression.Song}' due to missing Roman numerals or relative_to information.");
                 return new AbsoluteChordProgression(new List<MidiChord>(), "N/A");
             }
 
             // Parse root note and scale type from "relative_to" (e.g., "C Major", "A Aeolian")
-            var parts = relativeTo.Split(' ');
-            string rootNoteName = parts[0].Trim();
-            // The scaleType is mostly for context; the Roman numeral dictionary is primarily major-key centric
-            // and handles chromaticism relative to the major tonic.
-            string scaleType = parts.Length > 1 ? parts[1].Trim() : "Major";
+            var relativeToParts = relativeTo.Split(' ');
+            string keyRootNoteName = relativeToParts[0].Trim();
+            string keyScaleType = relativeToParts.Length > 1 ? relativeToParts[1].Trim() : "Major"; // Default to Major
 
-            if (!_noteToMidi.TryGetValue(rootNoteName, out int rootMidiOffset))
+            if (!_noteNameToSemitonesFromC.TryGetValue(keyRootNoteName, out int keyRootMidiOffset))
             {
-                Console.WriteLine($"Warning: Unknown root note '{rootNoteName}' for progression '{progression.Song}'. Defaulting to C.");
-                rootMidiOffset = _noteToMidi["C"]; // Fallback to C
+                Console.WriteLine($"Warning: Unknown key root note '{keyRootNoteName}' for progression '{progression.Song}'. Defaulting to C.");
+                keyRootMidiOffset = _noteNameToSemitonesFromC["C"]; // Fallback to C
             }
 
             // The base MIDI note for the *tonic of the key* (e.g., C4 for C Major)
-            int tonicMidiNote = (defaultOctave * 12) + rootMidiOffset;
+            int tonicMidiNote = (defaultOctave * 12) + keyRootMidiOffset;
 
-            var romanChordNames = romanNumerals.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            var romanChordStrings = romanNumeralsString.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
-            foreach (var roman in romanChordNames)
+            foreach (var romanChord in romanChordStrings)
             {
-                if (_romanToIntervalsMajor.TryGetValue(roman, out int[] intervals))
+                var match = _romanNumeralRegex.Match(romanChord);
+                if (!match.Success)
                 {
-                    var midiPitches = new List<int>();
-                    foreach (var interval in intervals)
-                    {
-                        // Add the interval to the tonic MIDI note
-                        int pitch = tonicMidiNote + interval;
-                        // Adjust octave if necessary to keep pitches within a reasonable range
-                        // This simple adjustment assumes upward intervals.
-                        while (pitch < defaultOctave * 12) pitch += 12; // Ensure it's at least in the default octave
-                        while (pitch > (defaultOctave + 1) * 12 + 11) pitch -= 12; // Prevent going too high
-                        midiPitches.Add(pitch);
-                    }
-                    absoluteChords.Add(new MidiChord(midiPitches));
+                    Console.WriteLine($"Warning: Could not parse Roman numeral '{romanChord}' for song '{progression.Song}'. Skipping this chord.");
+                    absoluteChords.Add(new MidiChord()); // Add an empty chord for unknown parsing
+                    continue;
+                }
+
+                string accidental = match.Groups[1].Value; // "b" or "#"
+                string degreeRoman = match.Groups[2].Value; // "I", "ii", "V", etc.
+                string qualitySuffix = match.Groups[3].Value; // "m", "7", "Maj7", "dim", etc.
+
+                // Standardize degree Roman (e.g., 'i' to 'I' for lookup, then apply minor quality)
+                string standardizedDegree = degreeRoman.ToUpper();
+                bool isMinorDegree = char.IsLower(degreeRoman[0]);
+
+                if (!_romanDegreeToSemitones.TryGetValue(standardizedDegree, out int degreeSemitoneOffset))
+                {
+                    Console.WriteLine($"Warning: Unknown Roman degree '{degreeRoman}' encountered for song '{progression.Song}'. Skipping this chord.");
+                    absoluteChords.Add(new MidiChord());
+                    continue;
+                }
+
+                // Adjust for accidental on the root degree (e.g., 'bVII' means 10 semitones from tonic)
+                if (accidental == "b")
+                {
+                    degreeSemitoneOffset--;
+                }
+                else if (accidental == "#")
+                {
+                    degreeSemitoneOffset++;
+                }
+
+                // Calculate the absolute MIDI pitch for the root of the *current chord*
+                int chordRootMidiNote = tonicMidiNote + degreeSemitoneOffset;
+
+                // Ensure the root is within a reasonable octave range for the chord
+                while (chordRootMidiNote < (defaultOctave * 12)) chordRootMidiNote += 12;
+                while (chordRootMidiNote > ((defaultOctave + 1) * 12 + 11)) chordRootMidiNote -= 12;
+
+
+                // Determine the chord quality intervals
+                int[] intervals;
+                if (!string.IsNullOrEmpty(qualitySuffix) && _chordQualityIntervals.TryGetValue(qualitySuffix, out intervals))
+                {
+                    // Use the specified quality
+                }
+                else if (isMinorDegree && _chordQualityIntervals.TryGetValue("m", out intervals))
+                {
+                    // If it's a lowercase Roman numeral (e.g., 'ii', 'iii', 'vi', 'i', 'iv', 'v'), default to minor triad
+                }
+                else if (_chordQualityIntervals.TryGetValue("", out intervals))
+                {
+                    // Default to major triad if no specific quality or lowercase indicates minor
                 }
                 else
                 {
-                    Console.WriteLine($"Warning: Unknown Roman numeral '{roman}' encountered for song '{progression.Song}'. Adding root note only.");
-                    // Fallback: Add just the root note of the chord (calculated from the Roman numeral's degree)
-                    // This is a more intelligent fallback than just the tonic.
-                    int chordRootOffset = 0; // Default to tonic
-                    if (roman.StartsWith("I")) chordRootOffset = 0;
-                    else if (roman.StartsWith("ii")) chordRootOffset = 2;
-                    else if (roman.StartsWith("iii")) chordRootOffset = 4;
-                    else if (roman.StartsWith("IV")) chordRootOffset = 5;
-                    else if (roman.StartsWith("V")) chordRootOffset = 7;
-                    else if (roman.StartsWith("vi")) chordRootOffset = 9;
-                    else if (roman.StartsWith("vii")) chordRootOffset = 11;
-                    // Handle flats/sharps for root if not in dictionary
-                    else if (roman.StartsWith("bII")) chordRootOffset = 1;
-                    else if (roman.StartsWith("bIII")) chordRootOffset = 3;
-                    else if (roman.StartsWith("bVI")) chordRootOffset = 8;
-                    else if (roman.StartsWith("bVII")) chordRootOffset = 10;
-                    else if (roman.StartsWith("II")) chordRootOffset = 2; // Major II
-                    else if (roman.StartsWith("III")) chordRootOffset = 4; // Major III
-                    else if (roman.StartsWith("VI")) chordRootOffset = 9; // Major VI
-                    else if (roman.Contains("#I")) chordRootOffset = 1;
-                    else if (roman.Contains("#V")) chordRootOffset = 8;
-                    else if (roman.Contains("#vi")) chordRootOffset = 10;
-
-
-                    int pitch = tonicMidiNote + chordRootOffset;
-                    while (pitch < defaultOctave * 12) pitch += 12;
-                    while (pitch > (defaultOctave + 1) * 12 + 11) pitch -= 12;
-
-                    absoluteChords.Add(new MidiChord(new[] { pitch }));
+                    Console.WriteLine($"Warning: Unknown chord quality '{qualitySuffix}' for Roman numeral '{romanChord}' in song '{progression.Song}'. Using major triad as fallback.");
+                    intervals = _chordQualityIntervals[""]; // Fallback to major triad
                 }
+
+                var midiPitches = new List<int>();
+                foreach (var interval in intervals)
+                {
+                    int pitch = chordRootMidiNote + interval;
+                    // Minimal octave adjustment to keep notes relatively close to the root of the chord
+                    // and prevent extreme high/low notes.
+                    while (pitch < chordRootMidiNote) pitch += 12; // Ensure notes are at or above the root
+                    while (pitch > chordRootMidiNote + 12) pitch -= 12; // Keep within two octaves of the root
+                    midiPitches.Add(pitch);
+                }
+                absoluteChords.Add(new MidiChord(midiPitches));
             }
 
             return new AbsoluteChordProgression(absoluteChords, $"{progression.Song} ({relativeTo})");
