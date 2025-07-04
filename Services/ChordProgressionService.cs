@@ -26,17 +26,17 @@ namespace ChordProgressionQuiz.Services
         // Diatonic intervals for various scales relative to their *own root* (in semitones)
         private readonly Dictionary<string, int[]> _scaleIntervals = new Dictionary<string, int[]>
         {
-            {"Major", new[] {0, 2, 4, 5, 7, 9, 11}}, // I, ii, iii, IV, V, vi, vii°
-            {"Ionian", new[] {0, 2, 4, 5, 7, 9, 11}}, // Same as Major
-            {"Minor", new[] {0, 2, 3, 5, 7, 8, 10}}, // Natural Minor: i, ii°, bIII, iv, v, bVI, bVII
-            {"Aeolian", new[] {0, 2, 3, 5, 7, 8, 10}}, // Same as Natural Minor
-            {"Dorian", new[] {0, 2, 3, 5, 7, 9, 10}}, // i, ii, bIII, IV, V, vi°, bVII
-            {"Phrygian", new[] {0, 1, 3, 5, 7, 8, 10}}, // i, bII, bIII, iv, v, bVI, bVII
-            {"Mixolydian", new[] {0, 2, 4, 5, 7, 9, 10}}, // I, ii, iii°, IV, V, vi°, bVII
-            {"Harmonic Minor", new[] {0, 2, 3, 5, 7, 8, 11}}, // i, ii°, bIII, iv, V, bVI, vii°
+            {"Major", new[] {0, 2, 4, 5, 7, 9, 11}},
+            {"Ionian", new[] {0, 2, 4, 5, 7, 9, 11}},
+            {"Minor", new[] {0, 2, 3, 5, 7, 8, 10}},
+            {"Aeolian", new[] {0, 2, 3, 5, 7, 8, 10}},
+            {"Dorian", new[] {0, 2, 3, 5, 7, 9, 10}},
+            {"Phrygian", new[] {0, 1, 3, 5, 7, 8, 10}},
+            {"Mixolydian", new[] {0, 2, 4, 5, 7, 9, 10}},
+            {"Harmonic Minor", new[] {0, 2, 3, 5, 7, 8, 11}},
         };
 
-        // Map Roman numeral degree (e.g., "I", "II", "V") to its 0-indexed position in the scale intervals array.
+        // Map Roman numeral degree to its 0-indexed position in the scale intervals array.
         private readonly Dictionary<string, int> _romanDegreeToIndex = new Dictionary<string, int>
         {
             {"I", 0}, {"II", 1}, {"III", 2}, {"IV", 3}, {"V", 4}, {"VI", 5}, {"VII", 6},
@@ -44,6 +44,7 @@ namespace ChordProgressionQuiz.Services
         };
 
         // Chord qualities and their intervals *relative to the chord's root*
+        // All keys are now LOWERCASE for consistent lookup
         private readonly Dictionary<string, int[]> _chordQualityIntervals = new Dictionary<string, int[]>
         {
             {"", new[] {0, 4, 7}},          // Major Triad (default if no suffix)
@@ -54,24 +55,19 @@ namespace ChordProgressionQuiz.Services
 
             {"7", new[] {0, 4, 7, 10}},     // Dominant 7th
             {"m7", new[] {0, 3, 7, 10}},    // Minor 7th
-            {"Maj7", new[] {0, 4, 7, 11}},  // Major 7th
+            {"maj7", new[] {0, 4, 7, 11}},  // <--- CHANGED: Key is now lowercase "maj7"
             {"dim7", new[] {0, 3, 6, 9}},   // Diminished 7th
-            {"m7b5", new[] {0, 3, 6, 10}},  // Half-diminished 7th (Minor 7th flat 5)
+            {"m7b5", new[] {0, 3, 6, 10}},  // Half-diminished 7th
 
             {"sus2", new[] {0, 2, 7}},      // Suspend 2nd
             {"sus4", new[] {0, 5, 7}},      // Suspend 4th
 
-            {"add9", new[] {0, 4, 7, 14}},  // Major triad with added 9 (octave + 2)
-            {"add#9", new[] {0, 4, 7, 15}}, // Major triad with added #9 (octave + 3)
-            {"maj7#11", new[] {0, 4, 7, 11, 18}}, // Major 7th with #11 (octave + 6)
-            // Add more as needed
+            {"add9", new[] {0, 4, 7, 14}},
+            {"add#9", new[] {0, 4, 7, 15}},
+            {"maj7#11", new[] {0, 4, 7, 11, 18}}, // <--- CHANGED: Key is now lowercase "maj7#11"
         };
 
-        // Regex to parse Roman numerals:
-        // Group 1: Optional leading accidental (b, #)
-        // Group 2: Roman numeral (I, V, ii, etc.) - Explicit list for safety
-        // Group 3: Optional trailing accidental (b, #)
-        // Group 4: Optional quality/extension (m, Maj7, dim, etc.)
+        // Regex to parse Roman numerals: (remains unchanged from previous fix, which used explicit list)
         private static readonly Regex _romanNumeralRegex = new Regex(
             @"^(b|#)?(I|II|III|IV|V|VI|VII|i|ii|iii|iv|v|vi|vii)(b|#)?(m7b5|m7|Maj7|dim7|dim|aug|sus2|sus4|add9|add#9|maj7#11|7|maj|m)?$",
             RegexOptions.IgnoreCase | RegexOptions.Compiled
@@ -129,12 +125,6 @@ namespace ChordProgressionQuiz.Services
             return _chordProgressions?.Count ?? 0;
         }
 
-        /// <summary>
-        /// Converts a Roman numeral chord progression to an AbsoluteChordProgression (MIDI pitches).
-        /// </summary>
-        /// <param name="progression">The symbolic ChordProgression object.</param>
-        /// <param name="defaultOctave">The base MIDI octave (e.g., 4 for C4).</param>
-        /// <returns>An AbsoluteChordProgression with MIDI pitches.</returns>
         public AbsoluteChordProgression ConvertToAbsoluteMidiProgression(ChordProgression progression, int defaultOctave = 4)
         {
             var absoluteChords = new List<MidiChord>();
@@ -183,11 +173,11 @@ namespace ChordProgressionQuiz.Services
 
             foreach (var romanChord in romanChordStrings)
             {
-                Console.WriteLine($"DEBUG: Processing Roman chord: '{romanChord}' for song '{progression.Song}'"); // DEBUG LINE
+                Console.WriteLine($"DEBUG: Processing Roman chord: '{romanChord}' for song '{progression.Song}'");
                 var match = _romanNumeralRegex.Match(romanChord);
                 if (!match.Success)
                 {
-                    Console.WriteLine($"DEBUG:   Regex failed for '{romanChord}'. Adding empty chord."); // DEBUG LINE
+                    Console.WriteLine($"DEBUG:   Regex failed for '{romanChord}'. Adding empty chord.");
                     absoluteChords.Add(new MidiChord());
                     continue;
                 }
@@ -197,7 +187,7 @@ namespace ChordProgressionQuiz.Services
                 string trailingAccidental = match.Groups[3].Value;
                 string qualitySuffix = match.Groups[4].Value;
 
-                Console.WriteLine($"DEBUG:   Parsed: Leading='{leadingAccidental}', Base='{baseRoman}', Trailing='{trailingAccidental}', Quality='{qualitySuffix}'"); // DEBUG LINE
+                Console.WriteLine($"DEBUG:   Parsed: Leading='{leadingAccidental}', Base='{baseRoman}', Trailing='{trailingAccidental}', Quality='{qualitySuffix}'");
 
                 bool isMinorDegreeDefault = baseRoman.All(char.IsLower);
 
@@ -241,7 +231,10 @@ namespace ChordProgressionQuiz.Services
 
 
                 int[] intervals;
-                if (!string.IsNullOrEmpty(qualitySuffix) && _chordQualityIntervals.TryGetValue(qualitySuffix, out intervals))
+                // Convert qualitySuffix to lowercase for consistent dictionary lookup
+                string normalizedQualitySuffix = qualitySuffix.ToLowerInvariant(); // <--- NEW LINE
+
+                if (!string.IsNullOrEmpty(normalizedQualitySuffix) && _chordQualityIntervals.TryGetValue(normalizedQualitySuffix, out intervals)) // <--- Use normalized suffix
                 {
                     // Use the explicitly specified quality
                 }
@@ -255,7 +248,7 @@ namespace ChordProgressionQuiz.Services
                 }
                 else
                 {
-                    Console.WriteLine($"Warning: Unknown chord quality '{qualitySuffix}' for Roman numeral '{romanChord}' in song '{progression.Song}'. Using major triad as fallback.");
+                    Console.WriteLine($"Warning: Unknown chord quality '{qualitySuffix}' (normalized: '{normalizedQualitySuffix}') for Roman numeral '{romanChord}' in song '{progression.Song}'. Using major triad as fallback.");
                     intervals = _chordQualityIntervals[""];
                 }
 
