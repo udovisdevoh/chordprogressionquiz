@@ -1,10 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿// Pages/Index.cshtml.cs
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace ChordProgressionQuiz.Pages
 {
@@ -19,7 +15,7 @@ namespace ChordProgressionQuiz.Pages
 
         public void OnGet()
         {
-
+            // No specific logic needed for the home page on GET request
         }
     }
 }

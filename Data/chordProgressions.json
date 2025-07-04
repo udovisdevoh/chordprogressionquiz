@@ -1,0 +1,1054 @@
+[
+  {
+    "song": "Can't stop: RDI, Étoiles Fillantes, Bollywood Dance",
+    "keys_example": "Am G Em F",
+    "tonal": {
+      "roman_numerals": "vi V iii IV",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "i bVII v bVI",
+        "relative_to": "A Aeolian"
+      }
+    ],
+    "substitution_group": 6
+  },
+  {
+    "song": "Bad touch, counting stars",
+    "keys_example": "Am C G F",
+    "tonal": {
+      "roman_numerals": "vi I V IV",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "i bIII bVII bVI",
+        "relative_to": "A Aeolian"
+      }
+    ],
+    "palindromic_group": 1,
+    "substitution_group": 1
+  },
+  {
+    "song": "One Must Fall 2097, Think about the way, Touch me (F G Em Am)",
+    "keys_example": "Am F G Em",
+    "tonal": {
+      "roman_numerals": "vi IV V iii",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "i bVI bVII v",
+        "relative_to": "A Aeolian"
+      }
+    ],
+    "rotation_group": 4
+  },
+  {
+    "song": "Royal road",
+    "keys_example": "F G Em Am",
+    "tonal": {
+      "roman_numerals": "IV V iii vi",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "bVI bVII v i",
+        "relative_to": "A Aeolian"
+      }
+    ],
+    "rotation_group": 4
+  },
+  {
+    "song": "Move my body (F G Am C)",
+    "keys_example": "Am C F G",
+    "tonal": {
+      "roman_numerals": "vi I IV V",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "i bIII bVI bVII",
+        "relative_to": "A Aeolian"
+      }
+    ],
+    "rotation_group": 5
+  },
+  {
+    "song": "Tyler",
+    "keys_example": "F G Am C",
+    "tonal": {
+      "roman_numerals": "IV V vi I",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "bVI bVII i bIII",
+        "relative_to": "A Aeolian"
+      }
+    ],
+    "rotation_group": 5
+  },
+  {
+    "song": "Axis of Awesome: Despacito, Kids aren't alright, (C G Am F, F C G Am, G Am F C)",
+    "keys_example": "Am F C G",
+    "tonal": {
+      "roman_numerals": "vi IV I V",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "i bVI bIII bVII",
+        "relative_to": "A Aeolian"
+      }
+    ],
+    "rotation_group": 1
+  },
+  {
+    "song": "Dragostea Din Tei, Midnight rain",
+    "keys_example": "F C G Am",
+    "tonal": {
+      "roman_numerals": "IV I V vi",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "bVI bIII bVII i",
+        "relative_to": "A Aeolian"
+      }
+    ],
+    "rotation_group": 1,
+    "palindromic_group": 5
+  },
+  {
+    "song": "I'm yours, With or without you, Dammit, Song for a winter's night",
+    "keys_example": "C G Am F",
+    "tonal": {
+      "roman_numerals": "I V vi IV",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "I V vi IV",
+        "relative_to": "C Ionian"
+      }
+    ],
+    "rotation_group": 1
+  },
+  {
+    "song": "Angels, Hurt, September Song",
+    "keys_example": "G Am F C",
+    "tonal": {
+      "roman_numerals": "V vi IV I",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "V vi IV I",
+        "relative_to": "C Ionian"
+      },
+      {
+        "roman_numerals": "I ii bVII IV",
+        "relative_to": "G Mixolydian"
+      }
+    ],
+    "rotation_group": 1,
+    "palindromic_group": 2
+  },
+  {
+    "song": "Major scale climb, My girl, 99 Luftballons, Love will keep us together",
+    "keys_example": "C Dm F G",
+    "tonal": {
+      "roman_numerals": "I ii IV V",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "I ii IV V",
+        "relative_to": "C Ionian"
+      }
+    ],
+    "substitution_group": 2
+  },
+  {
+    "song": "The lions sleep tonight",
+    "keys_example": "C F C G",
+    "tonal": {
+      "roman_numerals": "I IV I V",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "I IV I V",
+        "relative_to": "C Ionian"
+      }
+    ]
+  },
+  {
+    "song": "Mr Brightside, She drives me crazy",
+    "keys_example": "C F Am G",
+    "tonal": {
+      "roman_numerals": "I IV vi V",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "I IV vi V",
+        "relative_to": "C Ionian"
+      }
+    ],
+    "palindromic_group": 2,
+    "rotation_group": 9
+  },
+  {
+    "song": "5 years time, Minority, Cheerleader, Summer Nights, Walking on sunshine",
+    "keys_example": "C F G F",
+    "tonal": {
+      "roman_numerals": "I IV V IV",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "I IV V IV",
+        "relative_to": "C Ionian"
+      }
+    ]
+  },
+  {
+    "song": "Major scale vamp: Luka, All the small things",
+    "keys_example": "C G F G",
+    "tonal": {
+      "roman_numerals": "I V IV V",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "I V IV V",
+        "relative_to": "C Ionian"
+      }
+    ],
+    "substitution_group": 3
+  },
+  {
+    "song": "The deep blue",
+    "keys_example": "Am Em G Dm",
+    "tonal": {
+      "roman_numerals": "vi iii V ii",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "i v bVII iv",
+        "relative_to": "A Aeolian"
+      }
+    ]
+  },
+  {
+    "song": "World hold on",
+    "keys_example": "Am Dm F G",
+    "tonal": {
+      "roman_numerals": "vi ii IV V",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "i iv bVI bVII",
+        "relative_to": "A Aeolian"
+      }
+    ]
+  },
+  {
+    "song": "50's, Doo-wop change: Earth angel, I'll be watching you, I will always love you, j'ai souvenir encore, tous les garçons et les filles de mon age, Stand by me (F G C Am)",
+    "keys_example": "C Am F G",
+    "tonal": {
+      "roman_numerals": "I vi IV V",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "I vi IV V",
+        "relative_to": "C Ionian"
+      }
+    ],
+    "rotation_group": 2,
+    "substitution_group": 4
+  },
+  {
+    "song": "I want to hold your hands, Viva la vida, Somewhere else, Feliz Navidad",
+    "keys_example": "F G C Am",
+    "tonal": {
+      "roman_numerals": "IV V I vi",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "IV V I vi",
+        "relative_to": "C Ionian"
+      }
+    ],
+    "rotation_group": 2,
+    "palindromic_group": 1
+  },
+  {
+    "song": "Blue moon, I will, I'm not Okay, Bird of a feather, Last christmas",
+    "keys_example": "C Am Dm G",
+    "tonal": {
+      "roman_numerals": "I vi ii V",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "I vi ii V",
+        "relative_to": "C Ionian"
+      }
+    ],
+    "rotation_group": 3,
+    "substitution_group": 4
+  },
+  {
+    "song": "Flowers, This love, Island in the sun, Killing me softly with his song",
+    "keys_example": "Am Dm G C",
+    "tonal": {
+      "roman_numerals": "vi ii V I",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "i iv bVII bIII",
+        "relative_to": "A Aeolian"
+      }
+    ],
+    "rotation_group": 3,
+    "palindromic_group": 3
+  },
+  {
+    "song": "Plagal Cascade: Wonderall, Mad world, Boulevard of broken dreams, How you remind me",
+    "keys_example": "Dm F C G",
+    "tonal": {
+      "roman_numerals": "ii IV I V",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "i bIII bVII IV",
+        "relative_to": "D Dorian"
+      }
+    ],
+    "rotation_group": 6,
+    "palindromic_group": 4,
+    "substitution_group": 5
+  },
+  {
+    "song": "Closing time, Believe (Cher), All star, I'm like a bird, Wildest dreams",
+    "keys_example": "C G Dm F",
+    "tonal": {
+      "roman_numerals": "I V ii IV",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "I V ii IV",
+        "relative_to": "C Ionian"
+      }
+    ],
+    "rotation_group": 6
+  },
+  {
+    "song": "Get Lucky",
+    "keys_example": "Dm F Am G",
+    "tonal": {
+      "roman_numerals": "ii IV vi V",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "i bIII v bVII",
+        "relative_to": "D Dorian"
+      }
+    ],
+    "substitution_group": 5
+  },
+  {
+    "song": "Isn't she lovely",
+    "keys_example": "Dm G C F",
+    "tonal": {
+      "roman_numerals": "ii V I IV",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "i IV bVII bIII",
+        "relative_to": "D Dorian"
+      }
+    ],
+    "rotation_group": 8
+  },
+  {
+    "song": "Pride in the name of love",
+    "keys_example": "G C F Dm",
+    "tonal": {
+      "roman_numerals": "V I IV ii",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "I IV bVII v",
+        "relative_to": "G Mixolydian"
+      }
+    ],
+    "rotation_group": 8,
+    "palindromic_group": 4
+  },
+  {
+    "song": "Blinding Lights, Watermelon Sugar",
+    "keys_example": "Dm Am C G",
+    "tonal": {
+      "roman_numerals": "ii vi I V",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "i v bVII IV",
+        "relative_to": "D Dorian"
+      }
+    ],
+    "palindromic_group": 3
+  },
+  {
+    "song": "Creep",
+    "keys_example": "G B C Cm",
+    "tonal": {
+      "roman_numerals": "I III IV iv",
+      "relative_to": "G Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "I III IV iv",
+        "relative_to": "G Ionian with chromatic III and iv"
+      }
+    ]
+  },
+  {
+    "song": "Eight days a week",
+    "keys_example": "C D F C",
+    "tonal": {
+      "roman_numerals": "I II IV I",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "I II IV I",
+        "relative_to": "C Lydian"
+      }
+    ]
+  },
+  {
+    "song": "Here it goes again, Build me up buttercup, We used to be friends, Waterfalls",
+    "keys_example": "C G Bb F",
+    "tonal": {
+      "roman_numerals": "I V bVII IV",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "I V bVII IV",
+        "relative_to": "C Mixolydian"
+      }
+    ]
+  },
+  {
+    "song": "Like a prayer",
+    "keys_example": "F C F C",
+    "tonal": {
+      "roman_numerals": "I V I V",
+      "relative_to": "F Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "I V I V",
+        "relative_to": "F Ionian"
+      }
+    ],
+    "substitution_group": 3
+  },
+  {
+    "song": "Running up that hill, Sorry, Livin' on a prayer, wonder wall",
+    "keys_example": "F G Am Am",
+    "tonal": {
+      "roman_numerals": "IV V vi vi",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "I II iii iii",
+        "relative_to": "F Lydian"
+      },
+      {
+        "roman_numerals": "bVI bVII i i",
+        "relative_to": "A Aeolian"
+      }
+    ]
+  },
+  {
+    "song": "Phrygian Vamp, Get busy",
+    "keys_example": "Em F",
+    "tonal": {
+      "roman_numerals": "iii IV",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "i bII",
+        "relative_to": "E Phrygian"
+      }
+    ]
+  },
+  {
+    "song": "Harmonic minor vamp: sweet dreams, toxicity, smooth",
+    "keys_example": "Am F E",
+    "tonal": {
+      "roman_numerals": "vi IV III",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "i bVI V",
+        "relative_to": "A Harmonic Minor"
+      }
+    ]
+  },
+  {
+    "song": "Dorian vamp: Oye como va, Uptown funk, Great gig in the sky, Another brick in the wall",
+    "keys_example": "Dm G",
+    "tonal": {
+      "roman_numerals": "ii V",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "i IV",
+        "relative_to": "D Dorian"
+      }
+    ]
+  },
+  {
+    "song": "Aeolian vamp",
+    "keys_example": "Am G F G",
+    "tonal": {
+      "roman_numerals": "vi V IV V",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "i bVII bVI bVII",
+        "relative_to": "A Aeolian"
+      }
+    ],
+    "substitution_group": 7
+  },
+  {
+    "song": "Mixolydian Vamp: Sweet home Alabama, Tomy reviens, Hey Jude, Sweet Child O'Mine",
+    "keys_example": "G F C G",
+    "tonal": {
+      "roman_numerals": "V IV I V",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "I bVII IV I",
+        "relative_to": "G Mixolydian"
+      }
+    ]
+  },
+  {
+    "song": "Light my fire",
+    "keys_example": "Am7 F#m7",
+    "tonal": {
+      "roman_numerals": "vi7 iv#7",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "i7 vi7",
+        "relative_to": "A Dorian"
+      }
+    ]
+  },
+  {
+    "song": "Andalusian cadence: Hit the road jack, Genie in a bottle",
+    "keys_example": "Am G F E",
+    "tonal": {
+      "roman_numerals": "vi V IV III",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "i bVII bVI V",
+        "relative_to": "A Harmonic Minor"
+      }
+    ],
+    "substitution_group": 7
+  },
+  {
+    "song": "Minor climb: House of the rising sun, Ecstacy of Gold, Call me, Talk talk, Birdie, My Sharona",
+    "keys_example": "Am C D F",
+    "tonal": {
+      "roman_numerals": "vi I II IV",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "i bIII IV bVI",
+        "relative_to": "A Aeolian"
+      }
+    ],
+    "substitution_group": 1
+  },
+  {
+    "song": "Welcome to the internet: I want the world to stop",
+    "keys_example": "Am Dm C E",
+    "tonal": {
+      "roman_numerals": "vi ii I III",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "i iv bIII V",
+        "relative_to": "A Aeolian with a Harmonic Minor V"
+      }
+    ]
+  },
+  {
+    "song": "Aeolian closed loop: Dani California, Apart, True colors, Yet another movie",
+    "keys_example": "Am G Dm Am",
+    "tonal": {
+      "roman_numerals": "vi V ii vi",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "i bVII iv i",
+        "relative_to": "A Aeolian"
+      }
+    ]
+  },
+  {
+    "song": "Mario Cadence: Kiss from a rose",
+    "keys_example": "F G A",
+    "tonal": {
+      "roman_numerals": "IV V VI",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "bVI bVII I",
+        "relative_to": "A Mixolydian b6"
+      },
+      {
+        "roman_numerals": "bVI bVII I",
+        "relative_to": "A minor with Picardy third"
+      }
+    ]
+  },
+  {
+    "song": "Backdoor progression: No such thing (chorus)",
+    "keys_example": "Dm7 G7 A",
+    "tonal": {
+      "roman_numerals": "ii7 V7 VI",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "iv7 bVII7 I",
+        "relative_to": "A Mixolydian b6"
+      }
+    ]
+  },
+  {
+    "song": "What's up, Don't worry be happy",
+    "keys_example": "C Dm F C",
+    "tonal": {
+      "roman_numerals": "I ii IV I",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "I ii IV I",
+        "relative_to": "C Ionian"
+      }
+    ],
+    "substitution_group": 2
+  },
+  {
+    "song": "Harmonic minor axis: Lonely day, (You're welcome (moana))",
+    "keys_example": "Am F C E",
+    "tonal": {
+      "roman_numerals": "vi IV I III",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "i bVI bIII V",
+        "relative_to": "A Harmonic Minor"
+      }
+    ],
+    "rotation_group": 7
+  },
+  {
+    "song": "She’s Electric, You Got it (Am F C E)",
+    "keys_example": "C E Am F",
+    "tonal": {
+      "roman_numerals": "I III vi IV",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "I III vi IV",
+        "relative_to": "C Ionian with chromatic III"
+      }
+    ],
+    "rotation_group": 7
+  },
+  {
+    "song": "Let's get it on",
+    "keys_example": "C Em F G",
+    "tonal": {
+      "roman_numerals": "I iii IV V",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "I iii IV V",
+        "relative_to": "C Ionian"
+      }
+    ]
+  },
+  {
+    "song": "Major line cliché: Something, Kiss Me",
+    "keys_example": "C Cmaj7 C7 F",
+    "tonal": {
+      "roman_numerals": "I Imaj7 I7 IV",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "I Imaj7 I7 IV",
+        "relative_to": "C Ionian with chromatic alterations"
+      }
+    ]
+  },
+  {
+    "song": "Augmented climb",
+    "keys_example": "C Caug Am A7",
+    "tonal": {
+      "roman_numerals": "I Iaug vi VI7",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "I Iaug vi VI7",
+        "relative_to": "C Ionian with chromatic alterations"
+      }
+    ]
+  },
+  {
+    "song": "Minor line cliché",
+    "keys_example": "Am Caug C D",
+    "tonal": {
+      "roman_numerals": "vi Iaug I II",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "i Iaug bIII IV",
+        "relative_to": "A Aeolian with chromatic alterations"
+      }
+    ]
+  },
+  {
+    "song": "Magnolia, Dear Prudence, Magical Mystery Tour (ending) Part of your world, Desperado, Santa Claus is comin' to town, white christmas",
+    "keys_example": "C C7 F Fm",
+    "tonal": {
+      "roman_numerals": "I I7 IV iv",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "I I7 IV iv",
+        "relative_to": "C Ionian with borrowed iv"
+      }
+    ]
+  },
+  {
+    "song": "Lucy in the sky with diamond (intro)",
+    "keys_example": "C C7 Am G#aug",
+    "tonal": {
+      "roman_numerals": "I I7 vi #Vaug",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "I I7 vi #Vaug",
+        "relative_to": "C Ionian with chromatic alterations"
+      }
+    ]
+  },
+  {
+    "song": "Pachelbel's Canon",
+    "keys_example": "C G Am Em F C F G",
+    "tonal": {
+      "roman_numerals": "I V vi iii IV I IV V",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "I V vi iii IV I IV V",
+        "relative_to": "C Ionian"
+      }
+    ]
+  },
+  {
+    "song": "Circle of 5ths diatonic anti-clockwise: Fly me to the moon, you never give me your money, I will survive",
+    "keys_example": "Am Dm G C F Bdim E Am",
+    "tonal": {
+      "roman_numerals": "vi ii V I IV viidim III vi",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "i iv bVII bIII bVI iidim V i",
+        "relative_to": "A Aeolian"
+      }
+    ]
+  },
+  {
+    "song": "Wild world",
+    "keys_example": "Am D7 G C F Dm E Am",
+    "tonal": {
+      "roman_numerals": "vi V7 I IV IV ii V vi",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "i V7 bVII bIII bVI iv V i",
+        "relative_to": "A Aeolian with secondary dominant D7"
+      }
+    ]
+  },
+  {
+    "song": "Black hole sun",
+    "keys_example": "G Bb F Em Eb D G Ab",
+    "tonal": {
+      "roman_numerals": "I bIII bVII vi bVI V I bII",
+      "relative_to": "G Major, with strong chromaticism"
+    }
+  },
+  {
+    "song": "You and whose army?",
+    "keys_example": "Bm E Am D Gm C F Am",
+    "tonal": {
+      "roman_numerals": "i IV vii III vi II V i",
+      "relative_to": "B minor initially, then shifting implied tonics due to chromaticism"
+    }
+  },
+  {
+    "song": "All the young dudes",
+    "keys_example": "C Cmaj7 Am Gm D Eb Bb F Bb G",
+    "tonal": {
+      "roman_numerals": "I Imaj7 vi v II bIII bVII IV bVII V",
+      "relative_to": "C Major, with strong chromaticism and modulation"
+    }
+  },
+  {
+    "song": "James bond",
+    "keys_example": "Em C C#dim C",
+    "tonal": {
+      "roman_numerals": "iii I #Idim I",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "i bVI #VIdim bVI",
+        "relative_to": "E minor, with C#dim as a chromatic passing chord"
+      }
+    ]
+  },
+  {
+    "song": "Folia: Oops I did it again, Conquest of paradise, Al la flamenco",
+    "keys_example": "Am E Am G C G F E",
+    "tonal": {
+      "roman_numerals": "vi III vi V I V IV III",
+      "relative_to": "C Major, with E as III acting as a dominant of Am"
+    },
+    "modal": [
+      {
+        "roman_numerals": "i V i bVII bIII bVII bVI V",
+        "relative_to": "A Harmonic Minor, for the Am-E progression and then extending to C Major relatives"
+      }
+    ]
+  },
+  {
+    "song": "Yesterday, Mr Blue Sky",
+    "keys_example": "F Em A Dm Bb C D Dm G Bb F",
+    "tonal": {
+      "roman_numerals": "I vii III vi IV V I i IV bVII",
+      "relative_to": "F Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "I vii iii vi IV V",
+        "relative_to": "F Ionian"
+      },
+      {
+        "roman_numerals": "I i IV bVII",
+        "relative_to": "D Ionian with modal mixture"
+      }
+    ]
+  },
+  {
+    "song": "Clocks, speed of sound",
+    "keys_example": "G Dm Dm Am",
+    "tonal": {
+      "roman_numerals": "I iv iv ii",
+      "relative_to": "G Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "I iv iv ii",
+        "relative_to": "G Ionian"
+      }
+    ]
+  },
+  {
+    "song": "Hotel California",
+    "keys_example": "Am E7 G D F C Dm E7",
+    "tonal": {
+      "roman_numerals": "vi III7 V II IV I ii III7",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "i V7 bVII IV bVI bIII iv V7",
+        "relative_to": "A Harmonic Minor/Dorian blend"
+      }
+    ]
+  },
+  {
+    "song": "Poupée de cire poupée de son",
+    "keys_example": "Am F C Bb Am B E7",
+    "tonal": {
+      "roman_numerals": "vi IV I bVII vi VII III7",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "i bVI bIII bVII i II V7",
+        "relative_to": "A Aeolian with modal mixture"
+      }
+    ]
+  },
+  {
+    "song": "Toxic",
+    "keys_example": "Am C E7 Am B",
+    "tonal": {
+      "roman_numerals": "vi I III7 vi VII",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "i bIII V7 i II",
+        "relative_to": "A minor"
+      }
+    ]
+  },
+  {
+    "song": "Deewani Mastani",
+    "keys_example": "Am B C B Am B C E7",
+    "tonal": {
+      "roman_numerals": "vi VII I VII vi VII I III7",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "i II bIII II i II bIII V7",
+        "relative_to": "A minor"
+      }
+    ]
+  },
+  {
+    "song": "Zelda overworld",
+    "keys_example": "A G F E A Em F C Bb Am B7 E A Em F F#dim E F7 F#dim E Bb Am B7 E",
+	"tonal": {
+      "roman_numerals": "I bVII bVI V I v bVI bIII bII i II7 V I v bVI #vidim V bVI7 #vidim V bII i II7 V",
+      "relative_to": "A"
+    },
+  },
+  {
+    "song": "Our house",
+    "keys_example": "C Gm Dm Fm",
+    "tonal": {
+      "roman_numerals": "I v ii iv",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "I v ii iv",
+        "relative_to": "C Ionian with modal mixture from C minor"
+      }
+    ]
+  },
+  {
+    "song": "Circle of 5th chromatic clockwise: Hey joe, day in the life",
+    "keys_example": "C G D A E",
+    "tonal": {
+      "roman_numerals": "I V II VI III",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "I V II VI III",
+        "relative_to": "C Lydian for pure diatonic, or as a sequence of dominant chords leading to temporary tonicizations"
+      }
+    ]
+  },
+  {
+    "song": "Blur's unique chord progression",
+    "keys_example": "B B Aadd#9 E G Fmaj7#11 Bb Db",
+    "tonal": {
+      "roman_numerals": "I I bVIIadd9# IV bVI Vmaj7#11 bVII bII",
+      "relative_to": "B, with significant chromaticism"
+    }
+  },
+  {
+    "song": "Just the two of us",
+    "keys_example": "Db7 C7 Fm7 Ebm7 Ab7 Db7 C7 Fm7 Fm7",
+    "tonal": {
+      "roman_numerals": "I7 bVII7 iv7 iii7 bVI7 I7 bVII7 iv7 iv7",
+      "relative_to": "Db Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "I7 bVII7 iv7 iii7 bVI7 I7 bVII7 iv7 iv7",
+        "relative_to": "Db Ionian with dominant 7ths and chromaticism"
+      }
+    ]
+  },
+  {
+    "song": "Some non-used chord progression that should be common but is not",
+    "keys_example": "Am G C F",
+    "tonal": {
+      "roman_numerals": "vi V I IV",
+      "relative_to": "C Major"
+    },
+    "modal": [
+      {
+        "roman_numerals": "i bVII bIII bVI",
+        "relative_to": "A Aeolian"
+      }
+    ],
+    "rotation_group": 9,
+    "palindromic_group": 5,
+    "substitution_group": 6
+  }
+]

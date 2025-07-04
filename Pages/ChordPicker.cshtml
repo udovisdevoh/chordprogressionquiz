@@ -1,0 +1,53 @@
+﻿@page
+@model ChordProgressionQuiz.Pages.ChordPickerModel
+@{
+    ViewData["Title"] = "Random Chord Progression";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Your Random Chord Progression</h1>
+    @if (Model.RandomProgression != null)
+    {
+        <div class="card mt-4 mx-auto" style="max-width: 600px;">
+            <div class="card-header bg-primary text-white rounded-top">
+                <h4 class="mb-0">Song: @Model.RandomProgression.Song</h4>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-info">Keys Example: @Model.RandomProgression.KeysExample</h5>
+                <p class="card-text">
+                    <strong>Tonal:</strong> @Model.RandomProgression.Tonal?.RomanNumerals (relative to @Model.RandomProgression.Tonal?.RelativeTo)
+                </p>
+                @if (Model.RandomProgression.Modal != null && Model.RandomProgression.Modal.Any())
+                {
+                    <p class="card-text">
+                        <strong>Modal:</strong>
+                        @foreach (var modal in Model.RandomProgression.Modal)
+                        {
+                            <span>@modal.RomanNumerals (relative to @modal.RelativeTo)</span><br />
+                        }
+                    </p>
+                }
+                @if (Model.RandomProgression.SubstitutionGroup.HasValue)
+                {
+                    <p class="card-text"><strong>Substitution Group:</strong> @Model.RandomProgression.SubstitutionGroup</p>
+                }
+                @if (Model.RandomProgression.PalindromicGroup.HasValue)
+                {
+                    <p class="card-text"><strong>Palindromic Group:</strong> @Model.RandomProgression.PalindromicGroup</p>
+                }
+                @if (Model.RandomProgression.RotationGroup.HasValue)
+                {
+                    <p class="card-text"><strong>Rotation Group:</strong> @Model.RandomProgression.RotationGroup</p>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <p class="alert alert-warning mt-4">No chord progression found. Please ensure the 'chordProgressions.json' file is correctly placed in the 'Data' folder and contains valid data.</p>
+    }
+    <div class="mt-4">
+        <a asp-page="/ChordPicker" class="btn btn-success btn-lg mx-2">Get Another Random Progression</a>
+        <a asp-page="/Index" class="btn btn-secondary btn-lg mx-2">Back to Home</a>
+    </div>
+</div>
