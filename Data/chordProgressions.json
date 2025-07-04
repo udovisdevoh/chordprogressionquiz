@@ -910,13 +910,13 @@
         "song": "Clocks, speed of sound",
         "keys_example": "G Dm Dm Am",
         "tonal": {
-            "roman_numerals": "I iv iv ii",
-            "relative_to": "G Major"
+            "roman_numerals": "V ii ii vi",
+            "relative_to": "C Major"
         },
         "modal": [
             {
-                "roman_numerals": "I iv iv ii",
-                "relative_to": "G Ionian"
+                "roman_numerals": "I v v ii",
+                "relative_to": "G Mixolydian"
             }
         ]
     },

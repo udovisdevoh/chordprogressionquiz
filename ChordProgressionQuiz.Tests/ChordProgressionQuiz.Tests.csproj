@@ -10,11 +10,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Updated xunit packages to 2.9.3 to resolve version conflict -->
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.10.0" />
-    <PackageReference Include="xunit" Version="2.9.3" /> <!-- Updated version --> <!-- Updated version -->
-    <PackageReference Include="coverlet.collector" Version="6.0.2" />
-    <PackageReference Include="Moq" Version="4.20.70" />
+    <!-- Downgrading xunit.runner.visualstudio and xunit to versions known to be compatible with .NET 5.0 -->
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" /> <!-- Compatible with xunit 2.4.x and .NET 5.0 -->
+    <PackageReference Include="xunit" Version="2.4.1" /> <!-- Known stable for .NET 5.0 -->
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3" /> <!-- Crucial for .NET 5.0 Test Explorer compatibility -->
+    <PackageReference Include="coverlet.collector" Version="3.0.2" /> <!-- Compatible version -->
+    <PackageReference Include="Moq" Version="4.16.1" /> <!-- Compatible version -->
   </ItemGroup>
 
   <ItemGroup>
