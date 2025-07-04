@@ -5,3 +5,5 @@
 /.vs/ChordProgressionQuiz
 /obj
 /bin
+/ChordProgressionQuiz.Tests/obj
+/ChordProgressionQuiz.Tests/bin

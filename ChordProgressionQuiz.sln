@@ -5,6 +5,8 @@ VisualStudioVersion = 16.0.36128.20
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChordProgressionQuiz", "ChordProgressionQuiz.csproj", "{83CCEFA8-E4D9-49F4-A446-54E43814943F}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChordProgressionQuiz.Tests", "ChordProgressionQuiz.Tests\ChordProgressionQuiz.Tests.csproj", "{7AFEF83F-5A9A-44B6-821F-46982F3CA5A9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{83CCEFA8-E4D9-49F4-A446-54E43814943F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{83CCEFA8-E4D9-49F4-A446-54E43814943F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{83CCEFA8-E4D9-49F4-A446-54E43814943F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7AFEF83F-5A9A-44B6-821F-46982F3CA5A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7AFEF83F-5A9A-44B6-821F-46982F3CA5A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7AFEF83F-5A9A-44B6-821F-46982F3CA5A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7AFEF83F-5A9A-44B6-821F-46982F3CA5A9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

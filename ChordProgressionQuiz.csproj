@@ -4,4 +4,11 @@
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="ChordProgressionQuiz.Tests\**" />
+    <Content Remove="ChordProgressionQuiz.Tests\**" />
+    <EmbeddedResource Remove="ChordProgressionQuiz.Tests\**" />
+    <None Remove="ChordProgressionQuiz.Tests\**" />
+  </ItemGroup>
+
 </Project>
