@@ -1,11 +1,11 @@
 ﻿@page
 @model ChordProgressionQuiz.Pages.ChordPickerModel
 @{
-    ViewData["Title"] = "Random Chord Progression";
+    ViewData["Title"] = "Your Chord Progression";
 }
 
 <div class="text-center">
-    <h1 class="display-4">Your Random Chord Progression</h1>
+    <h1 class="display-4">Your Chord Progression</h1>
     @if (Model.RandomProgression != null)
     {
         <div class="card mt-4 mx-auto" style="max-width: 600px;">
@@ -64,13 +64,24 @@
                 }
             </div>
         </div>
+        @* This line uses the public ChordService property *@
+        <p class="mt-2">Progression @(Model.CurrentProgressionIndex + 1) of @(Model.ChordService.GetProgressionCount())</p>
+
     }
     else
     {
         <p class="alert alert-warning mt-4">No chord progression found. Please ensure the 'chordProgressions.json' file is correctly placed in the 'Data' folder and contains valid data.</p>
     }
     <div class="mt-4">
-        <a asp-page="/ChordPicker" class="btn btn-success btn-lg mx-2">Get Another Random Progression</a>
+        @* Button to get a new random progression *@
+        <a asp-page="/ChordPicker" class="btn btn-success btn-lg mx-2">Get Random Progression</a>
+
+        @* Form for the Next Progression button *@
+        <form method="post" class="d-inline-block">
+            <input type="hidden" asp-for="CurrentProgressionIndex" />
+            <button type="submit" asp-page-handler="Next" class="btn btn-info btn-lg mx-2">Next Progression</button>
+        </form>
+
         <a asp-page="/Index" class="btn btn-secondary btn-lg mx-2">Back to Home</a>
     </div>
 </div>
@@ -84,31 +95,28 @@
             let player = null;
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
-            // Get the MIDI pitches from the Model, safely serialized as JSON
             const midiProgressionData = @Html.Raw(Json.Serialize(Model.AbsoluteProgression?.Chords));
 
             if (playButton && midiProgressionData && midiProgressionData.length > 0) {
                 playButton.addEventListener('click', async function () {
                     if (player === null) {
-                        loadingMessage.style.display = 'block'; // Show loading message
-                        playButton.disabled = true; // Disable button while loading
+                        loadingMessage.style.display = 'block';
+                        playButton.disabled = true;
                         try {
-                            // Load the 'acoustic_grand_piano' instrument. You can try other instruments like 'guitar_acoustic', 'electric_piano_1', etc.
                             player = await Soundfont.instrument(audioContext, 'acoustic_grand_piano');
-                            loadingMessage.style.display = 'none'; // Hide loading message
-                            playButton.disabled = false; // Re-enable button
+                            loadingMessage.style.display = 'none';
+                            playButton.disabled = false;
                             console.log("Instrument loaded successfully!");
                         } catch (error) {
                             console.error("Error loading soundfont instrument:", error);
                             loadingMessage.textContent = "Error loading instrument. Check console.";
-                            return; // Stop if instrument failed to load
+                            return;
                         }
                     }
 
-                    // Play the progression
                     let delay = 0;
-                    const chordDuration = 1.0; // seconds per chord
-                    const noteDuration = 0.9; // seconds for each note within a chord
+                    const chordDuration = 1.0;
+                    const noteDuration = 0.9;
 
                     midiProgressionData.forEach((midiChord, index) => {
                         if (midiChord && midiChord.midiPitches && midiChord.midiPitches.length > 0) {
@@ -116,11 +124,10 @@
                                 player.play(pitch, audioContext.currentTime + delay, { duration: noteDuration });
                             });
                         }
-                        delay += chordDuration; // Advance delay for the next chord
+                        delay += chordDuration;
                     });
                 });
             } else if (playButton) {
-                // If no progression data, disable the button
                 playButton.disabled = true;
                 playButton.textContent = "No MIDI to Play";
             }
