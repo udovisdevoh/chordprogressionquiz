@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace ChordProgressionQuiz.Pages
@@ -12,23 +13,29 @@ namespace ChordProgressionQuiz.Pages
     public class ChordPickerModel : PageModel
     {
         private readonly ChordProgressionService _chordService;
+        private readonly ChordStylingService _chordStylingService;
         private readonly ILogger<ChordPickerModel> _logger;
         private readonly Random _randomLocal;
 
         public ChordProgression RandomProgression { get; set; }
         public AbsoluteChordProgression AbsoluteProgression { get; set; }
+        public StylizedChordProgression StylizedProgression { get; set; }
 
         [BindProperty(SupportsGet = true)]
         public int CurrentProgressionIndex { get; set; } = -1;
 
-        public ChordProgressionService ChordService { get; } // Public property for Razor page access
+        [BindProperty(SupportsGet = true)]
+        public bool EnableStylizedPlayback { get; set; } // This will be bound to the checkbox's state
 
-        public ChordPickerModel(ChordProgressionService chordService, ILogger<ChordPickerModel> logger)
+        public ChordProgressionService ChordService { get; }
+
+        public ChordPickerModel(ChordProgressionService chordService, ChordStylingService chordStylingService, ILogger<ChordPickerModel> logger)
         {
             _chordService = chordService;
+            _chordStylingService = chordStylingService;
             _logger = logger;
             _randomLocal = new Random();
-            ChordService = chordService; // Assign to the public property
+            ChordService = chordService;
         }
 
         public void OnGet(int? index)
@@ -40,6 +47,7 @@ namespace ChordProgressionQuiz.Pages
                 _logger.LogWarning("No chord progressions loaded. The JSON file might be empty or missing.");
                 RandomProgression = null;
                 AbsoluteProgression = null;
+                StylizedProgression = null;
                 CurrentProgressionIndex = -1;
                 return;
             }
@@ -50,8 +58,6 @@ namespace ChordProgressionQuiz.Pages
             }
             else
             {
-                // If no valid index is provided (e.g., first load or "Get Random Progression" clicked),
-                // pick a random one and set its index.
                 CurrentProgressionIndex = _randomLocal.Next(totalProgressions);
             }
 
@@ -60,71 +66,83 @@ namespace ChordProgressionQuiz.Pages
             if (RandomProgression != null)
             {
                 AbsoluteProgression = _chordService.ConvertToAbsoluteMidiProgression(RandomProgression, 4);
+
+                if (EnableStylizedPlayback)
+                {
+                    StylizedProgression = _chordStylingService.ApplyRandomStyling(AbsoluteProgression);
+                }
+                else
+                {
+                    var basicStylizedEvents = new List<StylizedMidiEvent>();
+                    double currentTime = 0.0;
+                    const double defaultNoteDuration = 1.0;
+
+                    foreach (var chord in AbsoluteProgression.Chords)
+                    {
+                        if (chord.MidiPitches.Any())
+                        {
+                            foreach (var pitch in chord.MidiPitches)
+                            {
+                                basicStylizedEvents.Add(new StylizedMidiEvent
+                                {
+                                    Pitch = pitch,
+                                    StartTime = currentTime,
+                                    Duration = defaultNoteDuration
+                                });
+                            }
+                        }
+                        currentTime += defaultNoteDuration;
+                    }
+                    StylizedProgression = new StylizedChordProgression(basicStylizedEvents, AbsoluteProgression.Name);
+                }
             }
             else
             {
                 _logger.LogWarning($"Failed to retrieve chord progression at index {CurrentProgressionIndex}. The list might be empty or an invalid index was requested.");
                 CurrentProgressionIndex = -1;
+                StylizedProgression = null;
             }
         }
 
         public IActionResult OnPostNext()
         {
             int totalProgressions = _chordService.GetProgressionCount();
-            if (totalProgressions == 0)
-            {
-                return RedirectToPage();
-            }
-
-            // Increment the index, loop back to 0 if at the end
+            if (totalProgressions == 0) return RedirectToPage();
             int nextIndex = (CurrentProgressionIndex + 1) % totalProgressions;
-            return RedirectToPage(new { index = nextIndex });
+            return RedirectToPage(new { index = nextIndex, EnableStylizedPlayback = EnableStylizedPlayback });
         }
 
-        /// <summary>
-        /// Handles the POST request for navigating to the previous chord progression.
-        /// </summary>
         public IActionResult OnPostPrevious()
         {
             int totalProgressions = _chordService.GetProgressionCount();
-            if (totalProgressions == 0)
-            {
-                return RedirectToPage();
-            }
-
-            // Decrement the index, loop to the last if at the beginning
+            if (totalProgressions == 0) return RedirectToPage();
             int previousIndex = (CurrentProgressionIndex - 1 + totalProgressions) % totalProgressions;
-            return RedirectToPage(new { index = previousIndex });
+            return RedirectToPage(new { index = previousIndex, EnableStylizedPlayback = EnableStylizedPlayback });
         }
 
-        /// <summary>
-        /// Handles the POST request for navigating to the first chord progression.
-        /// </summary>
         public IActionResult OnPostFirst()
         {
             int totalProgressions = _chordService.GetProgressionCount();
-            if (totalProgressions == 0)
-            {
-                return RedirectToPage();
-            }
-
-            // Navigate to the first index (0)
-            return RedirectToPage(new { index = 0 });
+            if (totalProgressions == 0) return RedirectToPage();
+            return RedirectToPage(new { index = 0, EnableStylizedPlayback = EnableStylizedPlayback });
         }
 
-        /// <summary>
-        /// Handles the POST request for navigating to the last chord progression.
-        /// </summary>
         public IActionResult OnPostLast()
         {
             int totalProgressions = _chordService.GetProgressionCount();
-            if (totalProgressions == 0)
-            {
-                return RedirectToPage();
-            }
+            if (totalProgressions == 0) return RedirectToPage();
+            return RedirectToPage(new { index = totalProgressions - 1, EnableStylizedPlayback = EnableStylizedPlayback });
+        }
 
-            // Navigate to the last index (totalProgressions - 1)
-            return RedirectToPage(new { index = totalProgressions - 1 });
+        /// <summary>
+        /// Handles the POST request for toggling stylized playback.
+        /// The EnableStylizedPlayback property will already be bound to the new state of the checkbox.
+        /// </summary>
+        public IActionResult OnPostToggleStylizedPlayback()
+        {
+            // Simply redirect back, passing the *already bound* EnableStylizedPlayback state.
+            // No need to toggle it with '!' here, as it reflects the checkbox's new state.
+            return RedirectToPage(new { index = CurrentProgressionIndex, EnableStylizedPlayback = EnableStylizedPlayback });
         }
     }
 }

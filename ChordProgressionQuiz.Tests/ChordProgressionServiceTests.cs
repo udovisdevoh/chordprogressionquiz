@@ -569,7 +569,7 @@ namespace ChordProgressionQuiz.Tests
         [InlineData("I vii III vi IV V I i IV bVII", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonic
                 new int[] { 0, 4, 7 },      // I (F Major)
-                new int[] { 11, 14, 18 },   // vii (E Minor)
+                new int[] { 11, 14, 18 },   // vii (E Minor) here it really should be vii minor: expected value, not diminished: wrong value. If it was viidim then it would be vii diminished
                 new int[] { 4, 8, 11 },     // III (A Major)
                 new int[] { 9, 12, 16 },    // vi (D Minor)
                 new int[] { 7, 11, 14 },    // IV (Bb Major)

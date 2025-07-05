@@ -1,4 +1,5 @@
 // Program.cs
+using ChordProgressionQuiz;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 

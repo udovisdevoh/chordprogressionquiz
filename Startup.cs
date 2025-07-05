@@ -2,11 +2,12 @@
 using ChordProgressionQuiz.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace ChordProgressionPicker
+namespace ChordProgressionQuiz
 {
     public class Startup
     {
@@ -23,9 +24,9 @@ namespace ChordProgressionPicker
             services.AddRazorPages();
 
             // Register the ChordProgressionService as a Singleton.
-            // This means a single instance of the service will be created and reused throughout the application's lifetime.
-            // This is suitable because the chord progressions are loaded once from a static file.
             services.AddSingleton<ChordProgressionService>();
+            // NEW: Register the ChordStylingService as a Singleton.
+            services.AddSingleton<ChordStylingService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -38,12 +39,11 @@ namespace ChordProgressionPicker
             else
             {
                 app.UseExceptionHandler("/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see [https://aka.ms/aspnetcore-hsts](https://aka.ms/aspnetcore-hsts).
                 app.UseHsts();
             }
 
             app.UseHttpsRedirection();
-            app.UseStaticFiles(); // Enables serving static files like CSS, JavaScript, and images
+            app.UseStaticFiles();
 
             app.UseRouting();
 
@@ -51,7 +51,13 @@ namespace ChordProgressionPicker
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapRazorPages(); // Configures endpoint routing for Razor Pages
+                // Test endpoint (optional, can be removed once confirmed working)
+                endpoints.MapGet("/hello", async context =>
+                {
+                    await context.Response.WriteAsync("Hello from Kestrel!");
+                });
+
+                endpoints.MapRazorPages();
             });
         }
     }
