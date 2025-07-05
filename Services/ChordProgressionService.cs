@@ -229,22 +229,20 @@ namespace ChordProgressionQuiz.Services
 
                 int[] intervals;
                 string normalizedQualitySuffix = qualitySuffix.ToLowerInvariant();
+
                 string finalQualityKey = normalizedQualitySuffix;
 
-                // --- SIMPLIFIED QUALITY INFERENCE LOGIC ---
+                // --- SIMPLIFIED QUALITY INFERENCE LOGIC (REFINED) ---
                 if (string.IsNullOrEmpty(finalQualityKey))
                 {
-                    // No explicit suffix, infer from Roman numeral casing
+                    // No explicit suffix, infer triad quality from Roman numeral casing
                     if (baseRoman.All(char.IsUpper)) // I, II, III, IV, V, VI, VII
                     {
                         finalQualityKey = ""; // Default to Major triad
                     }
                     else if (baseRoman.All(char.IsLower)) // i, ii, iii, iv, v, vi, vii
                     {
-                        // Special case for diatonic 'vii' in major (diminished) and 'ii' in minor (diminished)
-                        // This needs to be handled by explicit suffix or a more complex diatonic lookup.
-                        // For now, per user request, lowercase means 'm' unless explicitly 'dim'.
-                        // If 'vii' is lowercase, it's dim. Otherwise, it's minor.
+                        // Special case for diatonic 'vii' (diminished)
                         if (baseRoman.Equals("vii", StringComparison.OrdinalIgnoreCase))
                         {
                             finalQualityKey = "dim";
@@ -255,8 +253,14 @@ namespace ChordProgressionQuiz.Services
                         }
                     }
                 }
-                // If finalQualityKey is "7" (bare 7 suffix), it defaults to dominant 7th as per _chordQualityIntervals.
-                // Explicit suffixes like "m7", "maj7", "dim7" will be used directly.
+                else if (finalQualityKey == "7") // If bare "7" suffix (e.g., "I7", "ii7", "V7", "vi7")
+                {
+                    // As per user's explicit rule: "7 is always Flat7 (10 semitone)"
+                    // This means if the suffix is literally "7", it's a dominant 7th.
+                    // No further inference based on baseRoman casing for bare "7".
+                    finalQualityKey = "7"; // Ensures it's the dominant 7th definition (0,4,7,10)
+                }
+                // For other explicit suffixes (m, maj, dim, m7, maj7, dim7, m7b5, etc.), finalQualityKey is already set correctly.
                 // --- END SIMPLIFIED QUALITY INFERENCE LOGIC ---
 
 
