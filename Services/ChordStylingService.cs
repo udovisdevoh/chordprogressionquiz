@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ChordProgressionQuiz.Services
+namespace ChordProgprogressionQuiz.Services
 {
     public class ChordStylingService
     {
@@ -15,18 +15,12 @@ namespace ChordProgressionQuiz.Services
         private const double MinDurationFactor = 1.5; // Minimum factor to multiply BaseChordDuration by
         private const double MaxDurationFactor = 2.5; // Maximum factor to multiply BaseChordDuration by
 
-        private const double ArpeggioNoteDelay = 0.08; // Time between notes in an arpeggio in seconds
-        private const double ArpeggioChance = 0.70; // 70% chance a chord will be arpeggiated
-        private const int MaxTransposeSemitones = 12; // Max semitones to transpose up/down (one octave)
+        // ArpeggioNoteDelay is now a dynamic calculation, but we keep a small minimum for very short chords
+        private const double MinArpeggioNoteDuration = 0.05; // Minimum duration for an individual arpeggio note
+        private const double MinTimeBetweenArpeggioNotes = 0.02; // Minimum time between start of arpeggio notes
 
-        // Arpeggiation styles
-        private enum ArpeggioStyle
-        {
-            Up,
-            Down,
-            UpDown,
-            Random
-        }
+        // Max semitones to transpose up/down (one octave) - adjusted to ensure range safety
+        private const int MaxTransposeSemitones = 12;
 
         public ChordStylingService()
         {
@@ -35,6 +29,7 @@ namespace ChordProgressionQuiz.Services
 
         /// <summary>
         /// Applies random styling (transposition, duration, arpeggiation) to an AbsoluteChordProgression.
+        /// Arpeggiation is now always 'Up' and consistent when applied.
         /// </summary>
         /// <param name="absoluteProgression">The raw progression with absolute MIDI pitches.</param>
         /// <returns>A StylizedChordProgression ready for playback.</returns>
@@ -46,101 +41,76 @@ namespace ChordProgressionQuiz.Services
             }
 
             var stylizedEvents = new List<StylizedMidiEvent>();
-            double currentTime = 0.0;
+            double currentPlaybackTime = 0.0; // Tracks the current time in the overall stylized progression
 
             // 1. Determine random transposition for the entire progression
-            // Offset from -12 to +12 semitones (inclusive)
             int globalTransposeOffset = _random.Next(-MaxTransposeSemitones, MaxTransposeSemitones + 1);
-
-            // Ensure the transposed notes will generally stay within a playable MIDI range (e.g., around C3 to C6)
-            // This is a heuristic. A more robust solution might analyze the min/max pitches of the *entire* progression
-            // to find a safe transposition range. For now, we'll rely on the note adjustment later.
 
             foreach (var chord in absoluteProgression.Chords)
             {
                 if (!chord.MidiPitches.Any())
                 {
-                    // If a chord is empty, just advance time
-                    currentTime += BaseChordDuration * (_random.NextDouble() * (MaxDurationFactor - MinDurationFactor) + MinDurationFactor);
+                    // If a chord is empty, just advance time by a default duration
+                    currentPlaybackTime += BaseChordDuration * (_random.NextDouble() * (MaxDurationFactor - MinDurationFactor) + MinDurationFactor);
                     continue;
                 }
 
-                // 2. Determine random duration for this chord
-                double currentChordDuration = BaseChordDuration * (_random.NextDouble() * (MaxDurationFactor - MinDurationFactor) + MinDurationFactor);
-                double noteDuration = currentChordDuration * 0.8; // Notes play for 80% of chord duration or arpeggio time
+                // 2. Determine random duration for THIS chord's slot
+                double allocatedChordDuration = BaseChordDuration * (_random.NextDouble() * (MaxDurationFactor - MinDurationFactor) + MinDurationFactor);
 
-                // 3. Decide if arpeggiated and choose style
-                bool shouldArpeggiate = _random.NextDouble() < ArpeggioChance;
-                ArpeggioStyle arpeggioStyle = ArpeggioStyle.Random; // Default, will be chosen if arpeggiated
-
-                if (shouldArpeggiate)
-                {
-                    arpeggioStyle = (ArpeggioStyle)_random.Next(0, Enum.GetNames(typeof(ArpeggioStyle)).Length);
-                    // If Random is selected, re-roll to get a concrete style (Up, Down, UpDown)
-                    if (arpeggioStyle == ArpeggioStyle.Random)
-                    {
-                        arpeggioStyle = (ArpeggioStyle)_random.Next(0, Enum.GetNames(typeof(ArpeggioStyle)).Length - 1); // Exclude Random itself
-                    }
-                }
-
-                // Get notes for this chord, apply global transpose, and sort for arpeggiation
-                var pitchesToPlay = chord.MidiPitches
+                // Get notes for this chord, apply global transpose, and sort ascending for 'Up' arpeggio
+                var pitchesToProcess = chord.MidiPitches
                                         .Select(p => p + globalTransposeOffset)
                                         .ToList();
 
                 // Apply MIDI range adjustment *after* transposition but before arpeggiation logic
-                pitchesToPlay = pitchesToPlay.Select(AdjustMidiPitchToRange).ToList();
+                pitchesToProcess = pitchesToProcess.Select(AdjustMidiPitchToRange).ToList();
+                pitchesToProcess.Sort(); // Always sort ascending for consistent 'Up' arpeggio
 
-                if (shouldArpeggiate && pitchesToPlay.Count > 1)
+                // Determine if arpeggiated (always if more than one note) or block
+                bool isArpeggiated = pitchesToProcess.Count > 1;
+
+                if (isArpeggiated)
                 {
-                    // Sort pitches for consistent arpeggiation direction
-                    pitchesToPlay.Sort();
+                    // Arpeggiated playback (always Up)
+                    double currentArpeggioNoteOffset = 0.0;
 
-                    double arpeggioTimeOffset = 0.0;
-                    List<int> orderedPitches = new List<int>(pitchesToPlay);
+                    // Calculate the time slot for each note, spreading them evenly across the allocated chord duration.
+                    // This is the time from the start of one note to the start of the next.
+                    double dynamicNoteStartDelay = allocatedChordDuration / pitchesToProcess.Count;
 
-                    switch (arpeggioStyle)
-                    {
-                        case ArpeggioStyle.Up:
-                            // Already sorted ascending
-                            break;
-                        case ArpeggioStyle.Down:
-                            orderedPitches.Reverse(); // Sort descending
-                            break;
-                        case ArpeggioStyle.UpDown:
-                            // Play up, then down (excluding the highest note if it's the peak)
-                            var upPart = pitchesToPlay;
-                            var downPart = pitchesToPlay.Skip(1).Reverse(); // Skip root to avoid double-playing
-                            orderedPitches = upPart.Concat(downPart).ToList();
-                            break;
-                            // ArpeggioStyle.Random is handled by re-rolling
-                    }
+                    // Calculate individual note duration (shorter than the start delay to prevent overlap)
+                    // Ensure a small gap between notes for clarity.
+                    double individualNoteDuration = dynamicNoteStartDelay * 0.8; // Note plays for 80% of its slot
+                    individualNoteDuration = Math.Max(MinArpeggioNoteDuration, individualNoteDuration); // Ensure minimum duration
 
-                    foreach (var pitch in orderedPitches)
+                    foreach (var pitch in pitchesToProcess) // Already sorted ascending
                     {
                         stylizedEvents.Add(new StylizedMidiEvent
                         {
                             Pitch = pitch,
-                            StartTime = currentTime + arpeggioTimeOffset,
-                            Duration = noteDuration // Each note gets the same duration
+                            StartTime = currentPlaybackTime + currentArpeggioNoteOffset,
+                            Duration = individualNoteDuration
                         });
-                        arpeggioTimeOffset += ArpeggioNoteDelay;
+                        currentArpeggioNoteOffset += dynamicNoteStartDelay; // Advance offset by dynamic delay
                     }
-                    // Advance current time by the total time taken for the arpeggio
-                    currentTime += arpeggioTimeOffset;
+                    // Advance current time by the full allocated duration for this chord
+                    currentPlaybackTime += allocatedChordDuration;
                 }
-                else // Play as a block chord
+                else // Block chord playback (or single note)
                 {
-                    foreach (var pitch in pitchesToPlay)
+                    double individualNoteDuration = allocatedChordDuration * 0.9; // Notes play for 90% of the allocated time
+
+                    foreach (var pitch in pitchesToProcess)
                     {
                         stylizedEvents.Add(new StylizedMidiEvent
                         {
                             Pitch = pitch,
-                            StartTime = currentTime,
-                            Duration = noteDuration // All notes start at the same time
+                            StartTime = currentPlaybackTime,
+                            Duration = individualNoteDuration
                         });
                     }
-                    currentTime += currentChordDuration; // Advance time by full chord duration
+                    currentPlaybackTime += allocatedChordDuration; // Advance time by the full allocated duration
                 }
             }
 
@@ -153,15 +123,17 @@ namespace ChordProgressionQuiz.Services
         /// </summary>
         private int AdjustMidiPitchToRange(int pitch)
         {
-            // If the pitch is too high, shift down by octaves until it's in range or near the middle
-            while (pitch > 100 && pitch - 12 >= 0) // Keep it below 100 if possible, but above 0
-            {
-                pitch -= 12;
-            }
-            // If the pitch is too low, shift up by octaves until it's in range or near the middle
-            while (pitch < 20 && pitch + 12 <= 127) // Keep it above 20 if possible, but below 127
+            // Aim to keep pitches roughly within C3 (48) to C6 (84) for piano
+            const int lowerBound = 48; // C3
+            const int upperBound = 84; // C6
+
+            while (pitch < lowerBound && pitch + 12 <= 127)
             {
                 pitch += 12;
+            }
+            while (pitch > upperBound && pitch - 12 >= 0)
+            {
+                pitch -= 12;
             }
 
             // Final clamp to ensure it's strictly within MIDI range

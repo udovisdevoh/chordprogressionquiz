@@ -1,4 +1,5 @@
 // Startup.cs
+using ChordProgprogressionQuiz.Services;
 using ChordProgressionQuiz.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
