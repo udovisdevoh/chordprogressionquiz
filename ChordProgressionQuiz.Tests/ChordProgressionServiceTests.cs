@@ -104,7 +104,7 @@ namespace ChordProgressionQuiz.Tests
         [InlineData("vi7 iv#7", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonic
                 new int[] { 9, 12, 16, 19 }, // vi7 (Am7)
-                new int[] { 6, 10, 13, 16 }  // iv#7 (F#7)
+                new int[] { 6, 9, 13, 16 }  // iv#7 (F#m7)
             },
             "Light my fire", "C Major")] // songName, relativeTo
 
