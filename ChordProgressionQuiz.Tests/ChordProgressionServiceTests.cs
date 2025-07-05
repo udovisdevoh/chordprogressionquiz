@@ -590,7 +590,7 @@ namespace ChordProgressionQuiz.Tests
             },
             "Zelda overworld", "A")] // songName, relativeTo
 
-        [InlineData("I Iadd#9 IV bVI Vmaj7#11 bVII bII", // romanNumerals
+        [InlineData("I I bVIIadd9# IV bVI Vmaj7#11 bVII bII", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonal
                 new int[] { 0, 4, 7 },      // I (B Major)
                 new int[] { 0, 4, 7 },      // I (B Major)
