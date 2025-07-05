@@ -12,8 +12,7 @@ namespace ChordProgprogressionQuiz.Services
 
         // Configuration for styling
         private const double BaseChordDuration = 1.5; // Base duration for a full chord in seconds
-        private const double MinDurationFactor = 1.5; // Minimum factor to multiply BaseChordDuration by
-        private const double MaxDurationFactor = 2.5; // Maximum factor to multiply BaseChordDuration by
+        // MinDurationFactor and MaxDurationFactor are removed as duration will now be constant.
 
         // ArpeggioNoteDelay is now a dynamic calculation, but we keep a small minimum for very short chords
         private const double MinArpeggioNoteDuration = 0.05; // Minimum duration for an individual arpeggio note
@@ -51,12 +50,12 @@ namespace ChordProgprogressionQuiz.Services
                 if (!chord.MidiPitches.Any())
                 {
                     // If a chord is empty, just advance time by a default duration
-                    currentPlaybackTime += BaseChordDuration * (_random.NextDouble() * (MaxDurationFactor - MinDurationFactor) + MinDurationFactor);
+                    currentPlaybackTime += BaseChordDuration; // Use fixed BaseChordDuration
                     continue;
                 }
 
-                // 2. Determine random duration for THIS chord's slot
-                double allocatedChordDuration = BaseChordDuration * (_random.NextDouble() * (MaxDurationFactor - MinDurationFactor) + MinDurationFactor);
+                // 2. Determine fixed duration for THIS chord's slot
+                double allocatedChordDuration = BaseChordDuration; // Fixed duration as per request
 
                 // Get notes for this chord, apply global transpose, and sort ascending for 'Up' arpeggio
                 var pitchesToProcess = chord.MidiPitches
