@@ -87,19 +87,18 @@ namespace ChordProgressionQuiz.Tests
             },
             "I'm yours", "C Major")] // songName, relativeTo
 
-        [InlineData("I7 bVII7 iv7 iii7 bVI7 I7 bVII7 iv7 iv7", // romanNumerals
+        [InlineData("I7 VII7 iii7 ii7 V7 I7 VII7 iii7", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonic
-                new int[] { 0, 4, 7, 10 },  // I7 (Db7)
-                new int[] { 11, 15, 18, 21 }, // bVII7 (C7)
-                new int[] { 5, 8, 12, 15 }, // iv7 (Fm7)
-                new int[] { 3, 6, 10, 13 }, // iii7 (Ebm7)
-                new int[] { 8, 12, 15, 18 }, // bVI7 (Ab7)
-                new int[] { 0, 4, 7, 10 },  // I7 (Db7)
-                new int[] { 11, 15, 18, 21 }, // bVII7 (C7)
-                new int[] { 5, 8, 12, 15 }, // iv7 (Fm7)
-                new int[] { 5, 8, 12, 15 }  // iv7 (Fm7)
+                new int[] { 0, 4, 7, 10 },  // I7 (C7)
+                new int[] { 11, 15, 18, 21 }, // VII7 (B7)
+                new int[] { 4, 7, 11, 14 }, // iii7 (Em7)
+                new int[] { 2, 5, 9, 12 },  // ii7 (Dm7)
+                new int[] { 7, 11, 14, 17 }, // V7 (G7)
+                new int[] { 0, 4, 7, 10 },  // I7 (C7)
+                new int[] { 11, 15, 18, 21 }, // VII7 (B7)
+                new int[] { 4, 7, 11, 14 }  // iii7 (Em7)
             },
-            "Just the two of us", "Db Major")] // songName, relativeTo
+            "Just the two of us", "C Major")] // songName, relativeTo
 
         [InlineData("vi7 iv#7", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonic

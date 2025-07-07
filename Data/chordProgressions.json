@@ -1020,17 +1020,11 @@
     },
     {
         "song": "Just the two of us",
-        "keys_example": "Db7 C7 Fm7 Ebm7 Ab7 Db7 C7 Fm7 Fm7",
+        "keys_example": "C7 B7 Em7 Dm7 G7 C7 B7 Em7",
         "tonal": {
-            "roman_numerals": "I7 bVII7 iv7 iii7 bVI7 I7 bVII7 iv7 iv7",
-            "relative_to": "Db Major"
-        },
-        "modal": [
-            {
-                "roman_numerals": "I7 bVII7 iv7 iii7 bVI7 I7 bVII7 iv7 iv7",
-                "relative_to": "Db Ionian with dominant 7ths and chromaticism"
-            }
-        ]
+            "roman_numerals": "I7 VII7 iii7 ii7 V7 I7 VII7 iii7",
+            "relative_to": "C Major"
+        }
     },
     {
         "song": "Some non-used chord progression that should be common but is not",
