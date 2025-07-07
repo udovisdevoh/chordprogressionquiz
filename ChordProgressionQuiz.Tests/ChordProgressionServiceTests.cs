@@ -249,6 +249,15 @@ namespace ChordProgressionQuiz.Tests
             },
             "Dorian vamp", "D Dorian")] // songName, relativeTo
 
+        [InlineData("ii IV vi V", // romanNumerals
+            new object[] { // expectedPitchesRelativeToKeyTonic
+                new int[] { 2, 5, 9 },      // ii (D Minor)
+                new int[] { 5, 9, 12 },     // IV (F Major)
+                new int[] { 9, 12, 16 },    // vi (A Minor)
+                new int[] { 7, 11, 14 }     // V (G Major)
+            },
+            "Get Lucky", "C Major")] // songName, relativeTo
+
         [InlineData("vi V IV V", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonic
                 new int[] { 9, 12, 16 },    // vi (A Minor)
