@@ -848,7 +848,7 @@
         "song": "You and whose army?",
         "keys_example": "Bm E Am D Gm C F Am",
         "tonal": {
-            "roman_numerals": "i IV vii III vi II V i",
+            "roman_numerals": "i IV bvii bIII bvi bII bV i",
             "relative_to": "B minor initially, then shifting implied tonics due to chromaticism"
         }
     },
@@ -985,6 +985,14 @@
         }
     },
     {
+        "song": "Zelda overworld (first 4 chords only)",
+        "keys_example": "A G F E",
+        "tonal": {
+            "roman_numerals": "I bVII bVI V",
+            "relative_to": "A"
+        }
+    },
+    {
         "song": "Our house",
         "keys_example": "C Gm Dm Fm",
         "tonal": {
@@ -1014,9 +1022,9 @@
     },
     {
         "song": "Blur's unique chord progression",
-        "keys_example": "B B Aadd#9 E G Fmaj7#11 Bb Db",
+        "keys_example": "B A E G Fmaj7#11 Bb Db",
         "tonal": {
-            "roman_numerals": "I I bVIIadd9# IV bVI Vmaj7#11 bVII bII",
+            "roman_numerals": "I bVII IV bVI Vmaj7#11 bVII bII",
             "relative_to": "B, with significant chromaticism"
         }
     },

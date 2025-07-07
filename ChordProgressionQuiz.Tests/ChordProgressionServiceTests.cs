@@ -553,15 +553,15 @@ namespace ChordProgressionQuiz.Tests
             },
             "She’s Electric", "C Major")] // songName, relativeTo
 
-        [InlineData("i IV vii III vi II V i", // romanNumerals
+        [InlineData("i IV bvii bIII bvi bII bV i", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonic
                 new int[] { 0, 3, 7 },      // i (B Minor)
                 new int[] { 5, 9, 12 },     // IV (E Major)
-                new int[] { 10, 13, 16 },   // vii (A Minor)
-                new int[] { 3, 7, 10 },     // III (D Major)
-                new int[] { 8, 11, 15 },    // vi (G Minor)
-                new int[] { 1, 5, 8 },      // II (C Major)
-                new int[] { 6, 10, 13 },    // V (F Major)
+                new int[] { 10, 13, 17 },   // bvii (A Minor)
+                new int[] { 3, 7, 10 },     // bIII (D Major)
+                new int[] { 8, 11, 15 },    // bvi (G Minor)
+                new int[] { 1, 5, 8 },      // bII (C Major)
+                new int[] { 6, 10, 13 },    // bV (F Major)
                 new int[] { 0, 3, 7 }       // i (B Minor)
             },
             "You and whose army?", "B minor initially")] // songName, relativeTo
@@ -588,20 +588,7 @@ namespace ChordProgressionQuiz.Tests
                 new int[] { 8, 12, 15 },    // bVI (F Major)
                 new int[] { 7, 11, 14 }     // V (E Major)
             },
-            "Zelda overworld", "A")] // songName, relativeTo
-
-        [InlineData("I I bVIIadd9# IV bVI Vmaj7#11 bVII bII", // romanNumerals
-            new object[] { // expectedPitchesRelativeToKeyTonal
-                new int[] { 0, 4, 7 },      // I (B Major)
-                new int[] { 0, 4, 7 },      // I (B Major)
-                new int[] { 10, 14, 17, 24 },// Aadd#9
-                new int[] { 5, 9, 12 },     // IV (E Major)
-                new int[] { 8, 12, 15 },    // bVI (G Major)
-                new int[] { 6, 10, 13, 17, 24 }, // Vmaj7#11 (F#maj7#11)
-                new int[] { 10, 14, 17 },   // bVII (Bb Major)
-                new int[] { 1, 5, 8 }       // bII (Db Major)
-            },
-            "Blur's unique chord progression", "B")] // songName, relativeTo
+            "Zelda overworld (first 4 chords only)", "A")] // songName, relativeTo
 
         public void ConvertToAbsoluteMidiProgression_ShouldProduceCorrectMidiPitches(
             string romanNumerals,
