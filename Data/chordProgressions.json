@@ -892,19 +892,9 @@
         "song": "Yesterday, Mr Blue Sky",
         "keys_example": "F Em A Dm Bb C D Dm G Bb F",
         "tonal": {
-            "roman_numerals": "I vii III vi IV V I i IV bVII",
+            "roman_numerals": "I vii III vi IV V VI vi II IV I",
             "relative_to": "F Major"
-        },
-        "modal": [
-            {
-                "roman_numerals": "I vii iii vi IV V",
-                "relative_to": "F Ionian"
-            },
-            {
-                "roman_numerals": "I i IV bVII",
-                "relative_to": "D Ionian with modal mixture"
-            }
-        ]
+        }
     },
     {
         "song": "Clocks, speed of sound",

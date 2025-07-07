@@ -566,18 +566,19 @@ namespace ChordProgressionQuiz.Tests
             },
             "You and whose army?", "B minor initially")] // songName, relativeTo
 
-        [InlineData("I vii III vi IV V I i IV bVII", // romanNumerals
+        [InlineData("I vii III vi IV V VI vi II IV I", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonic
                 new int[] { 0, 4, 7 },      // I (F Major)
-                new int[] { 11, 14, 18 },   // vii (E Minor) here it really should be vii minor: expected value, not diminished: wrong value. If it was viidim then it would be vii diminished
+                new int[] { 11, 14, 18 },   // vii (E Minor)
                 new int[] { 4, 8, 11 },     // III (A Major)
                 new int[] { 9, 12, 16 },    // vi (D Minor)
-                new int[] { 7, 11, 14 },    // IV (Bb Major)
-                new int[] { 2, 6, 9 },      // V (C Major)
-                new int[] { 0, 4, 7 },      // I (F Major)
-                new int[] { 9, 12, 16 },    // i (Dm)
-                new int[] { 2, 6, 9 },      // IV (G)
-                new int[] { 7, 11, 14 }     // bVII (Bb)
+                new int[] { 5, 9, 12 },     // IV (Bb Major)
+                new int[] { 7, 11, 14 },    // V (C Major)
+                new int[] { 9, 13, 16 },    // VI (D Major)
+                new int[] { 9, 12, 16 },    // vi (D Minor)
+                new int[] { 2, 6, 9 },      // II (G Major)
+                new int[] { 5, 9, 12 },     // IV (Bb Major)
+                new int[] { 0, 4, 7 }       // I (F Major)
             },
             "Yesterday, Mr Blue Sky", "F Major")] // songName, relativeTo
 
