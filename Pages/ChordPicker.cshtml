@@ -70,7 +70,7 @@
                     }
 
                     <button id="playMidiButton" class="btn btn-primary btn-lg mt-3">Play MIDI Progression</button>
-                    <div id="loadingMessage" class="mt-2 text-muted" style="display:none;">Loading instrument...</div>
+                    <div id="loadingMessage" class="mt-2 text-muted" style="display:none;">Loading instruments...</div>
                 }
                 else
                 {
@@ -131,35 +131,65 @@
         document.addEventListener('DOMContentLoaded', function () {
             const playButton = document.getElementById('playMidiButton');
             const loadingMessage = document.getElementById('loadingMessage');
-            let player = null;
+            let pianoPlayer = null;
+            let stringPlayer = null;
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
-            // Get the stylized MIDI events from the Model
-            // This will always be present, either from styling service or basic block chord conversion
             const stylizedMidiEvents = @Html.Raw(Json.Serialize(Model.StylizedProgression?.MidiEvents));
+
+            const PIANO_PROGRAM = 0; // Acoustic Grand Piano
+            const STRING_ENSEMBLE_PROGRAM = 48; // String Ensemble 1
+
+            // NEW: Define gain levels
+            const PIANO_GAIN = 1.0; // Full volume for piano
+            const STRING_GAIN = 0.3; // Reduced volume for strings
 
             if (playButton && stylizedMidiEvents && stylizedMidiEvents.length > 0) {
                 playButton.addEventListener('click', async function () {
-                    if (player === null) {
+                    if (pianoPlayer === null || stringPlayer === null) {
                         loadingMessage.style.display = 'block';
                         playButton.disabled = true;
                         try {
-                            player = await Soundfont.instrument(audioContext, 'acoustic_grand_piano');
+                            [pianoPlayer, stringPlayer] = await Promise.all([
+                                Soundfont.instrument(audioContext, 'acoustic_grand_piano'),
+                                Soundfont.instrument(audioContext, 'string_ensemble_1')
+                            ]);
+
                             loadingMessage.style.display = 'none';
                             playButton.disabled = false;
-                            console.log("Instrument loaded successfully!");
+                            console.log("Instruments loaded successfully: Piano and String Ensemble.");
                         } catch (error) {
-                            console.error("Error loading soundfont instrument:", error);
-                            loadingMessage.textContent = "Error loading instrument. Check console.";
+                            console.error("Error loading soundfont instruments:", error);
+                            loadingMessage.textContent = "Error loading instruments. Check console.";
                             return;
                         }
                     }
 
-                    let delay = 0; // Initialize delay for sequential event playback
+                    if (pianoPlayer) pianoPlayer.stop();
+                    if (stringPlayer) stringPlayer.stop();
+
+
                     stylizedMidiEvents.forEach(event => {
-                        // Ensure pitch is within valid MIDI range (0-127) before playing
                         const safePitch = Math.max(0, Math.min(127, event.pitch));
-                        player.play(safePitch, audioContext.currentTime + event.startTime, { duration: event.duration });
+                        let playerToUse;
+                        let gainToApply = 1.0; // Default gain
+
+                        if (event.instrumentProgram === PIANO_PROGRAM) {
+                            playerToUse = pianoPlayer;
+                            gainToApply = PIANO_GAIN;
+                        } else if (event.instrumentProgram === STRING_ENSEMBLE_PROGRAM) {
+                            playerToUse = stringPlayer;
+                            gainToApply = STRING_GAIN; // Apply reduced gain for strings
+                        } else {
+                            console.warn(`Unknown instrument program: ${event.instrumentProgram}. Defaulting to piano.`);
+                            playerToUse = pianoPlayer;
+                            gainToApply = PIANO_GAIN; // Fallback
+                        }
+
+                        if (playerToUse) {
+                            // Pass the gain as an option to the play method
+                            playerToUse.play(safePitch, audioContext.currentTime + event.startTime, { duration: event.duration, gain: gainToApply });
+                        }
                     });
                 });
             } else if (playButton) {

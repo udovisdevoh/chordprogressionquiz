@@ -1,8 +1,8 @@
-﻿// Models/StylizedMidiEvent.cs
+﻿// Models/Midi/StylizedMidiEvent.cs
 namespace ChordProgressionQuiz.Models
 {
     /// <summary>
-    /// Represents a single MIDI note event with its pitch, start time, and duration.
+    /// Represents a single MIDI note event with its pitch, start time, duration, and instrument.
     /// This is used to build a sequence of individual notes for stylized playback.
     /// </summary>
     public class StylizedMidiEvent
@@ -21,5 +21,10 @@ namespace ChordProgressionQuiz.Models
         /// The duration of the note in seconds.
         /// </summary>
         public double Duration { get; set; }
+
+        /// <summary>
+        /// The General MIDI Program Change number for this note's instrument (0-127).
+        /// </summary>
+        public int InstrumentProgram { get; set; } = 0; // Default to Acoustic Grand Piano (GM Program 0/1)
     }
 }

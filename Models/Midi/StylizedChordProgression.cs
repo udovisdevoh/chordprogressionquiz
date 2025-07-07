@@ -1,4 +1,4 @@
-﻿// Models/StylizedChordProgression.cs
+﻿// Models/Midi/StylizedChordProgression.cs
 using System.Collections.Generic;
 
 namespace ChordProgressionQuiz.Models

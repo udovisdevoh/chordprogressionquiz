@@ -18,8 +18,12 @@ namespace ChordProgprogressionQuiz.Services
         // Max semitones to transpose up/down (one octave) - adjusted to ensure range safety
         private const int MaxTransposeSemitones = 12;
 
-        // NEW: Octave shift for the "left hand" notes
+        // Octave shift for the "left hand" notes
         private const int LeftHandOctaveShift = -24; // Two octaves down
+
+        // NEW: MIDI Program Change numbers for instruments
+        private const int PianoProgram = 0; // General MIDI Program 0 is Acoustic Grand Piano (often 1 in DAWs)
+        private const int StringEnsembleProgram = 48; // General MIDI Program 48 is String Ensemble 1 (often 49 in DAWs)
 
         public ChordStylingService()
         {
@@ -31,7 +35,8 @@ namespace ChordProgprogressionQuiz.Services
         /// Arpeggiation is always "twice as fast and repeated twice".
         /// Random chord inversion is applied per chord.
         /// Arpeggio direction (up/down) is chosen globally for the entire progression.
-        /// A "left hand" accompaniment of the two lowest chord notes (two octaves lower, held) is added.
+        /// A "left hand" accompaniment of the two lowest chord notes (two octaves lower, held, String Ensemble) is added.
+        /// The "right hand" arpeggios are played with an Acoustic Grand Piano.
         /// </summary>
         /// <param name="absoluteProgression">The raw progression with absolute MIDI pitches.</param>
         /// <returns>A StylizedChordProgression ready for playback.</returns>
@@ -68,7 +73,7 @@ namespace ChordProgprogressionQuiz.Services
                 // Capture the original pitches (sorted) for the left hand before any inversions/expansions
                 var originalSortedPitches = chord.MidiPitches.OrderBy(p => p).ToList();
 
-                // NEW LOGIC: Add "left hand" notes
+                // Add "left hand" notes (String Ensemble)
                 // Get the lowest two notes (or fewer if chord is smaller)
                 var leftHandPitches = originalSortedPitches
                                         .Take(2) // Take up to two lowest notes
@@ -81,7 +86,8 @@ namespace ChordProgprogressionQuiz.Services
                     {
                         Pitch = lhPitch,
                         StartTime = currentPlaybackTime,
-                        Duration = allocatedChordDuration * 0.95 // Hold for almost the full chord duration
+                        Duration = allocatedChordDuration * 0.95, // Hold for almost the full chord duration
+                        InstrumentProgram = StringEnsembleProgram // Assign String Ensemble
                     });
                 }
 
@@ -157,7 +163,8 @@ namespace ChordProgprogressionQuiz.Services
                             {
                                 Pitch = pitch,
                                 StartTime = currentPlaybackTime + currentArpeggioNoteOffset,
-                                Duration = individualNoteDuration
+                                Duration = individualNoteDuration,
+                                InstrumentProgram = PianoProgram // Assign Piano
                             });
                             currentArpeggioNoteOffset += dynamicNoteStartDelay;
                         }
@@ -174,16 +181,15 @@ namespace ChordProgprogressionQuiz.Services
                         {
                             Pitch = pitch,
                             StartTime = currentPlaybackTime,
-                            Duration = individualNoteDuration
+                            Duration = individualNoteDuration,
+                            InstrumentProgram = PianoProgram // Assign Piano
                         });
                     }
                     currentPlaybackTime += allocatedChordDuration;
                 }
             }
 
-            // It's good practice to sort all events by StartTime at the very end
-            // to ensure correct playback order, especially since we added "left hand" notes
-            // at the start of each chord's block.
+            // Sort all events by StartTime at the very end to ensure correct playback order.
             stylizedEvents.Sort((e1, e2) => e1.StartTime.CompareTo(e2.StartTime));
 
 
@@ -209,7 +215,7 @@ namespace ChordProgprogressionQuiz.Services
                 pitch -= 12;
             }
 
-            // A final check to ensure it doesn't go below 0 or above 127
+            // A final clamp to ensure it doesn't go below 0 or above 127
             return Math.Clamp(pitch, 0, 127);
         }
     }
