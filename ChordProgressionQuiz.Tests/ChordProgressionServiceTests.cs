@@ -590,6 +590,35 @@ namespace ChordProgressionQuiz.Tests
             },
             "Zelda overworld (first 4 chords only)", "A")] // songName, relativeTo
 
+        [InlineData("I bVII bVI V I v bVI bIII bII i II7 V I v bVI #vidim V bVI7 #vidim V bII i II7 V", // romanNumerals
+            new object[] { // expectedPitchesRelativeToKeyTonic
+                new int[] { 0, 4, 7 },      // I (A Major)
+                new int[] { 10, 14, 17 },   // bVII (G Major)
+                new int[] { 8, 12, 15 },    // bVI (F Major)
+                new int[] { 7, 11, 14 },    // V (E Major)
+                new int[] { 0, 4, 7 },      // I (A Major)
+                new int[] { 7, 10, 14 },    // v (E minor)
+                new int[] { 8, 12, 15 },    // bVI (F Major)
+                new int[] { 3, 7, 10 },     // bIII (C Major)
+                new int[] { 1, 5, 8 },      // bII (Bb Major)
+                new int[] { 0, 3, 7 },      // i (A minor)
+                new int[] { 2, 6, 9, 12 },  // II7 (B7)
+                new int[] { 7, 11, 14 },    // V (E Major)
+                new int[] { 0, 4, 7 },      // I (A Major)
+                new int[] { 7, 10, 14 },    // v (E minor)
+                new int[] { 8, 12, 15 },    // bVI (F Major)
+                new int[] { 10, 13, 16 },   // #vidim (G diminished, based on service logic for #vi)
+                new int[] { 7, 11, 14 },    // V (E Major)
+                new int[] { 8, 12, 15, 18 },// bVI7 (F7)
+                new int[] { 10, 13, 16 },   // #vidim (G diminished, based on service logic for #vi)
+                new int[] { 7, 11, 14 },    // V (E Major)
+                new int[] { 1, 5, 8 },      // bII (Bb Major)
+                new int[] { 0, 3, 7 },      // i (A minor)
+                new int[] { 2, 6, 9, 12 },  // II7 (B7)
+                new int[] { 7, 11, 14 }     // V (E Major)
+            },
+            "Zelda overworld", "A Major")] // songName, relativeTo - (assuming "A" defaults to "A Major" for scale calculation)
+
         public void ConvertToAbsoluteMidiProgression_ShouldProduceCorrectMidiPitches(
             string romanNumerals,
             object[] expectedPitchesRelativeToKeyTonic,
