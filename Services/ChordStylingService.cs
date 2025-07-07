@@ -13,7 +13,6 @@ namespace ChordProgprogressionQuiz.Services
         // Configuration for styling
         private const double BaseChordDuration = 1.5; // Base duration for a full chord in seconds
 
-        // ArpeggioNoteDelay is now a dynamic calculation, but we keep a small minimum for very short chords
         private const double MinArpeggioNoteDuration = 0.05; // Minimum duration for an individual arpeggio note
 
         // Max semitones to transpose up/down (one octave) - adjusted to ensure range safety
@@ -26,7 +25,7 @@ namespace ChordProgprogressionQuiz.Services
 
         /// <summary>
         /// Applies random styling (transposition, duration, arpeggiation) to an AbsoluteChordProgression.
-        /// Arpeggiation is now always 'Up' and consistent when applied.
+        /// Arpeggiation is always 'Up'. Random chord inversion and always "twice as fast and repeated twice" are applied.
         /// </summary>
         /// <param name="absoluteProgression">The raw progression with absolute MIDI pitches.</param>
         /// <returns>A StylizedChordProgression ready for playback.</returns>
@@ -40,7 +39,7 @@ namespace ChordProgprogressionQuiz.Services
             var stylizedEvents = new List<StylizedMidiEvent>();
             double currentPlaybackTime = 0.0; // Tracks the current time in the overall stylized progression
 
-            // 1. Determine random transposition for the entire progression
+            // Determine random transposition for the entire progression
             int globalTransposeOffset = _random.Next(-MaxTransposeSemitones, MaxTransposeSemitones + 1);
 
             // The "twice as fast, repeated twice" arpeggio style is now ALWAYS applied
@@ -51,28 +50,41 @@ namespace ChordProgprogressionQuiz.Services
                 if (!chord.MidiPitches.Any())
                 {
                     // If a chord is empty, just advance time by a default duration
-                    currentPlaybackTime += BaseChordDuration; // Use fixed BaseChordDuration
+                    currentPlaybackTime += BaseChordDuration;
                     continue;
                 }
 
-                // 2. Determine fixed duration for THIS chord's slot
-                double allocatedChordDuration = BaseChordDuration; // Fixed duration as per request
+                double allocatedChordDuration = BaseChordDuration;
 
-                // Get notes for this chord, apply global transpose, and sort ascending for 'Up' arpeggio
                 var pitchesToProcess = chord.MidiPitches
                                         .Select(p => p + globalTransposeOffset)
                                         .ToList();
 
                 // Apply MIDI range adjustment *after* transposition but before arpeggiation logic
                 pitchesToProcess = pitchesToProcess.Select(AdjustMidiPitchToRange).ToList();
-                pitchesToProcess.Sort(); // Always sort ascending for consistent 'Up' arpeggio
+                pitchesToProcess.Sort(); // Ensure notes are sorted ascending (root position initially)
 
-                // Determine if arpeggiated (always if more than one note) or block
                 bool isArpeggiated = pitchesToProcess.Count > 1;
 
                 if (isArpeggiated)
                 {
-                    // NEW LOGIC: Ensure at least 4 notes for arpeggiation
+                    // NEW LOGIC: Apply random chord inversion if the chord has at least 3 notes
+                    if (pitchesToProcess.Count >= 3)
+                    {
+                        // 0 = root position, 1 = 1st inversion, 2 = 2nd inversion
+                        int inversionType = _random.Next(0, 3); // Gives 0, 1, or 2
+
+                        for (int i = 0; i < inversionType; i++)
+                        {
+                            // Move the lowest pitch up an octave
+                            int lowestPitch = pitchesToProcess[0];
+                            pitchesToProcess.RemoveAt(0);
+                            pitchesToProcess.Add(AdjustMidiPitchToRange(lowestPitch + 12));
+                            pitchesToProcess.Sort(); // Re-sort to maintain ascending order after inversion
+                        }
+                    }
+
+                    // NEW LOGIC: Ensure at least 4 notes for arpeggiation, by repeating and octave shifting
                     List<int> arpeggioPitches = new List<int>();
                     int originalNoteCount = pitchesToProcess.Count;
                     const int desiredArpeggioNotes = 4;
@@ -90,10 +102,8 @@ namespace ChordProgprogressionQuiz.Services
                     for (int rep = 0; rep < numberOfRepetitions; rep++)
                     {
                         double currentArpeggioNoteOffset = 0.0;
-
                         double singlePassDuration = allocatedChordDuration / (applyFastRepeatedArpeggioGlobally ? 2.0 : 1.0);
 
-                        // Use arpeggioPitches.Count for the dynamicNoteStartDelay calculation
                         double dynamicNoteStartDelay = singlePassDuration / arpeggioPitches.Count;
 
                         if (dynamicNoteStartDelay < MinArpeggioNoteDuration)
@@ -105,7 +115,7 @@ namespace ChordProgprogressionQuiz.Services
                         double individualNoteDuration = dynamicNoteStartDelay * 0.8;
                         individualNoteDuration = Math.Max(MinArpeggioNoteDuration, individualNoteDuration);
 
-                        foreach (var pitch in arpeggioPitches) // Iterate over the augmented arpeggioPitches list
+                        foreach (var pitch in arpeggioPitches)
                         {
                             stylizedEvents.Add(new StylizedMidiEvent
                             {
