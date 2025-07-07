@@ -236,11 +236,11 @@ namespace ChordProgressionQuiz.Tests
 
         [InlineData("vi IV III", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonic
-                new int[] { 0, 3, 7 },      // vi (Am) -> relative to A: [0, 3, 7]
-                new int[] { 5, 9, 12 },     // IV (F) -> relative to A: [5, 9, 12]
-                new int[] { 4, 8, 11 }      // III (E) -> relative to A: [4, 8, 11]
+                new int[] { 9, 12, 16 },    // vi (A Minor)
+                new int[] { 5, 9, 12 },     // IV (F Major)
+                new int[] { 4, 8, 11 }      // III (E Major)
             },
-            "Harmonic minor vamp", "A Harmonic Minor")] // songName, relativeTo
+            "Harmonic minor vamp: sweet dreams, toxicity, smooth", "C Major")] // songName, relativeTo
 
         [InlineData("ii V", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonic
