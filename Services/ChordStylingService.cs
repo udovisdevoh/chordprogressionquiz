@@ -25,7 +25,9 @@ namespace ChordProgprogressionQuiz.Services
 
         /// <summary>
         /// Applies random styling (transposition, duration, arpeggiation) to an AbsoluteChordProgression.
-        /// Arpeggiation is always 'Up'. Random chord inversion and always "twice as fast and repeated twice" are applied.
+        /// Arpeggiation is always "twice as fast and repeated twice".
+        /// Random chord inversion is applied per chord.
+        /// Arpeggio direction (up/down) is chosen globally for the entire progression.
         /// </summary>
         /// <param name="absoluteProgression">The raw progression with absolute MIDI pitches.</param>
         /// <returns>A StylizedChordProgression ready for playback.</returns>
@@ -44,6 +46,9 @@ namespace ChordProgprogressionQuiz.Services
 
             // The "twice as fast, repeated twice" arpeggio style is now ALWAYS applied
             bool applyFastRepeatedArpeggioGlobally = true;
+
+            // NEW: Determine globally if arpeggios should move down
+            bool arpeggioDirectionIsDown = _random.NextDouble() < 0.5; // 50% chance for down, 50% for up
 
             foreach (var chord in absoluteProgression.Chords)
             {
@@ -68,7 +73,7 @@ namespace ChordProgprogressionQuiz.Services
 
                 if (isArpeggiated)
                 {
-                    // NEW LOGIC: Apply random chord inversion if the chord has at least 3 notes
+                    // Apply random chord inversion if the chord has at least 3 notes
                     if (pitchesToProcess.Count >= 3)
                     {
                         // 0 = root position, 1 = 1st inversion, 2 = 2nd inversion
@@ -84,7 +89,7 @@ namespace ChordProgprogressionQuiz.Services
                         }
                     }
 
-                    // NEW LOGIC: Ensure at least 4 notes for arpeggiation, by repeating and octave shifting
+                    // Ensure at least 4 notes for arpeggiation, by repeating and octave shifting
                     List<int> arpeggioPitches = new List<int>();
                     int originalNoteCount = pitchesToProcess.Count;
                     const int desiredArpeggioNotes = 4;
@@ -95,7 +100,13 @@ namespace ChordProgprogressionQuiz.Services
                         int octaveShift = (i / originalNoteCount) * 12; // Add 12 for each full cycle through original notes
                         arpeggioPitches.Add(AdjustMidiPitchToRange(basePitch + octaveShift)); // Adjust again to stay in range
                     }
-                    arpeggioPitches.Sort(); // Re-sort after potentially adding octave-shifted notes
+                    arpeggioPitches.Sort(); // Re-sort to ensure initial ascending order before applying direction
+
+                    // NEW LOGIC: Apply global arpeggio direction
+                    if (arpeggioDirectionIsDown)
+                    {
+                        arpeggioPitches.Reverse(); // Reverse the order for a 'down' arpeggio
+                    }
 
                     int numberOfRepetitions = applyFastRepeatedArpeggioGlobally ? 2 : 1;
 
@@ -104,6 +115,7 @@ namespace ChordProgprogressionQuiz.Services
                         double currentArpeggioNoteOffset = 0.0;
                         double singlePassDuration = allocatedChordDuration / (applyFastRepeatedArpeggioGlobally ? 2.0 : 1.0);
 
+                        // Use arpeggioPitches.Count for the dynamicNoteStartDelay calculation (after potential reversal)
                         double dynamicNoteStartDelay = singlePassDuration / arpeggioPitches.Count;
 
                         if (dynamicNoteStartDelay < MinArpeggioNoteDuration)
@@ -115,7 +127,7 @@ namespace ChordProgprogressionQuiz.Services
                         double individualNoteDuration = dynamicNoteStartDelay * 0.8;
                         individualNoteDuration = Math.Max(MinArpeggioNoteDuration, individualNoteDuration);
 
-                        foreach (var pitch in arpeggioPitches)
+                        foreach (var pitch in arpeggioPitches) // Iterate over the potentially reversed list
                         {
                             stylizedEvents.Add(new StylizedMidiEvent
                             {
