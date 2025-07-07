@@ -126,7 +126,7 @@
 </div>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/soundfont-player@latest/dist/soundfont-player.min.js"></script>
+    <script src="~/js/soundfont-player.min.js"></script>
     <script type="text/javascript">
         document.addEventListener('DOMContentLoaded', function () {
             const playButton = document.getElementById('playMidiButton');
@@ -140,9 +140,19 @@
             const PIANO_PROGRAM = 0; // Acoustic Grand Piano
             const STRING_ENSEMBLE_PROGRAM = 48; // String Ensemble 1
 
-            // NEW: Define gain levels
             const PIANO_GAIN = 1.0; // Full volume for piano
             const STRING_GAIN = 0.3; // Reduced volume for strings
+
+            // The base path for local soundfonts, pointing to the directory containing the .js files
+            const LOCAL_SOUNDFONT_PATH = '/soundfonts/MusyngKite/'; // Corresponds to wwwroot/soundfonts/MusyngKite/
+
+            // CORRECTED: Custom URL builder function for soundfont-player
+            // We hardcode '-mp3.js' because the 'format' argument passed to this function
+            // appears to be undefined in this specific usage context of soundfont-player.js.
+            function buildLocalSoundfontUrl(name, /* format is undefined here */) {
+                return LOCAL_SOUNDFONT_PATH + name + '-mp3.js';
+            }
+
 
             if (playButton && stylizedMidiEvents && stylizedMidiEvents.length > 0) {
                 playButton.addEventListener('click', async function () {
@@ -151,16 +161,25 @@
                         playButton.disabled = true;
                         try {
                             [pianoPlayer, stringPlayer] = await Promise.all([
-                                Soundfont.instrument(audioContext, 'acoustic_grand_piano'),
-                                Soundfont.instrument(audioContext, 'string_ensemble_1')
+                                // Use nameToUrl to force loading from our custom local path
+                                // The 'format: 'mp3'' option is still needed here for soundfont-player's
+                                // internal logic, even if not directly used by buildLocalSoundfontUrl's arguments.
+                                Soundfont.instrument(audioContext, 'acoustic_grand_piano', {
+                                    format: 'mp3',
+                                    nameToUrl: buildLocalSoundfontUrl // Pass our custom builder function
+                                }),
+                                Soundfont.instrument(audioContext, 'string_ensemble_1', {
+                                    format: 'mp3',
+                                    nameToUrl: buildLocalSoundfontUrl // Pass our custom builder function
+                                })
                             ]);
 
                             loadingMessage.style.display = 'none';
                             playButton.disabled = false;
-                            console.log("Instruments loaded successfully: Piano and String Ensemble.");
+                            console.log("Instruments loaded successfully from local path: Piano and String Ensemble.");
                         } catch (error) {
-                            console.error("Error loading soundfont instruments:", error);
-                            loadingMessage.textContent = "Error loading instruments. Check console.";
+                            console.error("Error loading soundfont instruments. Please double check: 1) local .js files are in 'wwwroot/soundfonts/MusyngKite/'. 2) Their names are exactly 'instrument_name-mp3.js'. 3) The 'format: 'mp3'' option is correct.", error);
+                            loadingMessage.textContent = "Error loading instruments. Check console (F12).";
                             return;
                         }
                     }
@@ -172,22 +191,21 @@
                     stylizedMidiEvents.forEach(event => {
                         const safePitch = Math.max(0, Math.min(127, event.pitch));
                         let playerToUse;
-                        let gainToApply = 1.0; // Default gain
+                        let gainToApply = 1.0;
 
                         if (event.instrumentProgram === PIANO_PROGRAM) {
                             playerToUse = pianoPlayer;
                             gainToApply = PIANO_GAIN;
                         } else if (event.instrumentProgram === STRING_ENSEMBLE_PROGRAM) {
                             playerToUse = stringPlayer;
-                            gainToApply = STRING_GAIN; // Apply reduced gain for strings
+                            gainToApply = STRING_GAIN;
                         } else {
                             console.warn(`Unknown instrument program: ${event.instrumentProgram}. Defaulting to piano.`);
                             playerToUse = pianoPlayer;
-                            gainToApply = PIANO_GAIN; // Fallback
+                            gainToApply = PIANO_GAIN;
                         }
 
                         if (playerToUse) {
-                            // Pass the gain as an option to the play method
                             playerToUse.play(safePitch, audioContext.currentTime + event.startTime, { duration: event.duration, gain: gainToApply });
                         }
                     });
