@@ -1012,9 +1012,9 @@
     },
     {
         "song": "Blur's unique chord progression",
-        "keys_example": "B A E G Fmaj7#11 Bb Db",
+        "keys_example": "B A E G Fmaj7 Bb Db",
         "tonal": {
-            "roman_numerals": "I bVII IV bVI Vmaj7#11 bVII bII",
+            "roman_numerals": "I bVII IV bVI Vmaj7 bVII bII",
             "relative_to": "B, with significant chromaticism"
         }
     },

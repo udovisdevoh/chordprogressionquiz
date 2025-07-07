@@ -628,6 +628,180 @@ namespace ChordProgressionQuiz.Tests
             },
             "Zelda overworld", "A Major")] // songName, relativeTo - (assuming "A" defaults to "A Major" for scale calculation)
 
+        [InlineData("vi V iii IV", // romanNumerals
+            new object[] { // expectedPitchesRelativeToKeyTonic
+                new int[] { 9, 12, 16 },    // vi (A Minor)
+                new int[] { 7, 11, 14 },    // V (G Major)
+                new int[] { 4, 7, 11 },     // iii (E Minor)
+                new int[] { 5, 9, 12 }      // IV (F Major)
+            },
+            "Can't stop: RDI, Étoiles Fillantes, Bollywood Dance", "C Major")]
+
+        [InlineData("vi I V IV", // romanNumerals
+            new object[] { // expectedPitchesRelativeToKeyTonic
+                new int[] { 9, 12, 16 },    // vi (A Minor)
+                new int[] { 0, 4, 7 },      // I (C Major)
+                new int[] { 7, 11, 14 },    // V (G Major)
+                new int[] { 5, 9, 12 }      // IV (F Major)
+            },
+            "Bad touch, counting stars", "C Major")]
+
+        [InlineData("vi IV V iii", // romanNumerals
+            new object[] { // expectedPitchesRelativeToKeyTonic
+                new int[] { 9, 12, 16 },    // vi (A Minor)
+                new int[] { 5, 9, 12 },     // IV (F Major)
+                new int[] { 7, 11, 14 },    // V (G Major)
+                new int[] { 4, 7, 11 }      // iii (E Minor)
+            },
+            "One Must Fall 2097, Think about the way, Touch me (F G Em Am)", "C Major")]
+
+        [InlineData("IV V iii vi", // romanNumerals
+            new object[] { // expectedPitchesRelativeToKeyTonic
+                new int[] { 5, 9, 12 },     // IV (F Major)
+                new int[] { 7, 11, 14 },    // V (G Major)
+                new int[] { 4, 7, 11 },     // iii (E Minor)
+                new int[] { 9, 12, 16 }     // vi (A Minor)
+            },
+            "Royal road", "C Major")]
+
+        [InlineData("vi I IV V", // romanNumerals
+            new object[] { // expectedPitchesRelativeToKeyTonic
+                new int[] { 9, 12, 16 },    // vi (A Minor)
+                new int[] { 0, 4, 7 },      // I (C Major)
+                new int[] { 5, 9, 12 },     // IV (F Major)
+                new int[] { 7, 11, 14 }     // V (G Major)
+            },
+            "Move my body (F G Am C)", "C Major")]
+
+        [InlineData("IV V vi I", // romanNumerals
+            new object[] { // expectedPitchesRelativeToKeyTonic
+                new int[] { 5, 9, 12 },     // IV (F Major)
+                new int[] { 7, 11, 14 },    // V (G Major)
+                new int[] { 9, 12, 16 },    // vi (A Minor)
+                new int[] { 0, 4, 7 }       // I (C Major)
+            },
+            "Tyler", "C Major")]
+
+        [InlineData("vi IV I V", // romanNumerals
+            new object[] { // expectedPitchesRelativeToKeyTonic
+                new int[] { 9, 12, 16 },    // vi (A Minor)
+                new int[] { 5, 9, 12 },     // IV (F Major)
+                new int[] { 0, 4, 7 },      // I (C Major)
+                new int[] { 7, 11, 14 }     // V (G Major)
+            },
+            "Axis of Awesome: Despacito, Kids aren't alright, (C G Am F, F C G Am, G Am F C)", "C Major")]
+
+        [InlineData("IV I V vi", // romanNumerals
+            new object[] { // expectedPitchesRelativeToKeyTonic
+                new int[] { 5, 9, 12 },     // IV (F Major)
+                new int[] { 0, 4, 7 },      // I (C Major)
+                new int[] { 7, 11, 14 },    // V (G Major)
+                new int[] { 9, 12, 16 }     // vi (A Minor)
+            },
+            "Dragostea Din Tei, Midnight rain", "C Major")]
+
+        [InlineData("I V vi IV", // romanNumerals
+            new object[] { // expectedPitchesRelativeToKeyTonic
+                new int[] { 0, 4, 7 },      // I (C Major)
+                new int[] { 7, 11, 14 },    // V (G Major)
+                new int[] { 9, 12, 16 },    // vi (A Minor)
+                new int[] { 5, 9, 12 }      // IV (F Major)
+            },
+            "I'm yours, With or without you, Dammit, Song for a winter's night", "C Major")]
+
+        [InlineData("V vi IV I", // romanNumerals
+            new object[] { // expectedPitchesRelativeToKeyTonic
+                new int[] { 7, 11, 14 },    // V (G Major)
+                new int[] { 9, 12, 16 },    // vi (A Minor)
+                new int[] { 5, 9, 12 },     // IV (F Major)
+                new int[] { 0, 4, 7 }       // I (C Major)
+            },
+            "Angels, Hurt, September Song", "C Major")]
+
+        [InlineData("I ii IV V", // romanNumerals
+            new object[] { // expectedPitchesRelativeToKeyTonic
+                new int[] { 0, 4, 7 },      // I (C Major)
+                new int[] { 2, 5, 9 },      // ii (D Minor)
+                new int[] { 5, 9, 12 },     // IV (F Major)
+                new int[] { 7, 11, 14 }     // V (G Major)
+            },
+            "Major scale climb, My girl, 99 Luftballons, Love will keep us together", "C Major")]
+
+        [InlineData("I IV V IV", // romanNumerals
+            new object[] { // expectedPitchesRelativeToKeyTonic
+                new int[] { 0, 4, 7 },      // I (C Major)
+                new int[] { 5, 9, 12 },     // IV (F Major)
+                new int[] { 7, 11, 14 },    // V (G Major)
+                new int[] { 5, 9, 12 }      // IV (F Major)
+            },
+            "5 years time, Minority, Cheerleader, Summer Nights, Walking on sunshine", "C Major")]
+
+        [InlineData("vi iii V ii", // romanNumerals
+            new object[] { // expectedPitchesRelativeToKeyTonic
+                new int[] { 9, 12, 16 },    // vi (A Minor)
+                new int[] { 4, 7, 11 },     // iii (E Minor)
+                new int[] { 7, 11, 14 },    // V (G Major)
+                new int[] { 2, 5, 9 }       // ii (D Minor)
+            },
+            "The deep blue", "C Major")]
+
+        [InlineData("ii IV I V", // romanNumerals
+            new object[] { // expectedPitchesRelativeToKeyTonic
+                new int[] { 2, 5, 9 },      // ii (D Minor)
+                new int[] { 5, 9, 12 },     // IV (F Major)
+                new int[] { 0, 4, 7 },      // I (C Major)
+                new int[] { 7, 11, 14 }     // V (G Major)
+            },
+            "Plagal Cascade: Wonderall, Mad world, Boulevard of broken dreams, How you remind me", "C Major")]
+
+        [InlineData("I V ii IV", // romanNumerals
+            new object[] { // expectedPitchesRelativeToKeyTonic
+                new int[] { 0, 4, 7 },      // I (C Major)
+                new int[] { 7, 11, 14 },    // V (G Major)
+                new int[] { 2, 5, 9 },      // ii (D Minor)
+                new int[] { 5, 9, 12 }      // IV (F Major)
+            },
+            "Closing time, Believe (Cher), All star, I'm like a bird, Wildest dreams", "C Major")]
+
+        [InlineData("ii V I IV", // romanNumerals
+            new object[] { // expectedPitchesRelativeToKeyTonic
+                new int[] { 2, 5, 9 },      // ii (D Minor)
+                new int[] { 7, 11, 14 },    // V (G Major)
+                new int[] { 0, 4, 7 },      // I (C Major)
+                new int[] { 5, 9, 12 }      // IV (F Major)
+            },
+            "Isn't she lovely", "C Major")]
+
+        [InlineData("V I IV ii", // romanNumerals
+            new object[] { // expectedPitchesRelativeToKeyTonic
+                new int[] { 7, 11, 14 },    // V (G Major)
+                new int[] { 0, 4, 7 },      // I (C Major)
+                new int[] { 5, 9, 12 },     // IV (F Major)
+                new int[] { 2, 5, 9 }       // ii (D Minor)
+            },
+            "Pride in the name of love", "C Major")]
+
+        [InlineData("ii vi I V", // romanNumerals
+            new object[] { // expectedPitchesRelativeToKeyTonic
+                new int[] { 2, 5, 9 },      // ii (D Minor)
+                new int[] { 9, 12, 16 },    // vi (A Minor)
+                new int[] { 0, 4, 7 },      // I (C Major)
+                new int[] { 7, 11, 14 }     // V (G Major)
+            },
+            "Blinding Lights, Watermelon Sugar", "C Major")]
+
+        [InlineData("I bVII IV bVI Vmaj7 bVII bII", // romanNumerals
+            new object[] { // expectedPitchesRelativeToKeyTonic
+                new int[] { 0, 4, 7 },      // I (B Major)
+                new int[] { 10, 14, 17 },   // bVII (A Major)
+                new int[] { 5, 9, 12 },     // IV (E Major)
+                new int[] { 8, 12, 15 },    // bVI (G Major)
+                new int[] { 7, 11, 14, 18 },// Vmaj7 (F#maj7)
+                new int[] { 10, 14, 17 },   // bVII (A Major)
+                new int[] { 1, 5, 8 }       // bII (C Major)
+            },
+            "Blur's unique chord progression", "B")]
+
         public void ConvertToAbsoluteMidiProgression_ShouldProduceCorrectMidiPitches(
             string romanNumerals,
             object[] expectedPitchesRelativeToKeyTonic,
