@@ -278,12 +278,12 @@ namespace ChordProgressionQuiz.Tests
 
         [InlineData("vi I II IV", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonic
-                new int[] { 0, 3, 7 },      // vi (Am) -> relative to A: [0, 3, 7]
-                new int[] { 3, 7, 10 },     // I (C) -> relative to A: [3, 7, 10]
-                new int[] { 5, 9, 12 },     // II (D) -> relative to A: [5, 9, 12]
-                new int[] { 8, 12, 15 }     // IV (F) -> relative to A: [8, 12, 15]
+                new int[] { 9, 12, 16 },    // vi (A Minor)
+                new int[] { 0, 4, 7 },      // I (C Major)
+                new int[] { 2, 6, 9 },      // II (D Major)
+                new int[] { 5, 9, 12 }      // IV (F Major)
             },
-            "Minor climb", "A Aeolian")] // songName, relativeTo
+            "Minor climb: House of the rising sun, Ecstacy of Gold, Call me, Talk talk, Birdie, My Sharona", "C Major")] // songName, relativeTo
 
         [InlineData("vi ii I III", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonic

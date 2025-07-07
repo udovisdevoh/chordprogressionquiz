@@ -597,12 +597,6 @@
             "roman_numerals": "vi I II IV",
             "relative_to": "C Major"
         },
-        "modal": [
-            {
-                "roman_numerals": "i bIII IV bVI",
-                "relative_to": "A Aeolian"
-            }
-        ],
         "substitution_group": 1
     },
     {
