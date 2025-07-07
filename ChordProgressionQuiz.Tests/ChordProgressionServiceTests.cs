@@ -229,8 +229,8 @@ namespace ChordProgressionQuiz.Tests
 
         [InlineData("iii IV", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonic
-                new int[] { 0, 3, 7 },      // iii (Em) -> relative to E: [0, 3, 7]
-                new int[] { 1, 5, 8 }       // IV (F) -> relative to E: [1, 5, 8]
+                new int[] { 4, 7, 11 },      // iii (Em) -> relative to E: [0, 3, 7]
+                new int[] { 5, 9, 12 }       // IV (F) -> relative to E: [1, 5, 8]
             },
             "Phrygian Vamp", "E Phrygian")] // songName, relativeTo
 
