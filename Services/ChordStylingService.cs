@@ -12,11 +12,9 @@ namespace ChordProgprogressionQuiz.Services
 
         // Configuration for styling
         private const double BaseChordDuration = 1.5; // Base duration for a full chord in seconds
-        // MinDurationFactor and MaxDurationFactor are removed as duration will now be constant.
 
         // ArpeggioNoteDelay is now a dynamic calculation, but we keep a small minimum for very short chords
         private const double MinArpeggioNoteDuration = 0.05; // Minimum duration for an individual arpeggio note
-        private const double MinTimeBetweenArpeggioNotes = 0.02; // Minimum time between start of arpeggio notes
 
         // Max semitones to transpose up/down (one octave) - adjusted to ensure range safety
         private const int MaxTransposeSemitones = 12;
@@ -45,6 +43,9 @@ namespace ChordProgprogressionQuiz.Services
             // 1. Determine random transposition for the entire progression
             int globalTransposeOffset = _random.Next(-MaxTransposeSemitones, MaxTransposeSemitones + 1);
 
+            // CHANGED: The "twice as fast, repeated twice" arpeggio style is now ALWAYS applied
+            bool applyFastRepeatedArpeggioGlobally = true;
+
             foreach (var chord in absoluteProgression.Chords)
             {
                 if (!chord.MidiPitches.Any())
@@ -71,30 +72,44 @@ namespace ChordProgprogressionQuiz.Services
 
                 if (isArpeggiated)
                 {
-                    // Arpeggiated playback (always Up)
-                    double currentArpeggioNoteOffset = 0.0;
+                    // Use the global decision for applying fast and repeated arpeggio
+                    int numberOfRepetitions = applyFastRepeatedArpeggioGlobally ? 2 : 1;
+                    // Note: speedFactor is implicitly handled by singlePassDuration calculation
 
-                    // Calculate the time slot for each note, spreading them evenly across the allocated chord duration.
-                    // This is the time from the start of one note to the start of the next.
-                    double dynamicNoteStartDelay = allocatedChordDuration / pitchesToProcess.Count;
-
-                    // Calculate individual note duration (shorter than the start delay to prevent overlap)
-                    // Ensure a small gap between notes for clarity.
-                    double individualNoteDuration = dynamicNoteStartDelay * 0.8; // Note plays for 80% of its slot
-                    individualNoteDuration = Math.Max(MinArpeggioNoteDuration, individualNoteDuration); // Ensure minimum duration
-
-                    foreach (var pitch in pitchesToProcess) // Already sorted ascending
+                    for (int rep = 0; rep < numberOfRepetitions; rep++)
                     {
-                        stylizedEvents.Add(new StylizedMidiEvent
+                        double currentArpeggioNoteOffset = 0.0;
+
+                        // Calculate the total time for one arpeggio pass
+                        double singlePassDuration = allocatedChordDuration / (applyFastRepeatedArpeggioGlobally ? 2.0 : 1.0);
+
+                        // Calculate the time slot for each note, spreading them evenly across the single pass duration.
+                        double dynamicNoteStartDelay = singlePassDuration / pitchesToProcess.Count;
+
+                        // Ensure a minimum for dynamicNoteStartDelay to prevent notes from being too short
+                        if (dynamicNoteStartDelay < MinArpeggioNoteDuration)
                         {
-                            Pitch = pitch,
-                            StartTime = currentPlaybackTime + currentArpeggioNoteOffset,
-                            Duration = individualNoteDuration
-                        });
-                        currentArpeggioNoteOffset += dynamicNoteStartDelay; // Advance offset by dynamic delay
+                            dynamicNoteStartDelay = MinArpeggioNoteDuration;
+                            // Recalculate singlePassDuration to ensure all notes fit within the pass with minimum delays
+                            singlePassDuration = dynamicNoteStartDelay * pitchesToProcess.Count;
+                        }
+
+                        // Calculate individual note duration (shorter than the start delay to prevent overlap)
+                        double individualNoteDuration = dynamicNoteStartDelay * 0.8; // Note plays for 80% of its slot
+                        individualNoteDuration = Math.Max(MinArpeggioNoteDuration, individualNoteDuration); // Ensure minimum duration
+
+                        foreach (var pitch in pitchesToProcess) // Already sorted ascending
+                        {
+                            stylizedEvents.Add(new StylizedMidiEvent
+                            {
+                                Pitch = pitch,
+                                StartTime = currentPlaybackTime + currentArpeggioNoteOffset,
+                                Duration = individualNoteDuration
+                            });
+                            currentArpeggioNoteOffset += dynamicNoteStartDelay; // Advance offset by dynamic delay
+                        }
+                        currentPlaybackTime += singlePassDuration; // Advance current time by the duration of this single arpeggio pass
                     }
-                    // Advance current time by the full allocated duration for this chord
-                    currentPlaybackTime += allocatedChordDuration;
                 }
                 else // Block chord playback (or single note)
                 {
