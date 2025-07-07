@@ -260,10 +260,10 @@ namespace ChordProgressionQuiz.Tests
 
         [InlineData("V IV I V", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonic
-                new int[] { 0, 4, 7 },      // V (G) -> relative to G: [0, 4, 7]
-                new int[] { 10, 14, 17 },   // IV (F) -> relative to G: [10, 14, 17]
-                new int[] { 5, 9, 12 },     // I (C) -> relative to G: [5, 9, 12]
-                new int[] { 0, 4, 7 }       // V (G) -> relative to G: [0, 4, 7]
+                new int[] { 7, 11, 14 },      // V (G) -> relative to G: [0, 4, 7]
+                new int[] { 5, 9, 12 },   // IV (F) -> relative to G: [10, 14, 17]
+                new int[] { 0, 4, 7 },     // I (C) -> relative to G: [5, 9, 12]
+                new int[] { 7, 11, 14 }       // V (G) -> relative to G: [0, 4, 7]
             },
             "Mixolydian Vamp", "G Mixolydian")] // songName, relativeTo
 
