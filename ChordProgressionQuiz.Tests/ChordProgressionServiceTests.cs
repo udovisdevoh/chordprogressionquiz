@@ -220,12 +220,12 @@ namespace ChordProgressionQuiz.Tests
         // The expected pitches are relative to the *key's tonic* (e.g., A=0 for A Aeolian).
         [InlineData("vi ii IV V", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonic
-                new int[] { 0, 3, 7 },      // vi (Am) -> relative to A: [0, 3, 7]
-                new int[] { 5, 8, 12 },     // ii (Dm) -> relative to A: [5, 8, 12]
-                new int[] { 8, 12, 15 },    // IV (F) -> relative to A: [8, 12, 15] (F is 8 semitones from A)
-                new int[] { 10, 14, 17 }    // V (G) -> relative to A: [10, 14, 17] (G is 10 semitones from A)
+                new int[] { 9, 12, 16 },    // vi (A Minor)
+                new int[] { 2, 5, 9 },      // ii (D Minor)
+                new int[] { 5, 9, 12 },     // IV (F Major)
+                new int[] { 7, 11, 14 }     // V (G Major)
             },
-            "World hold on", "A Aeolian")] // songName, relativeTo
+            "World hold on", "C Major")] // songName, relativeTo
 
         [InlineData("iii IV", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonic
