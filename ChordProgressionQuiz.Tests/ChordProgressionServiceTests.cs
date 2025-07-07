@@ -287,12 +287,12 @@ namespace ChordProgressionQuiz.Tests
 
         [InlineData("vi ii I III", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonic
-                new int[] { 0, 3, 7 },      // vi (Am) -> relative to A: [0, 3, 7]
-                new int[] { 5, 8, 12 },     // ii (Dm) -> relative to A: [5, 8, 12]
-                new int[] { 3, 7, 10 },     // I (C) -> relative to A: [3, 7, 10]
-                new int[] { 7, 11, 14 }     // III (E) -> relative to A: [7, 11, 14]
+                new int[] { 9, 12, 16 },    // vi (A Minor)
+                new int[] { 2, 5, 9 },      // ii (D Minor)
+                new int[] { 0, 4, 7 },      // I (C Major)
+                new int[] { 4, 8, 11 }      // III (E Major)
             },
-            "Welcome to the internet", "A Aeolian with a Harmonic Minor V")] // songName, relativeTo
+            "Welcome to the internet: I want the world to stop", "C Major")] // songName, relativeTo
 
         [InlineData("vi V ii vi", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonic
