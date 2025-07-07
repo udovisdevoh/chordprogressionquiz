@@ -41,7 +41,6 @@
                 }
 
                 <hr />
-                @* Display the absolute MIDI progression *@
                 @if (Model.AbsoluteProgression != null && Model.AbsoluteProgression.Chords.Any())
                 {
                     <h5 class="card-title text-success mt-3">Base MIDI Pitches:</h5>
@@ -49,7 +48,7 @@
                         @foreach (var chord in Model.AbsoluteProgression.Chords)
                         {
                             <span>[@string.Join(", ", chord.MidiPitches)]</span>
-                            @if (Model.AbsoluteProgression.Chords.IndexOf(chord) < Model.AbsoluteProgression.Chords.Count - 1)
+                            if (Model.AbsoluteProgression.Chords.IndexOf(chord) < Model.AbsoluteProgression.Chords.Count - 1)
                             {
                                 <span> | </span>
                             }
@@ -61,14 +60,12 @@
                         <p class="card-text">
                             Total MIDI Events: @Model.StylizedProgression.MidiEvents.Count
                             <br />
-                            @* You could add more details here about the styling applied if desired *@
                         </p>
                     }
                     else
                     {
                         <p class="alert alert-info mt-3">No stylized playback data available.</p>
                     }
-
                     <button id="playMidiButton" class="btn btn-primary btn-lg mt-3">Play MIDI Progression</button>
                     <div id="loadingMessage" class="mt-2 text-muted" style="display:none;">Loading instruments...</div>
                 }
@@ -78,7 +75,7 @@
                 }
             </div>
         </div>
-        <p class="mt-2">Progression @(Model.CurrentProgressionIndex + 1) of @(Model.ChordService.GetProgressionCount())</p>
+        <p class="mt-2">Progression @(Model.CurrentProgressionIndex + 1) of @Model.ChordService.GetProgressionCount()</p>
 
     }
     else
@@ -86,17 +83,24 @@
         <p class="alert alert-warning mt-4">No chord progression found. Please ensure the 'chordProgressions.json' file is correctly placed in the 'Data' folder and contains valid data.</p>
     }
     <div class="mt-4 d-flex justify-content-center align-items-center flex-wrap">
-        @* Checkbox for stylized playback - now with onchange submit and no separate button *@
+        @* Toggle Stylized Playback Checkbox *@
         <form method="post" asp-page-handler="ToggleStylizedPlayback" class="d-inline-flex align-items-center mx-2 my-1">
             <input type="hidden" asp-for="CurrentProgressionIndex" />
-            <input type="checkbox" asp-for="EnableStylizedPlayback" onchange="this.form.submit()" class="form-check-input me-1" /> @* Re-added onchange *@
+            <input type="checkbox" asp-for="EnableStylizedPlayback" onchange="this.form.submit()" class="form-check-input me-1" />
             <label asp-for="EnableStylizedPlayback" class="form-check-label">Enable Stylized Playback</label>
-            @* Removed Apply button *@
         </form>
 
-        @* Navigation Buttons *@
+        @* New Loop Playback Checkbox *@
+        <div class="form-check form-switch d-inline-flex align-items-center mx-2 my-1">
+            <input class="form-check-input me-1" type="checkbox" id="loopPlaybackCheckbox">
+            <label class="form-check-label" for="loopPlaybackCheckbox">Loop Playback</label>
+        </div>
+
+
+        @* Random Progression Button *@
         <a asp-page="/ChordPicker" asp-route-EnableStylizedPlayback="@Model.EnableStylizedPlayback" class="btn btn-success btn-lg mx-2 my-1">Get Random Progression</a>
 
+        @* Navigation Buttons *@
         <form method="post" class="d-inline-block my-1">
             <input type="hidden" asp-for="CurrentProgressionIndex" />
             <input type="hidden" asp-for="EnableStylizedPlayback" />
@@ -131,6 +135,7 @@
         document.addEventListener('DOMContentLoaded', function () {
             const playButton = document.getElementById('playMidiButton');
             const loadingMessage = document.getElementById('loadingMessage');
+            const loopCheckbox = document.getElementById('loopPlaybackCheckbox');
             let pianoPlayer = null;
             let stringPlayer = null;
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -143,72 +148,127 @@
             const PIANO_GAIN = 1.0; // Full volume for piano
             const STRING_GAIN = 0.3; // Reduced volume for strings
 
-            // The base path for local soundfonts, pointing to the directory containing the .js files
-            const LOCAL_SOUNDFONT_PATH = '/soundfonts/MusyngKite/'; // Corresponds to wwwroot/soundfonts/MusyngKite/
+            const LOCAL_SOUNDFONT_PATH = '/soundfonts/MusyngKite/';
 
-            // CORRECTED: Custom URL builder function for soundfont-player
-            // We hardcode '-mp3.js' because the 'format' argument passed to this function
-            // appears to be undefined in this specific usage context of soundfont-player.js.
-            function buildLocalSoundfontUrl(name, /* format is undefined here */) {
+            function buildLocalSoundfontUrl(name) {
                 return LOCAL_SOUNDFONT_PATH + name + '-mp3.js';
+            }
+
+            let loopPlayback = false; // Initialize loop state
+            let currentLoopTimeout = null; // To store the timeout ID for stopping the loop
+
+            // Update loopPlayback variable when checkbox changes
+            if (loopCheckbox) {
+                loopCheckbox.addEventListener('change', function() {
+                    loopPlayback = this.checked;
+                    if (!loopPlayback && currentLoopTimeout) {
+                        clearTimeout(currentLoopTimeout); // Stop the loop if unchecked
+                        currentLoopTimeout = null;
+                        if (pianoPlayer) pianoPlayer.stop();
+                        if (stringPlayer) stringPlayer.stop();
+                    }
+                });
+            }
+
+            async function loadInstruments() {
+                if (pianoPlayer === null || stringPlayer === null) {
+                    loadingMessage.style.display = 'block';
+                    playButton.disabled = true;
+                    try {
+                        [pianoPlayer, stringPlayer] = await Promise.all([
+                            Soundfont.instrument(audioContext, 'acoustic_grand_piano', {
+                                format: 'mp3',
+                                nameToUrl: buildLocalSoundfontUrl
+                            }),
+                            Soundfont.instrument(audioContext, 'string_ensemble_1', {
+                                format: 'mp3',
+                                nameToUrl: buildLocalSoundfontUrl
+                            })
+                        ]);
+
+                        // Attach onended event to the player that would typically finish last
+                        // This might need refinement for complex overlapping, but for chord progressions,
+                        // usually the last note in the longest chord dictates the end.
+                        // A more robust solution might involve tracking all playing notes and
+                        // only re-triggering the loop when all have finished.
+                        // For now, we'll use a pragmatic approach based on `lastEventTime`.
+
+                        loadingMessage.style.display = 'none';
+                        playButton.disabled = false;
+                        console.log("Instruments loaded successfully from local path: Piano and String Ensemble.");
+                    } catch (error) {
+                        console.error("Error loading soundfont instruments. Please double check: 1) local .js files are in 'wwwroot/soundfonts/MusyngKite/'. 2) Their names are exactly 'instrument_name-mp3.js'. 3) The 'format: 'mp3'' option is correct.", error);
+                        loadingMessage.textContent = "Error loading instruments. Check console (F12).";
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            function playProgression() {
+                if (!pianoPlayer || !stringPlayer) {
+                    console.error("Instruments not loaded. Cannot play progression.");
+                    return;
+                }
+
+                // Stop any currently playing notes before starting a new playback
+                pianoPlayer.stop();
+                stringPlayer.stop();
+
+                let maxNoteEndTime = 0; // Track the end time of the last played note
+
+                stylizedMidiEvents.forEach(event => {
+                    const safePitch = Math.max(0, Math.min(127, event.pitch));
+                    let playerToUse;
+                    let gainToApply = 1.0;
+
+                    if (event.instrumentProgram === PIANO_PROGRAM) {
+                        playerToUse = pianoPlayer;
+                        gainToApply = PIANO_GAIN;
+                    } else if (event.instrumentProgram === STRING_ENSEMBLE_PROGRAM) {
+                        playerToUse = stringPlayer;
+                        gainToApply = STRING_GAIN;
+                    } else {
+                        console.warn(`Unknown instrument program: ${event.instrumentProgram}. Defaulting to piano.`);
+                        playerToUse = pianoPlayer;
+                        gainToApply = PIANO_GAIN;
+                    }
+
+                    if (playerToUse) {
+                        const noteStartTime = audioContext.currentTime + event.startTime;
+                        const noteEndTime = noteStartTime + event.duration;
+                        playerToUse.play(safePitch, noteStartTime, { duration: event.duration, gain: gainToApply });
+                        if (noteEndTime > maxNoteEndTime) {
+                            maxNoteEndTime = noteEndTime;
+                        }
+                    }
+                });
+
+                // Calculate the delay for the next loop iteration
+                // The time until the next progression should start is `maxNoteEndTime - audioContext.currentTime`
+                // This accounts for the actual duration of the played notes.
+                const timeUntilNextPlay = maxNoteEndTime - audioContext.currentTime;
+
+                // Set a timeout to loop if loopPlayback is true
+                if (loopPlayback) {
+                    // Add a small buffer before replaying to avoid glitches
+                    const loopDelayMilliseconds = Math.max(0, timeUntilNextPlay + 0.1) * 1000; // 100ms buffer
+                    currentLoopTimeout = setTimeout(playProgression, loopDelayMilliseconds);
+                }
             }
 
 
             if (playButton && stylizedMidiEvents && stylizedMidiEvents.length > 0) {
                 playButton.addEventListener('click', async function () {
-                    if (pianoPlayer === null || stringPlayer === null) {
-                        loadingMessage.style.display = 'block';
-                        playButton.disabled = true;
-                        try {
-                            [pianoPlayer, stringPlayer] = await Promise.all([
-                                // Use nameToUrl to force loading from our custom local path
-                                // The 'format: 'mp3'' option is still needed here for soundfont-player's
-                                // internal logic, even if not directly used by buildLocalSoundfontUrl's arguments.
-                                Soundfont.instrument(audioContext, 'acoustic_grand_piano', {
-                                    format: 'mp3',
-                                    nameToUrl: buildLocalSoundfontUrl // Pass our custom builder function
-                                }),
-                                Soundfont.instrument(audioContext, 'string_ensemble_1', {
-                                    format: 'mp3',
-                                    nameToUrl: buildLocalSoundfontUrl // Pass our custom builder function
-                                })
-                            ]);
-
-                            loadingMessage.style.display = 'none';
-                            playButton.disabled = false;
-                            console.log("Instruments loaded successfully from local path: Piano and String Ensemble.");
-                        } catch (error) {
-                            console.error("Error loading soundfont instruments. Please double check: 1) local .js files are in 'wwwroot/soundfonts/MusyngKite/'. 2) Their names are exactly 'instrument_name-mp3.js'. 3) The 'format: 'mp3'' option is correct.", error);
-                            loadingMessage.textContent = "Error loading instruments. Check console (F12).";
-                            return;
+                    const instrumentsLoaded = await loadInstruments();
+                    if (instrumentsLoaded) {
+                        // Clear any existing loop timeout before starting new playback
+                        if (currentLoopTimeout) {
+                            clearTimeout(currentLoopTimeout);
+                            currentLoopTimeout = null;
                         }
+                        playProgression();
                     }
-
-                    if (pianoPlayer) pianoPlayer.stop();
-                    if (stringPlayer) stringPlayer.stop();
-
-
-                    stylizedMidiEvents.forEach(event => {
-                        const safePitch = Math.max(0, Math.min(127, event.pitch));
-                        let playerToUse;
-                        let gainToApply = 1.0;
-
-                        if (event.instrumentProgram === PIANO_PROGRAM) {
-                            playerToUse = pianoPlayer;
-                            gainToApply = PIANO_GAIN;
-                        } else if (event.instrumentProgram === STRING_ENSEMBLE_PROGRAM) {
-                            playerToUse = stringPlayer;
-                            gainToApply = STRING_GAIN;
-                        } else {
-                            console.warn(`Unknown instrument program: ${event.instrumentProgram}. Defaulting to piano.`);
-                            playerToUse = pianoPlayer;
-                            gainToApply = PIANO_GAIN;
-                        }
-
-                        if (playerToUse) {
-                            playerToUse.play(safePitch, audioContext.currentTime + event.startTime, { duration: event.duration, gain: gainToApply });
-                        }
-                    });
                 });
             } else if (playButton) {
                 playButton.disabled = true;
