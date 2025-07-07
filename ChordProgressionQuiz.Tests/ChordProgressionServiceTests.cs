@@ -251,12 +251,12 @@ namespace ChordProgressionQuiz.Tests
 
         [InlineData("vi V IV V", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonic
-                new int[] { 0, 3, 7 },      // vi (Am) -> relative to A: [0, 3, 7]
-                new int[] { 10, 14, 17 },   // V (G) -> relative to A: [10, 14, 17]
-                new int[] { 8, 12, 15 },    // IV (F) -> relative to A: [8, 12, 15]
-                new int[] { 10, 14, 17 }    // V (G) -> relative to A: [10, 14, 17]
+                new int[] { 9, 12, 16 },    // vi (A Minor)
+                new int[] { 7, 11, 14 },    // V (G Major)
+                new int[] { 5, 9, 12 },     // IV (F Major)
+                new int[] { 7, 11, 14 }     // V (G Major)
             },
-            "Aeolian vamp", "A Aeolian")] // songName, relativeTo
+            "Aeolian vamp", "C Major")] // songName, relativeTo
 
         [InlineData("V IV I V", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonic
@@ -269,12 +269,12 @@ namespace ChordProgressionQuiz.Tests
 
         [InlineData("vi V IV III", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonic
-                new int[] { 0, 3, 7 },      // vi (Am) -> relative to A: [0, 3, 7]
-                new int[] { 10, 14, 17 },   // V (G) -> relative to A: [10, 14, 17]
-                new int[] { 8, 12, 15 },    // IV (F) -> relative to A: [8, 12, 15]
-                new int[] { 7, 11, 14 }     // III (E) -> relative to A: [7, 11, 14]
+                new int[] { 9, 12, 16 },    // vi (A Minor)
+                new int[] { 7, 11, 14 },    // V (G Major)
+                new int[] { 5, 9, 12 },     // IV (F Major)
+                new int[] { 4, 8, 11 }      // III (E Major)
             },
-            "Andalusian cadence", "A Harmonic Minor")] // songName, relativeTo
+            "Andalusian cadence: Hit the road jack, Genie in a bottle", "C Major")] // songName, relativeTo
 
         [InlineData("vi I II IV", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonic
@@ -296,12 +296,12 @@ namespace ChordProgressionQuiz.Tests
 
         [InlineData("vi V ii vi", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonic
-                new int[] { 0, 3, 7 },      // vi (Am) -> relative to A: [0, 3, 7]
-                new int[] { 10, 14, 17 },   // V (G) -> relative to A: [10, 14, 17]
-                new int[] { 5, 8, 12 },     // ii (Dm) -> relative to A: [5, 8, 12]
-                new int[] { 0, 3, 7 }       // vi (Am) -> relative to A: [0, 3, 7]
+                new int[] { 9, 12, 16 },    // vi (A Minor)
+                new int[] { 7, 11, 14 },    // V (G Major)
+                new int[] { 2, 5, 9 },      // ii (D Minor)
+                new int[] { 9, 12, 16 }     // vi (A Minor)
             },
-            "Aeolian closed loop", "A Aeolian")] // songName, relativeTo
+            "Aeolian closed loop: Dani California, Apart, True colors, Yet another movie", "C Major")] // songName, relativeTo
 
         [InlineData("vi IV I III", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonic
@@ -415,12 +415,12 @@ namespace ChordProgressionQuiz.Tests
         [InlineData("vi V7 I IV IV ii V vi", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonic
                 new int[] { 9, 12, 16 },    // vi (A Minor)
-                new int[] { 2, 6, 9, 12 },  // V7 (D7)
-                new int[] { 7, 11, 14 },    // I (G Major)
-                new int[] { 0, 4, 7 },      // IV (C Major)
+                new int[] { 7, 11, 14, 17 },// V7 (G7)
+                new int[] { 0, 4, 7 },      // I (C Major)
+                new int[] { 5, 9, 12 },     // IV (F Major)
                 new int[] { 5, 9, 12 },     // IV (F Major)
                 new int[] { 2, 5, 9 },      // ii (D Minor)
-                new int[] { 4, 8, 11 },     // V (E Major)
+                new int[] { 7, 11, 14 },    // V (G Major)
                 new int[] { 9, 12, 16 }     // vi (A Minor)
             },
             "Wild world", "C Major")] // songName, relativeTo
