@@ -157,6 +157,11 @@
             let loopPlayback = false; // Initialize loop state
             let currentLoopTimeout = null; // To store the timeout ID for stopping the loop
 
+            // Calculate the total duration of the progression once
+            const totalProgressionDuration = stylizedMidiEvents.length > 0
+                ? Math.max(...stylizedMidiEvents.map(e => e.startTime + e.duration))
+                : 0;
+
             // Update loopPlayback variable when checkbox changes
             if (loopCheckbox) {
                 loopCheckbox.addEventListener('change', function() {
@@ -164,8 +169,8 @@
                     if (!loopPlayback && currentLoopTimeout) {
                         clearTimeout(currentLoopTimeout); // Stop the loop if unchecked
                         currentLoopTimeout = null;
-                        if (pianoPlayer) pianoPlayer.stop();
-                        if (stringPlayer) stringPlayer.stop();
+                        if (pianoPlayer) pianoPlayer.stop(); // Stop current playback
+                        if (stringPlayer) stringPlayer.stop(); // Stop current playback
                     }
                 });
             }
@@ -186,13 +191,6 @@
                             })
                         ]);
 
-                        // Attach onended event to the player that would typically finish last
-                        // This might need refinement for complex overlapping, but for chord progressions,
-                        // usually the last note in the longest chord dictates the end.
-                        // A more robust solution might involve tracking all playing notes and
-                        // only re-triggering the loop when all have finished.
-                        // For now, we'll use a pragmatic approach based on `lastEventTime`.
-
                         loadingMessage.style.display = 'none';
                         playButton.disabled = false;
                         console.log("Instruments loaded successfully from local path: Piano and String Ensemble.");
@@ -205,17 +203,15 @@
                 return true;
             }
 
-            function playProgression() {
+            function playProgression(startTime = audioContext.currentTime) {
                 if (!pianoPlayer || !stringPlayer) {
                     console.error("Instruments not loaded. Cannot play progression.");
                     return;
                 }
 
-                // Stop any currently playing notes before starting a new playback
+                // Stop any currently scheduled notes for these players to prevent overlap issues
                 pianoPlayer.stop();
                 stringPlayer.stop();
-
-                let maxNoteEndTime = 0; // Track the end time of the last played note
 
                 stylizedMidiEvents.forEach(event => {
                     const safePitch = Math.max(0, Math.min(127, event.pitch));
@@ -235,25 +231,20 @@
                     }
 
                     if (playerToUse) {
-                        const noteStartTime = audioContext.currentTime + event.startTime;
-                        const noteEndTime = noteStartTime + event.duration;
-                        playerToUse.play(safePitch, noteStartTime, { duration: event.duration, gain: gainToApply });
-                        if (noteEndTime > maxNoteEndTime) {
-                            maxNoteEndTime = noteEndTime;
-                        }
+                        playerToUse.play(safePitch, startTime + event.startTime, { duration: event.duration, gain: gainToApply });
                     }
                 });
 
-                // Calculate the delay for the next loop iteration
-                // The time until the next progression should start is `maxNoteEndTime - audioContext.currentTime`
-                // This accounts for the actual duration of the played notes.
-                const timeUntilNextPlay = maxNoteEndTime - audioContext.currentTime;
-
-                // Set a timeout to loop if loopPlayback is true
+                // Schedule the next loop iteration precisely
                 if (loopPlayback) {
-                    // Add a small buffer before replaying to avoid glitches
-                    const loopDelayMilliseconds = Math.max(0, timeUntilNextPlay + 0.1) * 1000; // 100ms buffer
-                    currentLoopTimeout = setTimeout(playProgression, loopDelayMilliseconds);
+                    const nextStartTime = startTime + totalProgressionDuration;
+                    const delayToNextPlayback = (nextStartTime - audioContext.currentTime) * 1000;
+
+                    // Ensure delay is not negative (can happen if browser is very busy)
+                    // Add a small buffer (e.g., 50ms) to ensure playback doesn't cut off early
+                    const finalDelay = Math.max(0, delayToNextPlayback + 50);
+
+                    currentLoopTimeout = setTimeout(() => playProgression(nextStartTime), finalDelay);
                 }
             }
 
@@ -267,7 +258,8 @@
                             clearTimeout(currentLoopTimeout);
                             currentLoopTimeout = null;
                         }
-                        playProgression();
+                        // Start the first playback immediately at audioContext.currentTime
+                        playProgression(audioContext.currentTime);
                     }
                 });
             } else if (playButton) {
