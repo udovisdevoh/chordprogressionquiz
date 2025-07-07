@@ -18,6 +18,9 @@ namespace ChordProgprogressionQuiz.Services
         // Max semitones to transpose up/down (one octave) - adjusted to ensure range safety
         private const int MaxTransposeSemitones = 12;
 
+        // NEW: Octave shift for the "left hand" notes
+        private const int LeftHandOctaveShift = -24; // Two octaves down
+
         public ChordStylingService()
         {
             _random = new Random();
@@ -28,6 +31,7 @@ namespace ChordProgprogressionQuiz.Services
         /// Arpeggiation is always "twice as fast and repeated twice".
         /// Random chord inversion is applied per chord.
         /// Arpeggio direction (up/down) is chosen globally for the entire progression.
+        /// A "left hand" accompaniment of the two lowest chord notes (two octaves lower, held) is added.
         /// </summary>
         /// <param name="absoluteProgression">The raw progression with absolute MIDI pitches.</param>
         /// <returns>A StylizedChordProgression ready for playback.</returns>
@@ -47,7 +51,7 @@ namespace ChordProgprogressionQuiz.Services
             // The "twice as fast, repeated twice" arpeggio style is now ALWAYS applied
             bool applyFastRepeatedArpeggioGlobally = true;
 
-            // NEW: Determine globally if arpeggios should move down
+            // Determine globally if arpeggios should move down
             bool arpeggioDirectionIsDown = _random.NextDouble() < 0.5; // 50% chance for down, 50% for up
 
             foreach (var chord in absoluteProgression.Chords)
@@ -61,7 +65,28 @@ namespace ChordProgprogressionQuiz.Services
 
                 double allocatedChordDuration = BaseChordDuration;
 
-                var pitchesToProcess = chord.MidiPitches
+                // Capture the original pitches (sorted) for the left hand before any inversions/expansions
+                var originalSortedPitches = chord.MidiPitches.OrderBy(p => p).ToList();
+
+                // NEW LOGIC: Add "left hand" notes
+                // Get the lowest two notes (or fewer if chord is smaller)
+                var leftHandPitches = originalSortedPitches
+                                        .Take(2) // Take up to two lowest notes
+                                        .Select(p => AdjustMidiPitchToRange(p + globalTransposeOffset + LeftHandOctaveShift))
+                                        .ToList();
+
+                foreach (var lhPitch in leftHandPitches)
+                {
+                    stylizedEvents.Add(new StylizedMidiEvent
+                    {
+                        Pitch = lhPitch,
+                        StartTime = currentPlaybackTime,
+                        Duration = allocatedChordDuration * 0.95 // Hold for almost the full chord duration
+                    });
+                }
+
+
+                var pitchesToProcess = originalSortedPitches // Start with original sorted pitches for the right hand as well
                                         .Select(p => p + globalTransposeOffset)
                                         .ToList();
 
@@ -102,7 +127,7 @@ namespace ChordProgprogressionQuiz.Services
                     }
                     arpeggioPitches.Sort(); // Re-sort to ensure initial ascending order before applying direction
 
-                    // NEW LOGIC: Apply global arpeggio direction
+                    // Apply global arpeggio direction
                     if (arpeggioDirectionIsDown)
                     {
                         arpeggioPitches.Reverse(); // Reverse the order for a 'down' arpeggio
@@ -115,7 +140,6 @@ namespace ChordProgprogressionQuiz.Services
                         double currentArpeggioNoteOffset = 0.0;
                         double singlePassDuration = allocatedChordDuration / (applyFastRepeatedArpeggioGlobally ? 2.0 : 1.0);
 
-                        // Use arpeggioPitches.Count for the dynamicNoteStartDelay calculation (after potential reversal)
                         double dynamicNoteStartDelay = singlePassDuration / arpeggioPitches.Count;
 
                         if (dynamicNoteStartDelay < MinArpeggioNoteDuration)
@@ -127,7 +151,7 @@ namespace ChordProgprogressionQuiz.Services
                         double individualNoteDuration = dynamicNoteStartDelay * 0.8;
                         individualNoteDuration = Math.Max(MinArpeggioNoteDuration, individualNoteDuration);
 
-                        foreach (var pitch in arpeggioPitches) // Iterate over the potentially reversed list
+                        foreach (var pitch in arpeggioPitches)
                         {
                             stylizedEvents.Add(new StylizedMidiEvent
                             {
@@ -157,6 +181,12 @@ namespace ChordProgprogressionQuiz.Services
                 }
             }
 
+            // It's good practice to sort all events by StartTime at the very end
+            // to ensure correct playback order, especially since we added "left hand" notes
+            // at the start of each chord's block.
+            stylizedEvents.Sort((e1, e2) => e1.StartTime.CompareTo(e2.StartTime));
+
+
             return new StylizedChordProgression(stylizedEvents, absoluteProgression.Name);
         }
 
@@ -179,7 +209,7 @@ namespace ChordProgprogressionQuiz.Services
                 pitch -= 12;
             }
 
-            // Final clamp to ensure it's strictly within MIDI range
+            // A final check to ensure it doesn't go below 0 or above 127
             return Math.Clamp(pitch, 0, 127);
         }
     }
