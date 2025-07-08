@@ -1,4 +1,4 @@
-﻿// Services/ChordStylingService.cs
+﻿// D:\users\Anonymous\Documents\C Sharp\ChordProgressionQuiz\Services\ChordStylingService.cs
 using ChordProgressionQuiz.Models;
 using System;
 using System.Collections.Generic;
@@ -21,7 +21,7 @@ namespace ChordProgprogressionQuiz.Services
         // Octave shift for the "left hand" notes
         private const int LeftHandOctaveShift = -24; // Two octaves down
 
-        // NEW: MIDI Program Change numbers for instruments
+        // MIDI Program Change numbers for instruments
         private const int PianoProgram = 0; // General MIDI Program 0 is Acoustic Grand Piano (often 1 in DAWs)
         private const int StringEnsembleProgram = 48; // General MIDI Program 48 is String Ensemble 1 (often 49 in DAWs)
 
@@ -32,6 +32,7 @@ namespace ChordProgprogressionQuiz.Services
 
         /// <summary>
         /// Applies random styling (transposition, duration, arpeggiation) to an AbsoluteChordProgression.
+        /// If the number of chords is odd, the last chord is repeated once to make it even.
         /// Arpeggiation is always "twice as fast and repeated twice".
         /// Random chord inversion is applied per chord.
         /// Arpeggio direction (up/down) is chosen globally for the entire progression.
@@ -47,19 +48,32 @@ namespace ChordProgprogressionQuiz.Services
                 return new StylizedChordProgression(new List<StylizedMidiEvent>(), "Empty Stylized Progression");
             }
 
+            // NEW FIX: Duplicate the last chord if the count is odd
+            var processedChords = new List<MidiChord>(absoluteProgression.Chords);
+            if (processedChords.Count % 2 != 0) // If odd number of chords
+            {
+                var lastChord = processedChords.Last();
+                // Create a deep copy of the last chord to ensure it's a distinct object
+                // This is important so future modifications to the original lastChord don't affect its duplicate,
+                // although in this specific use case, it might not be strictly necessary as StylingService creates new events.
+                // It's good practice for modifying lists of reference types.
+                var duplicatedChord = new MidiChord(lastChord.MidiPitches); // Assuming MidiChord has a constructor for IEnumerable<int>
+                processedChords.Add(duplicatedChord);
+                Console.WriteLine($"Duplicated last chord '{lastChord}' to make progression even. New count: {processedChords.Count}");
+            }
+
             var stylizedEvents = new List<StylizedMidiEvent>();
             double currentPlaybackTime = 0.0; // Tracks the current time in the overall stylized progression
 
             // Determine random transposition for the entire progression
             int globalTransposeOffset = _random.Next(-MaxTransposeSemitones, MaxTransposeSemitones + 1);
 
-            // The "twice as fast, repeated twice" arpeggio style is now ALWAYS applied
-            bool applyFastRepeatedArpeggioGlobally = true;
+            bool applyFastRepeatedArpeggioGlobally = true; // Always applied now as per previous instruction
 
             // Determine globally if arpeggios should move down
             bool arpeggioDirectionIsDown = _random.NextDouble() < 0.5; // 50% chance for down, 50% for up
 
-            foreach (var chord in absoluteProgression.Chords)
+            foreach (var chord in processedChords) // Loop over the potentially modified list
             {
                 if (!chord.MidiPitches.Any())
                 {
