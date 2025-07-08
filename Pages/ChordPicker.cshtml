@@ -133,39 +133,30 @@
 
             // Prepare data for JavaScript
             const progressionData = @Html.Raw(Json.Serialize(Model.StylizedProgression?.MidiEvents ?? new List<StylizedMidiEvent>()));
-            const songName = @Html.Raw(Json.Serialize(Model.RandomProgression?.Song)); // Changed to Json.Serialize
-            const keysExample = @Html.Raw(Json.Serialize(Model.RandomProgression?.KeysExample)); // Changed to Json.Serialize
-            const tonalRomanNumerals = @Html.Raw(Json.Serialize(Model.RandomProgression?.Tonal?.RomanNumerals)); // Changed to Json.Serialize
-            const tonalRelativeTo = @Html.Raw(Json.Serialize(Model.RandomProgression?.Tonal?.RelativeTo)); // Changed to Json.Serialize
-            const modalList = @Html.Raw(Json.Serialize(Model.RandomProgression?.Modal ?? new List<Modal>()));
-            const substitutionGroup = @Html.Raw(Json.Serialize(Model.RandomProgression?.SubstitutionGroup)); // Changed to Json.Serialize, removed HasValue, ToString(), "null"
-            const palindromicGroup = @Html.Raw(Json.Serialize(Model.RandomProgression?.PalindromicGroup)); // Changed to Json.Serialize, removed HasValue, ToString(), "null"
-            const rotationGroup = @Html.Raw(Json.Serialize(Model.RandomProgression?.RotationGroup)); // Changed to Json.Serialize, removed HasValue, ToString(), "null"
-            const absoluteChords = @Html.Raw(Json.Serialize(Model.AbsoluteProgression?.Chords ?? new List<MidiChord>()));
+            const displayData = { // Consolidate data for chordDisplay
+                songName: @Html.Raw(Json.Serialize(Model.RandomProgression?.Song)),
+                keysExample: @Html.Raw(Json.Serialize(Model.RandomProgression?.KeysExample)),
+                tonalRomanNumerals: @Html.Raw(Json.Serialize(Model.RandomProgression?.Tonal?.RomanNumerals)),
+                tonalRelativeTo: @Html.Raw(Json.Serialize(Model.RandomProgression?.Tonal?.RelativeTo)),
+                modalList: @Html.Raw(Json.Serialize(Model.RandomProgression?.Modal ?? new List<Modal>())),
+                substitutionGroup: @Html.Raw(Json.Serialize(Model.RandomProgression?.SubstitutionGroup)),
+                palindromicGroup: @Html.Raw(Json.Serialize(Model.RandomProgression?.PalindromicGroup)),
+                rotationGroup: @Html.Raw(Json.Serialize(Model.RandomProgression?.RotationGroup)),
+                absoluteChords: @Html.Raw(Json.Serialize(Model.AbsoluteProgression?.Chords ?? new List<MidiChord>())),
+                currentProgressionIndex: @Html.Raw(Json.Serialize(Model.CurrentProgressionIndex)),
+                totalProgressionCount: @Html.Raw(Json.Serialize(Model.ChordService.GetProgressionCount()))
+            };
+
+            // Calculate the total duration of the progression once (for looping)
             const totalProgressionDuration = progressionData.length > 0 ?
                 Math.max(...progressionData.map(e => e.startTime + e.duration)) : 0;
-            const currentProgressionIndex = @Html.Raw(Json.Serialize(Model.CurrentProgressionIndex)); // Changed to Json.Serialize
-            const totalProgressionCount = @Html.Raw(Json.Serialize(Model.ChordService.GetProgressionCount())); // Changed to Json.Serialize
+            // No longer need separate const for currentProgressionIndex and totalProgressionCount if they are in displayData
 
             // Populate display using chordDisplay.js
-            window.chordDisplay.updateChordDisplay({
-                songName: songName,
-                keysExample: keysExample,
-                tonalRomanNumerals: tonalRomanNumerals,
-                tonalRelativeTo: tonalRelativeTo,
-                modalList: modalList,
-                substitutionGroup: substitutionGroup,
-                palindromicGroup: palindromicGroup,
-                rotationGroup: rotationGroup,
-                absoluteChords: absoluteChords,
-                stylizedMidiEvents: progressionData,
-                currentProgressionIndex: currentProgressionIndex,
-                totalProgressionCount: totalProgressionCount
-            });
+            window.chordDisplay.updateChordDisplay(displayData); // Pass the consolidated object
 
             // Set initial checkbox state for loopPlayback (server-side model is source of truth)
             if (loopPlaybackCheckbox) {
-                // FIXED: Use Json.Serialize to reliably emit a JS boolean literal
                 loopPlaybackCheckbox.checked = @Html.Raw(Json.Serialize(Model.LoopPlayback));
             }
 
