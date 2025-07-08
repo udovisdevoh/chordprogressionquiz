@@ -540,7 +540,7 @@
         "substitution_group": 7
     },
     {
-        "song": "Mixolydian Vamp: Sweet home Alabama, Tomy reviens, Hey Jude, Sweet Child O'Mine",
+        "song": "Mixolydian Vamp Cycle: Tomy reviens, Hey Jude, Sweet Child O'Mine",
         "keys_example": "G F C G",
         "tonal": {
             "roman_numerals": "V IV I V",
@@ -549,6 +549,20 @@
         "modal": [
             {
                 "roman_numerals": "I bVII IV I",
+                "relative_to": "G Mixolydian"
+            }
+        ]
+    },
+    {
+        "song": "Mixolydian Vamp with ambiguous tonic: Sweet home Alabama",
+        "keys_example": "G F C",
+        "tonal": {
+            "roman_numerals": "V IV I",
+            "relative_to": "C Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "I bVII IV",
                 "relative_to": "G Mixolydian"
             }
         ]
@@ -1012,6 +1026,14 @@
         "tonal": {
             "roman_numerals": "I7 VII7 iii7 ii7 V7 I7 VII7 iii7",
             "relative_to": "C Major"
+        }
+    },
+    {
+        "song": "Just the two of us (first 3 chords)",
+        "keys_example": "C B Em",
+        "tonal": {
+            "roman_numerals": "bVI V i",
+            "relative_to": "E minor"
         }
     },
     {
