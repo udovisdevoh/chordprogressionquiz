@@ -4,7 +4,7 @@
  * Parses a Roman numeral string into its base degree and type, and calculates its relative semitones.
  * This is a simplified client-side version. For full accuracy, a more robust parser might be needed.
  * @param {string} roman - The Roman numeral string (e.g., "I", "ii", "V7", "bIII").
- * @returns {object|null} An object with { baseSemitones: int, qualitySuffix: string, pitchesRelative: int[], fullRoman: string } or null if invalid.
+ * @returns {object|null} An object with { baseSemitones: int, qualitySuffix: string, pitchesRelative: int[], fullRoman: string, baseRomanNoSuffix: string, basePitchesRelative: int[] } or null if invalid.
  */
 function parseRomanNumeralForQuiz(roman) {
     roman = roman.trim();
@@ -29,23 +29,34 @@ function parseRomanNumeralForQuiz(roman) {
         'm(maj7)': [0, 3, 7, 11]
     };
 
+    // Intervals for *just the triad* based on inferred quality, for 'base match'
+    const triadQualityMap = {
+        '': [0, 4, 7],         // Major Triad
+        'm': [0, 3, 7],        // Minor Triad
+        'dim': [0, 3, 6],      // Diminished Triad
+        'aug': [0, 4, 8]       // Augmented Triad
+    };
+
+
     // Semitones from C for diatonic degrees in C Major (I=0, ii=2, iii=4, IV=5, V=7, vi=9, vii=11)
     const majorScaleDegrees = {
         'I': 0, 'II': 2, 'III': 4, 'IV': 5, 'V': 7, 'VI': 9, 'VII': 11,
         'i': 0, 'ii': 2, 'iii': 4, 'iv': 5, 'v': 7, 'vi': 9, 'vii': 11
     };
 
-    // Regex to extract accidental, base roman, and quality
-    // This regex now is case-insensitive for the quality suffix part to catch variants like "Maj7" or "maj7"
-    // but the base Roman numeral part ([IVXivx]+) is still case-sensitive for initial capture.
-    const regex = /^(b|#)?([IVXivx]+)(m7b5|m7|Maj7|dim7|dim|aug|sus2|sus4|add9|add#9|maj7#11|7|maj|m|\(maj7\))?$/i; // Added 'i' flag for suffixes again
+    // Regex to extract accidental, base roman, and quality suffix (case-insensitive for suffixes)
+    const regex = /^(b|#)?([IVXivx]+)(m7b5|m7|Maj7|dim7|dim|aug|sus2|sus4|add9|add#9|maj7#11|7|maj|m|\(maj7\))?$/i;
     const match = roman.match(regex);
 
     if (!match) return null;
 
     const leadingAccidental = match[1];
     const baseRomanRaw = match[2]; // e.g., 'I', 'i'
-    let qualitySuffixRaw = match[3] || ''; // e.g., 'Maj7', '7', 'm'
+    const qualitySuffixRaw = match[3] || ''; // e.g., 'Maj7', '7', 'm'
+
+    // Determine the base Roman numeral string without any suffix for comparison
+    const baseRomanNoSuffix = (leadingAccidental || '') + baseRomanRaw;
+
 
     let baseDiatonicSemitones = majorScaleDegrees[baseRomanRaw.toUpperCase()];
     if (baseDiatonicSemitones === undefined) return null;
@@ -56,27 +67,48 @@ function parseRomanNumeralForQuiz(roman) {
     baseDiatonicSemitones = (baseDiatonicSemitones % 12 + 12) % 12;
 
     let finalQualitySuffix = ''; // Will be the key for qualityMap (e.g., 'maj7', 'm', '7')
+    let inferredTriadQuality = ''; // Will be the key for triadQualityMap (e.g., '', 'm')
 
-    // Determine the final quality suffix for map lookup
+    // Determine the final quality suffix for map lookup and the inferred triad quality
     if (qualitySuffixRaw === '') {
         if (baseRomanRaw.match(/^[IVX]+$/)) { // Uppercase base Roman -> Major triad
             finalQualitySuffix = '';
+            inferredTriadQuality = '';
         } else if (baseRomanRaw.match(/^[ivx]+$/)) { // Lowercase base Roman -> Minor triad
             finalQualitySuffix = 'm';
+            inferredTriadQuality = 'm';
         }
     } else {
-        // Explicit suffixes, standardize to lowercase for map lookup
         const lowerQualitySuffix = qualitySuffixRaw.toLowerCase();
         if (lowerQualitySuffix === '7') { // Special handling for bare '7'
             if (baseRomanRaw.match(/^[IVX]+$/)) { // Uppercase base Roman + '7' -> Dominant 7th
                 finalQualitySuffix = '7';
+                inferredTriadQuality = ''; // Dominant 7th is built on Major triad
             } else { // Lowercase base Roman + '7' -> Minor 7th (e.g., i7)
                 finalQualitySuffix = 'm7';
+                inferredTriadQuality = 'm'; // Minor 7th is built on Minor triad
             }
-        } else {
-            // For other explicit suffixes like 'maj7', 'dim7', 'm7b5', 'm(maj7)', etc.
-            // These should directly map to their lowercase form in qualityMap
+        } else if (lowerQualitySuffix.startsWith('maj')) { // Covers 'maj' and 'maj7'
             finalQualitySuffix = lowerQualitySuffix;
+            inferredTriadQuality = ''; // Major 7th is built on Major triad
+        } else if (lowerQualitySuffix.startsWith('m')) { // Covers 'm', 'm7', 'm7b5', 'm(maj7)'
+            finalQualitySuffix = lowerQualitySuffix;
+            inferredTriadQuality = 'm'; // Minor based
+        } else if (lowerQualitySuffix.includes('dim')) { // Covers 'dim' and 'dim7'
+            finalQualitySuffix = lowerQualitySuffix;
+            inferredTriadQuality = 'dim'; // Diminished based
+        } else if (lowerQualitySuffix === 'aug') {
+            finalQualitySuffix = lowerQualitySuffix;
+            inferredTriadQuality = 'aug';
+        } else {
+            // For other explicit suffixes like 'sus2', 'sus4', 'add9', 'add#9', etc.
+            // For base match, their implied triad is generally based on the uppercase/lowercase of the roman.
+            finalQualitySuffix = lowerQualitySuffix;
+            if (baseRomanRaw.match(/^[IVX]+$/)) { // If base is Major
+                inferredTriadQuality = '';
+            } else if (baseRomanRaw.match(/^[ivx]+$/)) { // If base is Minor
+                inferredTriadQuality = 'm';
+            }
         }
     }
 
@@ -89,11 +121,21 @@ function parseRomanNumeralForQuiz(roman) {
     const chordPitchesRelative = intervals.map(interval => (baseDiatonicSemitones + interval) % 12);
     chordPitchesRelative.sort((a, b) => a - b); // Ensure pitches are sorted for consistent comparison
 
+    // Calculate base triad pitches
+    const baseTriadIntervals = triadQualityMap[inferredTriadQuality];
+    const basePitchesRelative = baseTriadIntervals ? baseTriadIntervals.map(interval => (baseDiatonicSemitones + interval) % 12) : [];
+    basePitchesRelative.sort((a, b) => a - b);
+
+
     return {
         baseSemitones: baseDiatonicSemitones,
-        qualitySuffix: finalQualitySuffix,
-        pitchesRelative: chordPitchesRelative,
-        fullRoman: roman // Store the trimmed user input for strict text comparison
+        qualitySuffix: finalQualitySuffix, // Full quality (e.g., 'maj7', '7', 'm')
+        pitchesRelative: chordPitchesRelative, // Pitches for the full chord
+        fullRoman: roman, // The trimmed user input for strict text comparison
+
+        baseRomanNoSuffix: baseRomanNoSuffix, // e.g., "V", "i", "bIII"
+        inferredTriadQuality: inferredTriadQuality, // e.g., '', 'm', 'dim', 'aug'
+        basePitchesRelative: basePitchesRelative // Pitches for just the triad
     };
 }
 
@@ -166,24 +208,29 @@ function checkAnswers(quizData) {
 
 
         if (parsedGuessedChord && parsedActualChord) {
-            // First, check for exact string match (case-sensitive)
+            // 1. Strict Exact String Match (e.g., "V7" === "V7")
             if (parsedGuessedChord.fullRoman === parsedActualChord.fullRoman) {
                 displayBox.classList.add('correct');
             }
-            // Second, check for structural match (same root, same quality type, same notes)
-            // This handles cases like "I" vs "I" if both resolve to the same major triad structure,
-            // or if there are subtle differences in parsing but structure is identical.
-            // Also catches "i" vs "i" correctly after `parseRomanNumeralForQuiz` logic.
+            // 2. Structural Match (same root, same quality type, same full set of notes)
+            //    e.g., "I" === "I" if both resolve to same Major triad, or "i" === "i"
             else if (parsedGuessedChord.baseSemitones === parsedActualChord.baseSemitones &&
-                     parsedGuessedChord.qualitySuffix === parsedActualChord.qualitySuffix &&
-                     arePitchesExactlyEqual(parsedGuessedChord.pitchesRelative, parsedActualChord.pitchesRelative)) {
+                parsedGuessedChord.qualitySuffix === parsedActualChord.qualitySuffix &&
+                arePitchesExactlyEqual(parsedGuessedChord.pitchesRelative, parsedActualChord.pitchesRelative)) {
                 displayBox.classList.add('correct');
             }
-            // Third, check for similarity (at least 2 common notes)
+            // 3. NEW: Base Chord Match (same root, same inferred TRIAD quality, ignoring 7ths, add9, etc.)
+            //    e.g., "V" correct for "V7", "I" correct for "Imaj7"
+            else if (parsedGuessedChord.baseSemitones === parsedActualChord.baseSemitones &&
+                parsedGuessedChord.inferredTriadQuality === parsedActualChord.inferredTriadQuality &&
+                arePitchesExactlyEqual(parsedGuessedChord.basePitchesRelative, parsedActualChord.basePitchesRelative)) {
+                displayBox.classList.add('correct');
+            }
+            // 4. Similarity Match (at least 2 common notes in the full chord)
             else if (arePitchesSimilar(parsedGuessedChord.pitchesRelative, parsedActualChord.pitchesRelative, 2)) {
                 displayBox.classList.add('similar');
             }
-            // If none of the above, it's incorrect
+            // 5. If none of the above, it's incorrect
             else {
                 displayBox.classList.add('incorrect');
             }
