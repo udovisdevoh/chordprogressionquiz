@@ -1,5 +1,4 @@
-﻿// (Contents as provided in the previous turn)
-// wwwroot/js/chordDisplay.js
+﻿// wwwroot/js/chordDisplay.js
 
 /**
  * Updates the display with the current chord progression details.
@@ -43,8 +42,9 @@ function updateChordDisplay(data) {
             if (modalSectionElement) modalSectionElement.style.display = 'block'; // Show modal section
             data.modalList.forEach(modal => {
                 const span = document.createElement('span');
-                // Ensure modal properties are accessed correctly (they are strings after Json.Serialize)
-                span.innerHTML = `${modal.romanNumerals || ''} (relative to ${modal.relativeTo || ''})<br />`;
+                // FIXED: Access properties with correct casing (roman_numerals, relative_to)
+                // These come from the JSON, which uses snake_case, and Json.Serialize preserves it unless specified otherwise.
+                span.innerHTML = `${modal.roman_numerals || ''} (relative to ${modal.relative_to || ''})<br />`;
                 modalListElement.appendChild(span);
             });
         } else {
@@ -60,7 +60,7 @@ function updateChordDisplay(data) {
         const displayValue = data.substitutionGroup !== null ? data.substitutionGroup : 'N/A';
         substitutionGroupElement.textContent = displayValue;
         if (substitutionGroupElement.closest('p')) { // Ensure parent 'p' exists before trying to style
-            substitutionGroupElement.closest('p').style.display = data.substitutionGroup !== null ? 'block' : 'none';
+             substitutionGroupElement.closest('p').style.display = data.substitutionGroup !== null ? 'block' : 'none';
         }
     }
     if (palindromicGroupElement) {
