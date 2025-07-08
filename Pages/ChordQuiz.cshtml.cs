@@ -33,11 +33,14 @@ namespace ChordProgressionQuiz.Pages
         public bool LoopPlayback { get; set; } = true;
 
         // Properties to hold the *actual* answers, serialized to JS as hidden data
-        public string ActualRomanNumeralsJson { get; set; }
-        public string ActualModalRomanNumeralsJson { get; set; } // If a modal exists
+        public string ActualTonalRomanNumeralsJson { get; set; } // Keep for display
+        public string ActualModalRomanNumeralsJson { get; set; } // Keep for display
         public string ActualKeysExampleJson { get; set; }
         public string ActualSongNameJson { get; set; }
-        public string ActualRelativeToJson { get; set; }
+        public string ActualRelativeToJson { get; set; } // Tonal relative to
+
+        // NEW: This will hold the preferred answer sequence for the quiz check
+        public string ActualQuizAnswersJson { get; set; }
 
 
         public ChordQuizModel(ChordProgressionService chordService, ChordStylingService chordStylingService, ILogger<ChordQuizModel> logger)
@@ -106,23 +109,41 @@ namespace ChordProgressionQuiz.Pages
                     StylizedProgression = new StylizedChordProgression(basicStylizedEvents, AbsoluteProgression.Name);
                 }
 
-                // Serialize actual answers for JavaScript, but keep them hidden from direct Razor display
+                // Serialize all answers for JavaScript to reveal/display later
                 ActualSongNameJson = JsonSerializer.Serialize(QuizProgression.Song);
                 ActualKeysExampleJson = JsonSerializer.Serialize(QuizProgression.KeysExample);
-                ActualRelativeToJson = JsonSerializer.Serialize(QuizProgression.Tonal?.RelativeTo); // Assuming Tonal always exists if RomanNumerals are present
-                ActualRomanNumeralsJson = JsonSerializer.Serialize(QuizProgression.Tonal?.RomanNumerals?.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+                ActualRelativeToJson = JsonSerializer.Serialize(QuizProgression.Tonal?.RelativeTo); // Tonal relative to
 
+                // Always serialize Tonal Roman Numerals
+                ActualTonalRomanNumeralsJson = JsonSerializer.Serialize(QuizProgression.Tonal?.RomanNumerals?.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+
+                // Always serialize Modal Roman Numerals (can be empty list)
                 if (QuizProgression.Modal != null && QuizProgression.Modal.Any())
                 {
-                    // Serialize list of modal objects, then extract roman numerals from them in JS
                     ActualModalRomanNumeralsJson = JsonSerializer.Serialize(
                         QuizProgression.Modal.Select(m => new { RomanNumerals = m.RomanNumerals, RelativeTo = m.RelativeTo }).ToList()
                     );
                 }
                 else
                 {
-                    ActualModalRomanNumeralsJson = JsonSerializer.Serialize(new List<object>()); // Empty list if no modal
+                    ActualModalRomanNumeralsJson = JsonSerializer.Serialize(new List<object>());
                 }
+
+                // NEW: Determine the primary quiz answer sequence
+                string[] quizAnswerNumerals;
+                if (QuizProgression.Modal != null && QuizProgression.Modal.Any())
+                {
+                    quizAnswerNumerals = QuizProgression.Modal.First().RomanNumerals.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                }
+                else if (QuizProgression.Tonal != null && !string.IsNullOrEmpty(QuizProgression.Tonal.RomanNumerals))
+                {
+                    quizAnswerNumerals = QuizProgression.Tonal.RomanNumerals.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                }
+                else
+                {
+                    quizAnswerNumerals = new string[] { }; // Fallback to empty if neither available
+                }
+                ActualQuizAnswersJson = JsonSerializer.Serialize(quizAnswerNumerals);
             }
             else
             {

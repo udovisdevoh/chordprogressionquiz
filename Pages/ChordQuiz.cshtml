@@ -109,7 +109,7 @@
                     </form>
                 </div>
 
-                @* NEW: Revealed Answer Info Section *@
+                @* Revealed Answer Info Section *@
                 <div class="hidden-info mt-4" id="revealInfoSection">
                     <hr />
                     <h4>Actual Progression Details:</h4>
@@ -120,6 +120,8 @@
                     <div id="quizInfoModalSection" style="display:none;">
                         <p><strong>Modal Roman Numerals:</strong> <span id="quizInfoModalRoman"></span></p>
                     </div>
+                    @* NEW: Display the Quiz Answer Source *@
+                    <p><strong>Quiz Answer Source:</strong> <span id="quizAnswerSource"></span></p>
                 </div>
 
 
@@ -166,10 +168,9 @@
             // Get navigation forms by ID (for persistence)
             const previousQuizForm = document.getElementById('previousQuizForm');
             const nextQuizForm = document.getElementById('nextQuizForm');
-            const newQuizForm = document.querySelector('form[asp-page-handler="Random"]'); // Get "New Quiz" form by handler
+            const newQuizForm = document.querySelector('form[asp-page-handler="Random"]');
             const toggleStylizedPlaybackForm = document.getElementById('toggleStylizedPlaybackForm');
             const toggleLoopPlaybackForm = document.getElementById('toggleLoopPlaybackForm');
-
 
             // Data for MIDI Playback (from Model)
             const progressionData = @Html.Raw(Json.Serialize(Model.StylizedProgression?.MidiEvents ?? new List<StylizedMidiEvent>()));
@@ -178,13 +179,21 @@
 
             // Quiz Data passed directly as a JavaScript object
             const quizData = {
-                actualRomanNumerals: @Html.Raw(Model.ActualRomanNumeralsJson),
+                actualQuizAnswers: @Html.Raw(Model.ActualQuizAnswersJson), // NEW: Use the preferred answer sequence
+                actualTonalRomanNumerals: @Html.Raw(Model.ActualTonalRomanNumeralsJson),
                 actualModalRomanNumerals: @Html.Raw(Model.ActualModalRomanNumeralsJson),
                 actualKeysExample: @Html.Raw(Model.ActualKeysExampleJson),
                 actualSongName: @Html.Raw(Model.ActualSongNameJson),
                 actualRelativeTo: @Html.Raw(Model.ActualRelativeToJson),
                 absoluteMidiPitches: @Html.Raw(Json.Serialize(Model.AbsoluteProgression?.Chords.Select(c => c.MidiPitches).ToList() ?? new List<List<int>>()))
             };
+            // Determine the source of the quiz answer for display after reveal
+            if (quizData.actualModalRomanNumerals && quizData.actualModalRomanNumerals.length > 0) {
+                quizData.quizAnswerSource = "Modal";
+            } else {
+                quizData.quizAnswerSource = "Tonal";
+            }
+
 
             // Initialize loopPlayback checkbox state from server-side model
             if (loopPlaybackCheckbox) {
