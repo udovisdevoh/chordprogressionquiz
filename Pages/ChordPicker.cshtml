@@ -10,62 +10,46 @@
     {
         <div class="card mt-4 mx-auto" style="max-width: 600px;">
             <div class="card-header bg-primary text-white rounded-top">
-                <h4 class="mb-0">Song: @Model.RandomProgression.Song</h4>
+                <h4 class="mb-0">Song: <span id="songName">@Model.RandomProgression.Song</span></h4>
             </div>
             <div class="card-body">
-                <h5 class="card-title text-info">Keys Example: @Model.RandomProgression.KeysExample</h5>
+                <h5 class="card-title text-info">Keys Example: <span id="keysExample">@Model.RandomProgression.KeysExample</span></h5>
                 <p class="card-text">
-                    <strong>Tonal:</strong> @Model.RandomProgression.Tonal?.RomanNumerals (relative to @Model.RandomProgression.Tonal?.RelativeTo)
+                    <strong>Tonal:</strong> <span id="tonalRomanNumerals">@Model.RandomProgression.Tonal?.RomanNumerals</span> (relative to <span id="tonalRelativeTo">@Model.RandomProgression.Tonal?.RelativeTo)</span>
                 </p>
-                @if (Model.RandomProgression.Modal != null && Model.RandomProgression.Modal.Any())
-                {
+                <div id="modalSection" style="display:none;">
                     <p class="card-text">
                         <strong>Modal:</strong>
-                        @foreach (var modal in Model.RandomProgression.Modal)
-                        {
-                            <span>@modal.RomanNumerals (relative to @modal.RelativeTo)</span><br />
-                        }
+                        <span id="modalList">
+                        </span>
                     </p>
-                }
-                @if (Model.RandomProgression.SubstitutionGroup.HasValue)
-                {
-                    <p class="card-text"><strong>Substitution Group:</strong> @Model.RandomProgression.SubstitutionGroup</p>
-                }
-                @if (Model.RandomProgression.PalindromicGroup.HasValue)
-                {
-                    <p class="card-text"><strong>Palindromic Group:</strong> @Model.RandomProgression.PalindromicGroup</p>
-                }
-                @if (Model.RandomProgression.RotationGroup.HasValue)
-                {
-                    <p class="card-text"><strong>Rotation Group:</strong> @Model.RandomProgression.RotationGroup</p>
-                }
+                </div>
+                <p class="card-text"><strong>Substitution Group:</strong> <span id="substitutionGroup">@(Model.RandomProgression.SubstitutionGroup.HasValue ? Model.RandomProgression.SubstitutionGroup.ToString() : "N/A")</span></p>
+                <p class="card-text"><strong>Palindromic Group:</strong> <span id="palindromicGroup">@(Model.RandomProgression.PalindromicGroup.HasValue ? Model.RandomProgression.PalindromicGroup.ToString() : "N/A")</span></p>
+                <p class="card-text"><strong>Rotation Group:</strong> <span id="rotationGroup">@(Model.RandomProgression.RotationGroup.HasValue ? Model.RandomProgression.RotationGroup.ToString() : "N/A")</span></p>
 
                 <hr />
                 @if (Model.AbsoluteProgression != null && Model.AbsoluteProgression.Chords.Any())
                 {
-                    <h5 class="card-title text-success mt-3">Base MIDI Pitches:</h5>
-                    <p class="card-text">
-                        @foreach (var chord in Model.AbsoluteProgression.Chords)
-                        {
-                            <span>[@string.Join(", ", chord.MidiPitches)]</span>
-                            if (Model.AbsoluteProgression.Chords.IndexOf(chord) < Model.AbsoluteProgression.Chords.Count - 1)
-                            {
-                                <span> | </span>
-                            }
-                        }
-                    </p>
-                    <h5 class="card-title text-primary mt-3">Stylized Playback Details:</h5>
-                    @if (Model.StylizedProgression != null && Model.StylizedProgression.MidiEvents.Any())
-                    {
-                        <p class="card-text">
-                            Total MIDI Events: @Model.StylizedProgression.MidiEvents.Count
-                            <br />
+                    <div id="baseMidiPitchesSection">
+                        <h5 class="card-title text-success mt-3">Base MIDI Pitches:</h5>
+                        <p class="card-text" id="baseMidiPitches">
+                            @* Content will be populated by JavaScript *@
                         </p>
-                    }
-                    else
-                    {
-                        <p class="alert alert-info mt-3">No stylized playback data available.</p>
-                    }
+                    </div>
+                    <h5 class="card-title text-primary mt-3">Stylized Playback Details:</h5>
+                    <div id="stylizedPlaybackDetailsSection">
+                        @if (Model.StylizedProgression != null && Model.StylizedProgression.MidiEvents.Any())
+                        {
+                            <p class="card-text" id="totalMidiEvents">
+                                @* Content will be populated by JavaScript *@
+                            </p>
+                        }
+                        else
+                        {
+                            <p class="alert alert-info mt-3">No stylized playback data available.</p>
+                        }
+                    </div>
                     <button id="playMidiButton" class="btn btn-primary btn-lg mt-3">Play MIDI Progression</button>
                     <div id="loadingMessage" class="mt-2 text-muted" style="display:none;">Loading instruments...</div>
                 }
@@ -75,7 +59,7 @@
                 }
             </div>
         </div>
-        <p class="mt-2">Progression @(Model.CurrentProgressionIndex + 1) of @Model.ChordService.GetProgressionCount()</p>
+        <p class="mt-2" id="progressionIndexCount">Progression @(Model.CurrentProgressionIndex + 1) of @Model.ChordService.GetProgressionCount()</p>
 
     }
     else
@@ -83,30 +67,28 @@
         <p class="alert alert-warning mt-4">No chord progression found. Please ensure the 'chordProgressions.json' file is correctly placed in the 'Data' folder and contains valid data.</p>
     }
     <div class="mt-4 d-flex justify-content-center align-items-center flex-wrap">
-        @* Toggle Stylized Playback Checkbox *@
         <form method="post" asp-page-handler="ToggleStylizedPlayback" class="d-inline-flex align-items-center mx-2 my-1">
             <input type="hidden" asp-for="CurrentProgressionIndex" />
             <input type="hidden" asp-for="LoopPlayback" />
-            <input type="checkbox" asp-for="EnableStylizedPlayback" onchange="this.form.submit()" class="form-check-input me-1" />
+            <input type="checkbox" asp-for="EnableStylizedPlayback"
+                   onchange="this.form.submit()" class="form-check-input me-1" />
             <label asp-for="EnableStylizedPlayback" class="form-check-label">Enable Stylized Playback</label>
         </form>
 
-        @* New Loop Playback Checkbox (now server-bound) *@
         <form method="post" asp-page-handler="ToggleLoopPlayback" class="d-inline-flex align-items-center mx-2 my-1">
             <input type="hidden" asp-for="CurrentProgressionIndex" />
             <input type="hidden" asp-for="EnableStylizedPlayback" />
-            <input type="checkbox" asp-for="LoopPlayback" onchange="this.form.submit()" class="form-check-input me-1" />
+            <input type="checkbox"
+                   asp-for="LoopPlayback" onchange="this.form.submit()" class="form-check-input me-1" id="loopPlaybackCheckbox" />
             <label asp-for="LoopPlayback" class="form-check-label">Loop Playback</label>
         </form>
 
+        <form method="get" asp-page="/ChordPicker" class="d-inline-block mx-2 my-1">
+            <input type="hidden" name="EnableStylizedPlayback" value="@Model.EnableStylizedPlayback.ToString().ToLowerInvariant()" />
+            <input type="hidden" name="LoopPlayback" value="@Model.LoopPlayback.ToString().ToLowerInvariant()" />
+            <button type="submit" class="btn btn-success btn-lg">Get Random Progression</button>
+        </form>
 
-        @* Random Progression Button - PAY CLOSE ATTENTION TO THIS LINE *@
-        <a asp-page="/ChordPicker"
-           asp-route-EnableStylizedPlayback="@Model.EnableStylizedPlayback"
-           asp-route-LoopPlayback="@Model.LoopPlayback"
-           class="btn btn-success btn-lg mx-2 my-1">Get Random Progression</a>
-
-        @* Navigation Buttons *@
         <form method="post" class="d-inline-block my-1">
             <input type="hidden" asp-for="CurrentProgressionIndex" />
             <input type="hidden" asp-for="EnableStylizedPlayback" />
@@ -141,149 +123,65 @@
 
 @section Scripts {
     <script src="~/js/soundfont-player.min.js"></script>
+    <script src="~/js/midiPlayer.js"></script>
+    <script src="~/js/chordDisplay.js"></script>
     <script type="text/javascript">
         document.addEventListener('DOMContentLoaded', function () {
-            const playButton = document.getElementById('playMidiButton');
+            const playMidiButton = document.getElementById('playMidiButton');
             const loadingMessage = document.getElementById('loadingMessage');
-            const loopCheckbox = document.getElementById('loopPlaybackCheckbox');
-            let pianoPlayer = null;
-            let stringPlayer = null;
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const loopPlaybackCheckbox = document.getElementById('loopPlaybackCheckbox');
 
-            const stylizedMidiEvents = @Html.Raw(Json.Serialize(Model.StylizedProgression?.MidiEvents));
+            // Prepare data for JavaScript
+            const progressionData = @Html.Raw(Json.Serialize(Model.StylizedProgression?.MidiEvents ?? new List<StylizedMidiEvent>()));
+            const songName = @Html.Raw(Json.Serialize(Model.RandomProgression?.Song)); // Changed to Json.Serialize
+            const keysExample = @Html.Raw(Json.Serialize(Model.RandomProgression?.KeysExample)); // Changed to Json.Serialize
+            const tonalRomanNumerals = @Html.Raw(Json.Serialize(Model.RandomProgression?.Tonal?.RomanNumerals)); // Changed to Json.Serialize
+            const tonalRelativeTo = @Html.Raw(Json.Serialize(Model.RandomProgression?.Tonal?.RelativeTo)); // Changed to Json.Serialize
+            const modalList = @Html.Raw(Json.Serialize(Model.RandomProgression?.Modal ?? new List<Modal>()));
+            const substitutionGroup = @Html.Raw(Json.Serialize(Model.RandomProgression?.SubstitutionGroup)); // Changed to Json.Serialize, removed HasValue, ToString(), "null"
+            const palindromicGroup = @Html.Raw(Json.Serialize(Model.RandomProgression?.PalindromicGroup)); // Changed to Json.Serialize, removed HasValue, ToString(), "null"
+            const rotationGroup = @Html.Raw(Json.Serialize(Model.RandomProgression?.RotationGroup)); // Changed to Json.Serialize, removed HasValue, ToString(), "null"
+            const absoluteChords = @Html.Raw(Json.Serialize(Model.AbsoluteProgression?.Chords ?? new List<MidiChord>()));
+            const totalProgressionDuration = progressionData.length > 0 ?
+                Math.max(...progressionData.map(e => e.startTime + e.duration)) : 0;
+            const currentProgressionIndex = @Html.Raw(Json.Serialize(Model.CurrentProgressionIndex)); // Changed to Json.Serialize
+            const totalProgressionCount = @Html.Raw(Json.Serialize(Model.ChordService.GetProgressionCount())); // Changed to Json.Serialize
 
-            const PIANO_PROGRAM = 0; // Acoustic Grand Piano
-            const STRING_ENSEMBLE_PROGRAM = 48; // String Ensemble 1
+            // Populate display using chordDisplay.js
+            window.chordDisplay.updateChordDisplay({
+                songName: songName,
+                keysExample: keysExample,
+                tonalRomanNumerals: tonalRomanNumerals,
+                tonalRelativeTo: tonalRelativeTo,
+                modalList: modalList,
+                substitutionGroup: substitutionGroup,
+                palindromicGroup: palindromicGroup,
+                rotationGroup: rotationGroup,
+                absoluteChords: absoluteChords,
+                stylizedMidiEvents: progressionData,
+                currentProgressionIndex: currentProgressionIndex,
+                totalProgressionCount: totalProgressionCount
+            });
 
-            const PIANO_GAIN = 1.0; // Full volume for piano
-            const STRING_GAIN = 0.3; // Reduced volume for strings
-
-            const LOCAL_SOUNDFONT_PATH = '/soundfonts/MusyngKite/';
-
-            function buildLocalSoundfontUrl(name) {
-                return LOCAL_SOUNDFONT_PATH + name + '-mp3.js';
+            // Set initial checkbox state for loopPlayback (server-side model is source of truth)
+            if (loopPlaybackCheckbox) {
+                // FIXED: Use Json.Serialize to reliably emit a JS boolean literal
+                loopPlaybackCheckbox.checked = @Html.Raw(Json.Serialize(Model.LoopPlayback));
             }
 
-            // Initialize loopPlayback from server-side model state
-            let loopPlayback = @Html.Raw(Json.Serialize(Model.LoopPlayback));
-            if (loopCheckbox) {
-                loopCheckbox.checked = loopPlayback; // Set checkbox state based on server-side model
-            }
-
-            let currentLoopTimeout = null; // To store the timeout ID for stopping the loop
-
-            // Calculate the total duration of the progression once
-            const totalProgressionDuration = stylizedMidiEvents.length > 0
-                ? Math.max(...stylizedMidiEvents.map(e => e.startTime + e.duration))
-                : 0;
-
-            // Update loopPlayback variable when checkbox changes
-            if (loopCheckbox) {
-                loopCheckbox.addEventListener('change', function() {
-                    // This change handler now also submits the form to persist the state
-                    // The 'loopPlayback' JS variable will be updated on the *next* page load
-                    // based on the server-side model, ensuring consistency.
-                    // For immediate client-side effect, we can update the variable here too.
-                    loopPlayback = this.checked;
-                    if (!loopPlayback && currentLoopTimeout) {
-                        clearTimeout(currentLoopTimeout); // Stop the loop if unchecked
-                        currentLoopTimeout = null;
-                        if (pianoPlayer) pianoPlayer.stop(); // Stop current playback
-                        if (stringPlayer) stringPlayer.stop(); // Stop current playback
-                    }
-                });
-            }
-
-            async function loadInstruments() {
-                if (pianoPlayer === null || stringPlayer === null) {
-                    loadingMessage.style.display = 'block';
-                    playButton.disabled = true;
-                    try {
-                        [pianoPlayer, stringPlayer] = await Promise.all([
-                            Soundfont.instrument(audioContext, 'acoustic_grand_piano', {
-                                format: 'mp3',
-                                nameToUrl: buildLocalSoundfontUrl
-                            }),
-                            Soundfont.instrument(audioContext, 'string_ensemble_1', {
-                                format: 'mp3',
-                                nameToUrl: buildLocalSoundfontUrl
-                            })
-                        ]);
-
-                        loadingMessage.style.display = 'none';
-                        playButton.disabled = false;
-                        console.log("Instruments loaded successfully from local path: Piano and String Ensemble.");
-                    } catch (error) {
-                        console.error("Error loading soundfont instruments. Please double check: 1) local .js files are in 'wwwroot/soundfonts/MusyngKite/'. 2) Their names are exactly 'instrument_name-mp3.js'. 3) The 'format: 'mp3'' option is correct.", error);
-                        loadingMessage.textContent = "Error loading instruments. Check console (F12).";
-                        return false;
-                    }
-                }
-                return true;
-            }
-
-            function playProgression(startTime = audioContext.currentTime) {
-                if (!pianoPlayer || !stringPlayer) {
-                    console.error("Instruments not loaded. Cannot play progression.");
-                    return;
-                }
-
-                // Stop any currently scheduled notes for these players to prevent overlap issues
-                pianoPlayer.stop();
-                stringPlayer.stop();
-
-                stylizedMidiEvents.forEach(event => {
-                    const safePitch = Math.max(0, Math.min(127, event.pitch));
-                    let playerToUse;
-                    let gainToApply = 1.0;
-
-                    if (event.instrumentProgram === PIANO_PROGRAM) {
-                        playerToUse = pianoPlayer;
-                        gainToApply = PIANO_GAIN;
-                    } else if (event.instrumentProgram === STRING_ENSEMBLE_PROGRAM) {
-                        playerToUse = stringPlayer;
-                        gainToApply = STRING_GAIN;
-                    } else {
-                        console.warn(`Unknown instrument program: ${event.instrumentProgram}. Defaulting to piano.`);
-                        playerToUse = pianoPlayer;
-                        gainToApply = PIANO_GAIN;
-                    }
-
-                    if (playerToUse) {
-                        playerToUse.play(safePitch, startTime + event.startTime, { duration: event.duration, gain: gainToApply });
-                    }
-                });
-
-                // Schedule the next loop iteration precisely
-                if (loopPlayback) {
-                    const nextStartTime = startTime + totalProgressionDuration;
-                    const delayToNextPlayback = (nextStartTime - audioContext.currentTime) * 1000;
-
-                    // Ensure delay is not negative (can happen if browser is very busy)
-                    // Add a small buffer (e.g., 50ms) to ensure playback doesn't cut off early
-                    const finalDelay = Math.max(0, delayToNextPlayback + 50);
-
-                    currentLoopTimeout = setTimeout(() => playProgression(nextStartTime), finalDelay);
-                }
-            }
-
-
-            if (playButton && stylizedMidiEvents && stylizedMidiEvents.length > 0) {
-                playButton.addEventListener('click', async function () {
-                    const instrumentsLoaded = await loadInstruments();
+            // Playback logic using midiPlayer.js
+            if (playMidiButton && progressionData && progressionData.length > 0) {
+                playMidiButton.addEventListener('click', async function () {
+                    const instrumentsLoaded = await window.midiPlayer.loadInstruments(loadingMessage, playMidiButton);
                     if (instrumentsLoaded) {
-                        // Clear any existing loop timeout before starting new playback
-                        if (currentLoopTimeout) {
-                            clearTimeout(currentLoopTimeout);
-                            currentLoopTimeout = null;
-                        }
-                        // Start the first playback immediately at audioContext.currentTime
-                        playProgression(audioContext.currentTime);
+                        window.midiPlayer.stopAllNotes();
+                        const loopEnabledForPlayback = loopPlaybackCheckbox ? loopPlaybackCheckbox.checked : false;
+                        window.midiPlayer.playProgression(progressionData, loopEnabledForPlayback, totalProgressionDuration);
                     }
                 });
-            } else if (playButton) {
-                playButton.disabled = true;
-                playButton.textContent = "No MIDI to Play";
+            } else if (playMidiButton) {
+                playMidiButton.disabled = true;
+                playMidiButton.textContent = "No MIDI to Play";
             }
         });
     </script>
