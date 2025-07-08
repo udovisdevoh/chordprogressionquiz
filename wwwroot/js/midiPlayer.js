@@ -8,6 +8,14 @@ let stringPlayer = null;
 // Store the timeout ID for stopping the loop
 let currentLoopTimeout = null;
 
+// Store the start time of the current progression playback in audioContext.currentTime
+let currentPlaybackStartTime = 0;
+// Store the current position in the progression (relative to its start) when paused
+let currentPauseOffset = 0;
+// Flag to indicate if playback is currently paused
+let isPaused = false;
+
+
 // MIDI Program Change numbers for instruments (from ChordStylingService.cs and ChordPicker.cshtml)
 const PIANO_PROGRAM = 0; // Acoustic Grand Piano
 const STRING_ENSEMBLE_PROGRAM = 48; // String Ensemble 1
@@ -43,7 +51,7 @@ function initializeAudioContext() {
  * Loads the piano and string ensemble instruments.
  * @param {HTMLElement} loadingMessageElement - The HTML element to show/hide loading messages.
  * @param {HTMLElement} playButtonElement - The HTML play button to disable/enable.
- * @returns {Promise<boolean>} True if instruments loaded successfully, false otherwise.
+ * @returns {Promise<boolean>} A promise that resolves with the loaded instrument.
  */
 async function loadInstruments(loadingMessageElement, playButtonElement) {
     initializeAudioContext(); // Ensure context is ready
@@ -90,51 +98,71 @@ async function loadInstruments(loadingMessageElement, playButtonElement) {
  * @param {Array<Object>} stylizedMidiEvents - An array of StylizedMidiEvent objects.
  * @param {boolean} loopPlayback - Whether the progression should loop.
  * @param {number} totalProgressionDuration - The total duration of the progression in seconds.
- * @param {number} [startTime=audioContext.currentTime] - The exact Web Audio API time to start playback.
+ * @param {number} [startOffset=0] - The offset in seconds into the progression to start playback from (for resuming).
  */
-function playProgression(stylizedMidiEvents, loopPlayback, totalProgressionDuration, startTime = initializeAudioContext().currentTime) {
+function playProgression(stylizedMidiEvents, loopPlayback, totalProgressionDuration, startOffset = 0) {
     if (!pianoPlayer || !stringPlayer) {
         console.error("Instruments not loaded. Cannot play progression.");
         return;
     }
 
-    // Stop any currently scheduled notes for these players to prevent overlap issues
-    pianoPlayer.stop();
-    stringPlayer.stop();
+    // Stop any currently scheduled notes/loops (important for play after pause/stop)
+    stopAllNotes();
+
+    currentPlaybackStartTime = audioContext.currentTime - startOffset; // Adjust start time for offset
+    isPaused = false; // Mark as not paused
 
     stylizedMidiEvents.forEach(event => {
-        const safePitch = Math.max(0, Math.min(127, event.pitch));
-        let playerToUse;
-        let gainToApply = 1.0;
+        // Only schedule notes that are after the startOffset
+        if (event.startTime >= startOffset) {
+            const safePitch = Math.max(0, Math.min(127, event.pitch));
+            let playerToUse;
+            let gainToApply = 1.0;
 
-        if (event.instrumentProgram === PIANO_PROGRAM) {
-            playerToUse = pianoPlayer;
-            gainToApply = PIANO_GAIN;
-        } else if (event.instrumentProgram === STRING_ENSEMBLE_PROGRAM) {
-            playerToUse = stringPlayer;
-            gainToApply = STRING_GAIN;
-        } else {
-            console.warn(`Unknown instrument program: ${event.instrumentProgram}. Defaulting to piano.`);
-            playerToUse = pianoPlayer;
-            gainToApply = PIANO_GAIN;
-        }
+            if (event.instrumentProgram === PIANO_PROGRAM) {
+                playerToUse = pianoPlayer;
+                gainToApply = PIANO_GAIN;
+            } else if (event.instrumentProgram === STRING_ENSEMBLE_PROGRAM) {
+                playerToUse = stringPlayer;
+                gainToApply = STRING_GAIN;
+            } else {
+                console.warn(`Unknown instrument program: ${event.instrumentProgram}. Defaulting to piano.`);
+                playerToUse = pianoPlayer;
+                gainToApply = PIANO_GAIN;
+            }
 
-        if (playerToUse) {
-            // Note: Soundfont.js play() method automatically handles connecting to the audio context's destination.
-            // We don't need a separate masterGainNode here unless we want to apply global volume after the instrument's own output.
-            playerToUse.play(safePitch, startTime + event.startTime, { duration: event.duration, gain: gainToApply });
+            if (playerToUse) {
+                playerToUse.play(safePitch, currentPlaybackStartTime + event.startTime, { duration: event.duration, gain: gainToApply });
+            }
         }
     });
 
     // Schedule the next loop iteration precisely
     if (loopPlayback) {
-        const nextStartTime = startTime + totalProgressionDuration;
-        const delayToNextPlayback = (nextStartTime - audioContext.currentTime) * 1000;
+        // Calculate the time when the current progression pass will end relative to audio context time
+        const endOfCurrentPassTime = currentPlaybackStartTime + totalProgressionDuration;
+        const delayToNextPlayback = (endOfCurrentPassTime - audioContext.currentTime) * 1000;
 
-        // Ensure delay is not negative (can happen if browser is very busy)
-        // Add a small buffer (e.g., 50ms) to ensure playback doesn't cut off early
+        // Ensure delay is not negative and add a small buffer
         const finalDelay = Math.max(0, delayToNextPlayback + 50);
-        currentLoopTimeout = setTimeout(() => playProgression(stylizedMidiEvents, loopPlayback, totalProgressionDuration, nextStartTime), finalDelay);
+        currentLoopTimeout = setTimeout(() => {
+            // When looping, restart from offset 0
+            playProgression(stylizedMidiEvents, loopPlayback, totalProgressionDuration, 0);
+        }, finalDelay);
+    }
+}
+
+/**
+ * Pauses the current playback. This stops all notes and records the current playback offset.
+ * Play button will resume from this offset.
+ */
+function pausePlayback() {
+    if (audioContext) {
+        // Calculate how much time has passed in the progression
+        currentPauseOffset = audioContext.currentTime - currentPlaybackStartTime;
+        stopAllNotes(); // Stop all playing sounds
+        isPaused = true;
+        console.log(`Playback paused at offset: ${currentPauseOffset.toFixed(2)} seconds.`);
     }
 }
 
@@ -148,6 +176,9 @@ function stopAllNotes() {
         clearTimeout(currentLoopTimeout);
         currentLoopTimeout = null;
     }
+    currentPlaybackStartTime = 0; // Reset playback time
+    currentPauseOffset = 0; // Reset pause offset
+    isPaused = false; // Not paused
     console.log("All notes stopped and loop cleared.");
 }
 
@@ -155,5 +186,6 @@ function stopAllNotes() {
 window.midiPlayer = {
     loadInstruments: loadInstruments,
     playProgression: playProgression,
+    pausePlayback: pausePlayback, // NEW
     stopAllNotes: stopAllNotes
 };

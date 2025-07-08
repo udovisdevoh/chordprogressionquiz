@@ -1,19 +1,21 @@
-﻿// wwwroot/js/chordDisplay.js
+﻿// (Contents as provided in the previous turn)
+// wwwroot/js/chordDisplay.js
 
 /**
  * Updates the display with the current chord progression details.
- * @param {string} songName - The name of the song.
- * @param {string} keysExample - The keys example string.
- * @param {string} tonalRomanNumerals - The Roman numerals string for tonal.
- * @param {string} tonalRelativeTo - The key/mode the tonal progression is relative to.
- * @param {Array<Object>} modalList - List of modal objects with RomanNumerals and RelativeTo.
- * @param {number|null} substitutionGroup - The substitution group number.
- * @param {number|null} palindromicGroup - The palindromic group number.
- * @param {number|null} rotationGroup - The rotation group number.
- * @param {Array<Object>} absoluteChords - Array of MIDI chords.
- * @param {Array<Object>} stylizedMidiEvents - Array of stylized MIDI events.
- * @param {number} currentProgressionIndex - Current index (0-based).
- * @param {number} totalProgressionCount - Total number of progressions.
+ * @param {object} data - An object containing all the display data.
+ * @param {string} data.songName - The name of the song.
+ * @param {string} data.keysExample - The keys example string.
+ * @param {string} data.tonalRomanNumerals - The Roman numerals string for tonal.
+ * @param {string} data.tonalRelativeTo - The key/mode the tonal progression is relative to.
+ * @param {Array<Object>} data.modalList - List of modal objects with RomanNumerals and RelativeTo.
+ * @param {number|null} data.substitutionGroup - The substitution group number.
+ * @param {number|null} data.palindromicGroup - The palindromic group number.
+ * @param {number|null} data.rotationGroup - The rotation group number.
+ * @param {Array<Object>} data.absoluteChords - Array of MIDI chords.
+ * @param {Array<Object>} data.stylizedMidiEvents - Array of stylized MIDI events.
+ * @param {number} data.currentProgressionIndex - Current index (0-based).
+ * @param {number} data.totalProgressionCount - Total number of progressions.
  */
 function updateChordDisplay(data) {
     const songNameElement = document.getElementById('songName');
@@ -38,63 +40,68 @@ function updateChordDisplay(data) {
     if (modalListElement) {
         modalListElement.innerHTML = ''; // Clear previous modal entries
         if (data.modalList && data.modalList.length > 0) {
-            modalSectionElement.style.display = 'block'; // Show modal section
+            if (modalSectionElement) modalSectionElement.style.display = 'block'; // Show modal section
             data.modalList.forEach(modal => {
                 const span = document.createElement('span');
-                span.innerHTML = `${modal.romanNumerals} (relative to ${modal.relativeTo})<br />`;
+                // Ensure modal properties are accessed correctly (they are strings after Json.Serialize)
+                span.innerHTML = `${modal.romanNumerals || ''} (relative to ${modal.relativeTo || ''})<br />`;
                 modalListElement.appendChild(span);
             });
         } else {
-            modalSectionElement.style.display = 'none'; // Hide modal section if no modal data
+            if (modalSectionElement) modalSectionElement.style.display = 'none'; // Hide modal section if no modal data
         }
     }
 
 
     // Update Optional Groups
+    // For nullable numbers, Json.Serialize will convert null to JS null.
+    // So check for 'null' literally, or use `data.value !== null && data.value !== undefined`
     if (substitutionGroupElement) {
-        if (data.substitutionGroup !== null) {
-            substitutionGroupElement.textContent = data.substitutionGroup;
-            substitutionGroupElement.closest('p').style.display = 'block';
-        } else {
-            substitutionGroupElement.closest('p').style.display = 'none';
+        const displayValue = data.substitutionGroup !== null ? data.substitutionGroup : 'N/A';
+        substitutionGroupElement.textContent = displayValue;
+        if (substitutionGroupElement.closest('p')) { // Ensure parent 'p' exists before trying to style
+            substitutionGroupElement.closest('p').style.display = data.substitutionGroup !== null ? 'block' : 'none';
         }
     }
     if (palindromicGroupElement) {
-        if (data.palindromicGroup !== null) {
-            palindromicGroupElement.textContent = data.palindromicGroup;
-            palindromicGroupElement.closest('p').style.display = 'block';
-        } else {
-            palindromicGroupElement.closest('p').style.display = 'none';
+        const displayValue = data.palindromicGroup !== null ? data.palindromicGroup : 'N/A';
+        palindromicGroupElement.textContent = displayValue;
+        if (palindromicGroupElement.closest('p')) {
+            palindromicGroupElement.closest('p').style.display = data.palindromicGroup !== null ? 'block' : 'none';
         }
     }
     if (rotationGroupElement) {
-        if (data.rotationGroup !== null) {
-            rotationGroupElement.textContent = data.rotationGroup;
-            rotationGroupElement.closest('p').style.display = 'block';
-        } else {
-            rotationGroupElement.closest('p').style.display = 'none';
+        const displayValue = data.rotationGroup !== null ? data.rotationGroup : 'N/A';
+        rotationGroupElement.textContent = displayValue;
+        if (rotationGroupElement.closest('p')) {
+            rotationGroupElement.closest('p').style.display = data.rotationGroup !== null ? 'block' : 'none';
         }
     }
+
 
     // Update Base MIDI Pitches
     if (baseMidiPitchesElement) {
         if (data.absoluteChords && data.absoluteChords.length > 0) {
-            baseMidiPitchesElement.closest('div').style.display = 'block'; // Show section
+            const section = baseMidiPitchesElement.closest('div[id="baseMidiPitchesSection"]');
+            if (section) section.style.display = 'block'; // Show section
             baseMidiPitchesElement.innerHTML = data.absoluteChords.map(chord =>
                 `<span>[${chord.midiPitches.join(', ')}]</span>`
             ).join(' | ');
         } else {
-            baseMidiPitchesElement.closest('div').style.display = 'none'; // Hide section
+            const section = baseMidiPitchesElement.closest('div[id="baseMidiPitchesSection"]');
+            if (section) section.style.display = 'none'; // Hide section
         }
     }
 
     // Update Stylized Playback Details
     if (totalMidiEventsElement) {
         if (data.stylizedMidiEvents && data.stylizedMidiEvents.length > 0) {
-            totalMidiEventsElement.closest('div').style.display = 'block'; // Show section
+            const section = totalMidiEventsElement.closest('div[id="stylizedPlaybackDetailsSection"]');
+            if (section) section.style.display = 'block'; // Show section
             totalMidiEventsElement.innerHTML = `Total MIDI Events: ${data.stylizedMidiEvents.length}<br />`;
         } else {
-            totalMidiEventsElement.closest('div').style.display = 'none'; // Hide section
+            const section = totalMidiEventsElement.closest('div[id="stylizedPlaybackDetailsSection"]');
+            if (section) section.style.display = 'none'; // Hide section
         }
     }
 

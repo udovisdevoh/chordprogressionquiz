@@ -50,7 +50,27 @@
                             <p class="alert alert-info mt-3">No stylized playback data available.</p>
                         }
                     </div>
-                    <button id="playMidiButton" class="btn btn-primary btn-lg mt-3">Play MIDI Progression</button>
+                    @* NEW: Sound System Controls Layout *@
+                    <div class="d-flex justify-content-center align-items-center mt-3 mb-3">
+                        <form method="post" class="d-inline-block mx-1 my-1">
+                            <input type="hidden" asp-for="CurrentProgressionIndex" />
+                            <input type="hidden" asp-for="EnableStylizedPlayback" />
+                            <input type="hidden" asp-for="LoopPlayback" />
+                            <button type="submit" asp-page-handler="Previous" class="btn btn-primary btn-lg">⏮️ Previous</button>
+                        </form>
+
+                        <button id="playButton" class="btn btn-success btn-lg mx-1">▶️ Play</button>
+                        <button id="pauseButton" class="btn btn-warning btn-lg mx-1">⏸️ Pause</button>
+                        <button id="stopButton" class="btn btn-danger btn-lg mx-1">⏹️ Stop</button>
+
+                        <form method="post" class="d-inline-block mx-1 my-1">
+                            <input type="hidden" asp-for="CurrentProgressionIndex" />
+                            <input type="hidden" asp-for="EnableStylizedPlayback" />
+                            <input type="hidden" asp-for="LoopPlayback" />
+                            <button type="submit" asp-page-handler="Next" class="btn btn-primary btn-lg">Next ⏭️</button>
+                        </form>
+                    </div>
+
                     <div id="loadingMessage" class="mt-2 text-muted" style="display:none;">Loading instruments...</div>
                 }
                 else
@@ -83,31 +103,19 @@
             <label asp-for="LoopPlayback" class="form-check-label">Loop Playback</label>
         </form>
 
+        @* Get Random Progression Button: Now a form button for consistency and robustness *@
         <form method="get" asp-page="/ChordPicker" class="d-inline-block mx-2 my-1">
             <input type="hidden" name="EnableStylizedPlayback" value="@Model.EnableStylizedPlayback.ToString().ToLowerInvariant()" />
             <input type="hidden" name="LoopPlayback" value="@Model.LoopPlayback.ToString().ToLowerInvariant()" />
             <button type="submit" class="btn btn-success btn-lg">Get Random Progression</button>
         </form>
 
+        @* Original First/Last navigation buttons (now less prominent or can be removed if desired) *@
         <form method="post" class="d-inline-block my-1">
             <input type="hidden" asp-for="CurrentProgressionIndex" />
             <input type="hidden" asp-for="EnableStylizedPlayback" />
             <input type="hidden" asp-for="LoopPlayback" />
             <button type="submit" asp-page-handler="First" class="btn btn-secondary btn-lg mx-1">First</button>
-        </form>
-
-        <form method="post" class="d-inline-block my-1">
-            <input type="hidden" asp-for="CurrentProgressionIndex" />
-            <input type="hidden" asp-for="EnableStylizedPlayback" />
-            <input type="hidden" asp-for="LoopPlayback" />
-            <button type="submit" asp-page-handler="Previous" class="btn btn-info btn-lg mx-1">Previous</button>
-        </form>
-
-        <form method="post" class="d-inline-block my-1">
-            <input type="hidden" asp-for="CurrentProgressionIndex" />
-            <input type="hidden" asp-for="EnableStylizedPlayback" />
-            <input type="hidden" asp-for="LoopPlayback" />
-            <button type="submit" asp-page-handler="Next" class="btn btn-info btn-lg mx-1">Next</button>
         </form>
 
         <form method="post" class="d-inline-block my-1">
@@ -127,7 +135,10 @@
     <script src="~/js/chordDisplay.js"></script>
     <script type="text/javascript">
         document.addEventListener('DOMContentLoaded', function () {
-            const playMidiButton = document.getElementById('playMidiButton');
+            const playButton = document.getElementById('playButton'); // Changed ID to 'playButton'
+            const pauseButton = document.getElementById('pauseButton'); // NEW
+            const stopButton = document.getElementById('stopButton'); // Changed ID to 'stopButton'
+
             const loadingMessage = document.getElementById('loadingMessage');
             const loopPlaybackCheckbox = document.getElementById('loopPlaybackCheckbox');
 
@@ -150,10 +161,9 @@
             // Calculate the total duration of the progression once (for looping)
             const totalProgressionDuration = progressionData.length > 0 ?
                 Math.max(...progressionData.map(e => e.startTime + e.duration)) : 0;
-            // No longer need separate const for currentProgressionIndex and totalProgressionCount if they are in displayData
 
             // Populate display using chordDisplay.js
-            window.chordDisplay.updateChordDisplay(displayData); // Pass the consolidated object
+            window.chordDisplay.updateChordDisplay(displayData);
 
             // Set initial checkbox state for loopPlayback (server-side model is source of truth)
             if (loopPlaybackCheckbox) {
@@ -161,18 +171,32 @@
             }
 
             // Playback logic using midiPlayer.js
-            if (playMidiButton && progressionData && progressionData.length > 0) {
-                playMidiButton.addEventListener('click', async function () {
-                    const instrumentsLoaded = await window.midiPlayer.loadInstruments(loadingMessage, playMidiButton);
+            if (playButton && progressionData && progressionData.length > 0) {
+                playButton.addEventListener('click', async function () {
+                    const instrumentsLoaded = await window.midiPlayer.loadInstruments(loadingMessage, playButton);
                     if (instrumentsLoaded) {
-                        window.midiPlayer.stopAllNotes();
+                        window.midiPlayer.stopAllNotes(); // Stop any current playback
                         const loopEnabledForPlayback = loopPlaybackCheckbox ? loopPlaybackCheckbox.checked : false;
                         window.midiPlayer.playProgression(progressionData, loopEnabledForPlayback, totalProgressionDuration);
                     }
                 });
-            } else if (playMidiButton) {
-                playMidiButton.disabled = true;
-                playMidiButton.textContent = "No MIDI to Play";
+            } else if (playButton) {
+                playButton.disabled = true;
+                playButton.textContent = "No MIDI to Play";
+            }
+
+            // NEW: Pause button listener
+            if (pauseButton) {
+                pauseButton.addEventListener('click', function() {
+                    window.midiPlayer.pausePlayback(); // Call the new pause function
+                });
+            }
+
+            // NEW: Stop button listener
+            if (stopButton) {
+                stopButton.addEventListener('click', function() {
+                    window.midiPlayer.stopAllNotes(); // Stop is already implemented
+                });
             }
         });
     </script>
