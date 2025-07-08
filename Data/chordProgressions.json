@@ -145,10 +145,6 @@
         },
         "modal": [
             {
-                "roman_numerals": "V vi IV I",
-                "relative_to": "C Ionian"
-            },
-            {
                 "roman_numerals": "I ii bVII IV",
                 "relative_to": "G Mixolydian"
             }
@@ -483,10 +479,6 @@
             {
                 "roman_numerals": "I II iii iii",
                 "relative_to": "F Lydian"
-            },
-            {
-                "roman_numerals": "bVI bVII i i",
-                "relative_to": "A Aeolian"
             }
         ]
     },
@@ -644,10 +636,6 @@
             {
                 "roman_numerals": "bVI bVII I",
                 "relative_to": "A Mixolydian b6"
-            },
-            {
-                "roman_numerals": "bVI bVII I",
-                "relative_to": "A minor with Picardy third"
             }
         ]
     },
