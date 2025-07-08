@@ -86,42 +86,52 @@
         @* Toggle Stylized Playback Checkbox *@
         <form method="post" asp-page-handler="ToggleStylizedPlayback" class="d-inline-flex align-items-center mx-2 my-1">
             <input type="hidden" asp-for="CurrentProgressionIndex" />
+            <input type="hidden" asp-for="LoopPlayback" />
             <input type="checkbox" asp-for="EnableStylizedPlayback" onchange="this.form.submit()" class="form-check-input me-1" />
             <label asp-for="EnableStylizedPlayback" class="form-check-label">Enable Stylized Playback</label>
         </form>
 
-        @* New Loop Playback Checkbox *@
-        <div class="form-check form-switch d-inline-flex align-items-center mx-2 my-1">
-            <input class="form-check-input me-1" type="checkbox" id="loopPlaybackCheckbox">
-            <label class="form-check-label" for="loopPlaybackCheckbox">Loop Playback</label>
-        </div>
+        @* New Loop Playback Checkbox (now server-bound) *@
+        <form method="post" asp-page-handler="ToggleLoopPlayback" class="d-inline-flex align-items-center mx-2 my-1">
+            <input type="hidden" asp-for="CurrentProgressionIndex" />
+            <input type="hidden" asp-for="EnableStylizedPlayback" />
+            <input type="checkbox" asp-for="LoopPlayback" onchange="this.form.submit()" class="form-check-input me-1" />
+            <label asp-for="LoopPlayback" class="form-check-label">Loop Playback</label>
+        </form>
 
 
-        @* Random Progression Button *@
-        <a asp-page="/ChordPicker" asp-route-EnableStylizedPlayback="@Model.EnableStylizedPlayback" class="btn btn-success btn-lg mx-2 my-1">Get Random Progression</a>
+        @* Random Progression Button - PAY CLOSE ATTENTION TO THIS LINE *@
+        <a asp-page="/ChordPicker"
+           asp-route-EnableStylizedPlayback="@Model.EnableStylizedPlayback"
+           asp-route-LoopPlayback="@Model.LoopPlayback"
+           class="btn btn-success btn-lg mx-2 my-1">Get Random Progression</a>
 
         @* Navigation Buttons *@
         <form method="post" class="d-inline-block my-1">
             <input type="hidden" asp-for="CurrentProgressionIndex" />
             <input type="hidden" asp-for="EnableStylizedPlayback" />
+            <input type="hidden" asp-for="LoopPlayback" />
             <button type="submit" asp-page-handler="First" class="btn btn-secondary btn-lg mx-1">First</button>
         </form>
 
         <form method="post" class="d-inline-block my-1">
             <input type="hidden" asp-for="CurrentProgressionIndex" />
             <input type="hidden" asp-for="EnableStylizedPlayback" />
+            <input type="hidden" asp-for="LoopPlayback" />
             <button type="submit" asp-page-handler="Previous" class="btn btn-info btn-lg mx-1">Previous</button>
         </form>
 
         <form method="post" class="d-inline-block my-1">
             <input type="hidden" asp-for="CurrentProgressionIndex" />
             <input type="hidden" asp-for="EnableStylizedPlayback" />
+            <input type="hidden" asp-for="LoopPlayback" />
             <button type="submit" asp-page-handler="Next" class="btn btn-info btn-lg mx-1">Next</button>
         </form>
 
         <form method="post" class="d-inline-block my-1">
             <input type="hidden" asp-for="CurrentProgressionIndex" />
             <input type="hidden" asp-for="EnableStylizedPlayback" />
+            <input type="hidden" asp-for="LoopPlayback" />
             <button type="submit" asp-page-handler="Last" class="btn btn-secondary btn-lg mx-1">Last</button>
         </form>
 
@@ -154,7 +164,12 @@
                 return LOCAL_SOUNDFONT_PATH + name + '-mp3.js';
             }
 
-            let loopPlayback = false; // Initialize loop state
+            // Initialize loopPlayback from server-side model state
+            let loopPlayback = @Html.Raw(Json.Serialize(Model.LoopPlayback));
+            if (loopCheckbox) {
+                loopCheckbox.checked = loopPlayback; // Set checkbox state based on server-side model
+            }
+
             let currentLoopTimeout = null; // To store the timeout ID for stopping the loop
 
             // Calculate the total duration of the progression once
@@ -165,6 +180,10 @@
             // Update loopPlayback variable when checkbox changes
             if (loopCheckbox) {
                 loopCheckbox.addEventListener('change', function() {
+                    // This change handler now also submits the form to persist the state
+                    // The 'loopPlayback' JS variable will be updated on the *next* page load
+                    // based on the server-side model, ensuring consistency.
+                    // For immediate client-side effect, we can update the variable here too.
                     loopPlayback = this.checked;
                     if (!loopPlayback && currentLoopTimeout) {
                         clearTimeout(currentLoopTimeout); // Stop the loop if unchecked
