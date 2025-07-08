@@ -1,0 +1,270 @@
+﻿@page
+@model ChordProgressionQuiz.Pages.ChordQuizModel
+@{
+    ViewData["Title"] = "Chord Quiz";
+}
+
+<style>
+    /* Quiz specific styles */
+    .chord-input-group {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 10px;
+    }
+
+    .chord-display-box {
+        width: 100px; /* Fixed width for consistency */
+        height: 60px;
+        border: 1px solid #ccc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #333;
+    }
+
+        .chord-display-box.correct {
+            background-color: #d4edda; /* Light green */
+            border-color: #28a745; /* Green */
+        }
+
+        .chord-display-box.incorrect {
+            background-color: #f8d7da; /* Light red */
+            border-color: #dc3545; /* Red */
+        }
+
+        .chord-display-box.similar {
+            background-color: #fff3cd; /* Light yellow/orange */
+            border-color: #ffc107; /* Orange */
+        }
+
+    .chord-reveal-box {
+        font-size: 0.8em;
+        color: #666;
+        text-align: center;
+    }
+
+    .hidden-info {
+        display: none; /* Used to hide info until revealed */
+    }
+</style>
+
+<div class="text-center">
+    <h1 class="display-4">Chord Quiz</h1>
+
+    @if (Model.QuizProgression != null)
+    {
+        <div class="card mt-4 mx-auto" style="max-width: 800px;">
+            <div class="card-header bg-primary text-white rounded-top">
+                <h4 class="mb-0">Guess the Chord Progression!</h4>
+            </div>
+            <div class="card-body">
+                @* Playback Controls *@
+                <div class="d-flex justify-content-center align-items-center mt-3 mb-3">
+                    <form method="post" class="d-inline-block mx-1 my-1" id="previousQuizForm">
+                        <input type="hidden" asp-for="CurrentProgressionIndex" />
+                        <input type="hidden" asp-for="EnableStylizedPlayback" />
+                        <input type="hidden" asp-for="LoopPlayback" />
+                        <button type="submit" asp-page-handler="Previous" class="btn btn-outline-primary btn-lg">⏮️ Prev Quiz</button>
+                    </form>
+
+                    <button id="playButton" class="btn btn-outline-success btn-lg mx-1">▶️ Play</button>
+                    <button id="stopButton" class="btn btn-outline-danger btn-lg mx-1">⏹️ Stop</button>
+
+                    <form method="post" class="d-inline-block mx-1 my-1" id="nextQuizForm">
+                        <input type="hidden" asp-for="CurrentProgressionIndex" />
+                        <input type="hidden" asp-for="EnableStylizedPlayback" />
+                        <input type="hidden" asp-for="LoopPlayback" />
+                        <button type="submit" asp-page-handler="Next" class="btn btn-outline-primary btn-lg">Next Quiz ⏭️</button>
+                    </form>
+                </div>
+
+                <div id="loadingMessage" class="mt-2 text-muted" style="display:none;">Loading instruments...</div>
+
+                <hr />
+
+                @* Quiz Input Area *@
+                <div id="quizInputs" class="d-flex justify-content-center flex-wrap mt-4">
+                    @for (int i = 0; i < Model.AbsoluteProgression.Chords.Count; i++)
+                    {
+                        <div class="chord-input-group">
+                            <div class="chord-display-box" id="chordDisplay@(i)">
+                                ?
+                            </div>
+                            <input type="text" class="form-control text-center chord-guess-input" placeholder="Chord @(i + 1)" data-chord-index="@i" />
+                            <div class="chord-reveal-box" id="chordReveal@(i)"></div> @* For displaying actual chord name after check/reveal *@
+                        </div>
+                    }
+                </div>
+
+                <div class="mt-4">
+                    <button id="checkAnswerButton" class="btn btn-primary btn-lg mx-2">Check Answers</button>
+                    <button id="revealAnswerButton" class="btn btn-info btn-lg mx-2">Reveal Answers</button>
+                    <form method="post" asp-page-handler="Random" class="d-inline-block mx-2">
+                        <input type="hidden" name="EnableStylizedPlayback" value="@Model.EnableStylizedPlayback.ToString().ToLowerInvariant()" />
+                        <input type="hidden" name="LoopPlayback" value="@Model.LoopPlayback.ToString().ToLowerInvariant()" />
+                        <button type="submit" class="btn btn-success btn-lg">New Quiz 🎲</button>
+                    </form>
+                </div>
+
+                @* NEW: Revealed Answer Info Section *@
+                <div class="hidden-info mt-4" id="revealInfoSection">
+                    <hr />
+                    <h4>Actual Progression Details:</h4>
+                    <p><strong>Song:</strong> <span id="quizInfoSongName"></span></p>
+                    <p><strong>Keys Example:</strong> <span id="quizInfoKeysExample"></span></p>
+                    <p><strong>Relative To:</strong> <span id="quizInfoRelativeTo"></span></p>
+                    <p><strong>Tonal Roman Numerals:</strong> <span id="quizInfoTonalRoman"></span></p>
+                    <div id="quizInfoModalSection" style="display:none;">
+                        <p><strong>Modal Roman Numerals:</strong> <span id="quizInfoModalRoman"></span></p>
+                    </div>
+                </div>
+
+
+                @* Options (Stylized Playback, Loop) *@
+                <div class="mt-4 d-flex justify-content-center align-items-center flex-wrap">
+                    <form method="post" asp-page-handler="ToggleStylizedPlayback" class="d-inline-flex align-items-center mx-2 my-1" id="toggleStylizedPlaybackForm">
+                        <input type="hidden" asp-for="CurrentProgressionIndex" />
+                        <input type="hidden" asp-for="LoopPlayback" />
+                        <input type="checkbox" asp-for="EnableStylizedPlayback" onchange="this.form.submit()" class="form-check-input me-1" />
+                        <label asp-for="EnableStylizedPlayback" class="form-check-label">Enable Stylized Playback</label>
+                    </form>
+
+                    <form method="post" asp-page-handler="ToggleLoopPlayback" class="d-inline-flex align-items-center mx-2 my-1" id="toggleLoopPlaybackForm">
+                        <input type="hidden" asp-for="CurrentProgressionIndex" />
+                        <input type="hidden" asp-for="EnableStylizedPlayback" />
+                        <input type="checkbox" asp-for="LoopPlayback" onchange="this.form.submit()" class="form-check-input me-1" id="loopPlaybackCheckbox" />
+                        <label asp-for="LoopPlayback" class="form-check-label">Loop Playback</label>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    }
+    else
+    {
+        <p class="alert alert-warning mt-4">No chord progression found for the quiz. Please ensure 'chordProgressions.json' is correctly placed in the 'Data' folder and contains valid data.</p>
+    }
+</div>
+
+@section Scripts {
+    <script src="~/js/soundfont-player.min.js"></script>
+    <script src="~/js/midiPlayer.js"></script>
+    <script src="~/js/chordQuiz.js"></script>
+
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function () {
+            const playButton = document.getElementById('playButton');
+            const stopButton = document.getElementById('stopButton');
+            const loadingMessage = document.getElementById('loadingMessage');
+            const loopPlaybackCheckbox = document.getElementById('loopPlaybackCheckbox');
+            const checkAnswerButton = document.getElementById('checkAnswerButton');
+            const revealAnswerButton = document.getElementById('revealAnswerButton');
+
+            // Get navigation forms by ID (for persistence)
+            const previousQuizForm = document.getElementById('previousQuizForm');
+            const nextQuizForm = document.getElementById('nextQuizForm');
+            const newQuizForm = document.querySelector('form[asp-page-handler="Random"]'); // Get "New Quiz" form by handler
+            const toggleStylizedPlaybackForm = document.getElementById('toggleStylizedPlaybackForm');
+            const toggleLoopPlaybackForm = document.getElementById('toggleLoopPlaybackForm');
+
+
+            // Data for MIDI Playback (from Model)
+            const progressionData = @Html.Raw(Json.Serialize(Model.StylizedProgression?.MidiEvents ?? new List<StylizedMidiEvent>()));
+            const totalProgressionDuration = progressionData.length > 0 ?
+                Math.max(...progressionData.map(e => e.startTime + e.duration)) : 0;
+
+            // Quiz Data passed directly as a JavaScript object
+            const quizData = {
+                actualRomanNumerals: @Html.Raw(Model.ActualRomanNumeralsJson),
+                actualModalRomanNumerals: @Html.Raw(Model.ActualModalRomanNumeralsJson),
+                actualKeysExample: @Html.Raw(Model.ActualKeysExampleJson),
+                actualSongName: @Html.Raw(Model.ActualSongNameJson),
+                actualRelativeTo: @Html.Raw(Model.ActualRelativeToJson),
+                absoluteMidiPitches: @Html.Raw(Json.Serialize(Model.AbsoluteProgression?.Chords.Select(c => c.MidiPitches).ToList() ?? new List<List<int>>()))
+            };
+
+            // Initialize loopPlayback checkbox state from server-side model
+            if (loopPlaybackCheckbox) {
+                loopPlaybackCheckbox.checked = @Html.Raw(Json.Serialize(Model.LoopPlayback));
+            }
+
+            // --- Playback State Persistence ---
+            const IS_PLAYING_KEY = 'quizIsPlaying';
+            const LOOP_ENABLED_KEY = 'quizLoopEnabled';
+            const STYLIZED_ENABLED_KEY = 'quizStylizedEnabled';
+
+            const navigationForms = [
+                previousQuizForm, nextQuizForm, newQuizForm,
+                toggleStylizedPlaybackForm, toggleLoopPlaybackForm
+            ].filter(Boolean);
+
+            navigationForms.forEach(form => {
+                form.addEventListener('submit', () => {
+                    if (midiPlayer.isPlaying()) {
+                        sessionStorage.setItem(IS_PLAYING_KEY, 'true');
+                        sessionStorage.setItem(LOOP_ENABLED_KEY, loopPlaybackCheckbox ? loopPlaybackCheckbox.checked.toString() : 'false');
+                        sessionStorage.setItem(STYLIZED_ENABLED_KEY, (document.querySelector('input[asp-for="EnableStylizedPlayback"]')?.checked || false).toString());
+                    } else {
+                        sessionStorage.removeItem(IS_PLAYING_KEY);
+                        sessionStorage.removeItem(LOOP_ENABLED_KEY);
+                        sessionStorage.removeItem(STYLIZED_ENABLED_KEY);
+                    }
+                    midiPlayer.stopAllNotes(false);
+                });
+            });
+
+            const shouldResumePlaying = sessionStorage.getItem(IS_PLAYING_KEY) === 'true';
+            sessionStorage.removeItem(IS_PLAYING_KEY);
+            sessionStorage.removeItem(LOOP_ENABLED_KEY);
+            sessionStorage.removeItem(STYLIZED_ENABLED_KEY);
+
+            // --- Button Event Listeners ---
+            if (playButton && progressionData && progressionData.length > 0) {
+                playButton.addEventListener('click', async function () {
+                    const instrumentsLoaded = await window.midiPlayer.loadInstruments(loadingMessage, playButton);
+                    if (instrumentsLoaded) {
+                        window.midiPlayer.stopAllNotes(true);
+                        const loopEnabledForPlayback = loopPlaybackCheckbox ? loopPlaybackCheckbox.checked : false;
+                        window.midiPlayer.playProgression(progressionData, loopEnabledForPlayback, totalProgressionDuration);
+                    }
+                });
+            } else if (playButton) {
+                playButton.disabled = true;
+                playButton.textContent = "No MIDI to Play";
+            }
+
+            if (stopButton) {
+                stopButton.addEventListener('click', function() {
+                    window.midiPlayer.stopAllNotes(true);
+                });
+            }
+
+            // --- Quiz Specific Event Listeners ---
+            if (checkAnswerButton) {
+                checkAnswerButton.addEventListener('click', () => {
+                    window.chordQuiz.checkAnswers(quizData);
+                });
+            }
+
+            if (revealAnswerButton) {
+                revealAnswerButton.addEventListener('click', () => {
+                    window.chordQuiz.revealAnswers(quizData);
+                });
+            }
+
+            // --- Auto-play on load if state was persisted ---
+            if (shouldResumePlaying) {
+                 if (playButton && progressionData && progressionData.length > 0) {
+                     window.midiPlayer.loadInstruments(loadingMessage, playButton).then(instrumentsLoaded => {
+                        if (instrumentsLoaded) {
+                            window.midiPlayer.playProgression(progressionData, @Html.Raw(Json.Serialize(Model.LoopPlayback)), totalProgressionDuration);
+                        }
+                    });
+                }
+            }
+        });
+    </script>
+}
