@@ -24,9 +24,9 @@
                         </span>
                     </p>
                 </div>
-                <p class="card-text"><strong>Substitution Group:</strong> <span id="substitutionGroup">@(Model.RandomProgression.SubstitutionGroup.HasValue ? Model.RandomProgression.SubstitutionGroup.ToString() : "N/A")</span></p>
-                <p class="card-text"><strong>Palindromic Group:</strong> <span id="palindromicGroup">@(Model.RandomProgression.PalindromicGroup.HasValue ? Model.RandomProgression.PalindromicGroup.ToString() : "N/A")</span></p>
-                <p class="card-text"><strong>Rotation Group:</strong> <span id="rotationGroup">@(Model.RandomProgression.RotationGroup.HasValue ? Model.RandomProgression.RotationGroup.ToString() : "N/A")</span></p>
+                <p class="card-text"><strong>Substitution Group:</strong> <span id="substitutionGroup">@(Model.RandomProgression.SubstitutionGroup.HasValue? Model.RandomProgression.SubstitutionGroup.ToString() : "N/A")</span></p>
+                <p class="card-text"><strong>Palindromic Group:</strong> <span id="palindromicGroup">@(Model.RandomProgression.PalindromicGroup.HasValue? Model.RandomProgression.PalindromicGroup.ToString() : "N/A")</span></p>
+                <p class="card-text"><strong>Rotation Group:</strong> <span id="rotationGroup">@(Model.RandomProgression.RotationGroup.HasValue? Model.RandomProgression.RotationGroup.ToString() : "N/A")</span></p>
 
                 <hr />
                 @if (Model.AbsoluteProgression != null && Model.AbsoluteProgression.Chords.Any())
@@ -50,24 +50,25 @@
                             <p class="alert alert-info mt-3">No stylized playback data available.</p>
                         }
                     </div>
-                    @* NEW: Sound System Controls Layout *@
+                    @* UPDATED: Sound System Controls Layout - Removed Pause, Less Saturated Colors *@
                     <div class="d-flex justify-content-center align-items-center mt-3 mb-3">
-                        <form method="post" class="d-inline-block mx-1 my-1">
+                        <form method="post" class="d-inline-block mx-1 my-1" id="previousTrackForm">
+                            @* Added ID for JS submission *@
                             <input type="hidden" asp-for="CurrentProgressionIndex" />
                             <input type="hidden" asp-for="EnableStylizedPlayback" />
                             <input type="hidden" asp-for="LoopPlayback" />
-                            <button type="submit" asp-page-handler="Previous" class="btn btn-primary btn-lg">⏮️ Previous</button>
+                            <button type="submit" asp-page-handler="Previous" class="btn btn-outline-primary btn-lg">⏮️ Previous</button> @* Less saturated *@
                         </form>
 
-                        <button id="playButton" class="btn btn-success btn-lg mx-1">▶️ Play</button>
-                        <button id="pauseButton" class="btn btn-warning btn-lg mx-1">⏸️ Pause</button>
-                        <button id="stopButton" class="btn btn-danger btn-lg mx-1">⏹️ Stop</button>
+                        <button id="playButton" class="btn btn-outline-success btn-lg mx-1">▶️ Play</button> @* Less saturated *@
+                        <button id="stopButton" class="btn btn-outline-danger btn-lg mx-1">⏹️ Stop</button> @* Less saturated *@
 
-                        <form method="post" class="d-inline-block mx-1 my-1">
+                        <form method="post" class="d-inline-block mx-1 my-1" id="nextTrackForm">
+                            @* Added ID for JS submission *@
                             <input type="hidden" asp-for="CurrentProgressionIndex" />
                             <input type="hidden" asp-for="EnableStylizedPlayback" />
                             <input type="hidden" asp-for="LoopPlayback" />
-                            <button type="submit" asp-page-handler="Next" class="btn btn-primary btn-lg">Next ⏭️</button>
+                            <button type="submit" asp-page-handler="Next" class="btn btn-outline-primary btn-lg">Next ⏭️</button> @* Less saturated *@
                         </form>
                     </div>
 
@@ -104,10 +105,11 @@
         </form>
 
         @* Get Random Progression Button: Now a form button for consistency and robustness *@
-        <form method="get" asp-page="/ChordPicker" class="d-inline-block mx-2 my-1">
+        <form method="get" asp-page="/ChordPicker" class="d-inline-block mx-2 my-1" id="randomProgressionForm">
+            @* Added ID for JS submission *@
             <input type="hidden" name="EnableStylizedPlayback" value="@Model.EnableStylizedPlayback.ToString().ToLowerInvariant()" />
             <input type="hidden" name="LoopPlayback" value="@Model.LoopPlayback.ToString().ToLowerInvariant()" />
-            <button type="submit" class="btn btn-success btn-lg">Get Random Progression</button>
+            <button type="submit" class="btn btn-outline-success btn-lg">Get Random Progression</button> @* Less saturated *@
         </form>
 
         @* Original First/Last navigation buttons (now less prominent or can be removed if desired) *@
@@ -115,17 +117,17 @@
             <input type="hidden" asp-for="CurrentProgressionIndex" />
             <input type="hidden" asp-for="EnableStylizedPlayback" />
             <input type="hidden" asp-for="LoopPlayback" />
-            <button type="submit" asp-page-handler="First" class="btn btn-secondary btn-lg mx-1">First</button>
+            <button type="submit" asp-page-handler="First" class="btn btn-outline-secondary btn-lg mx-1">First</button> @* Less saturated *@
         </form>
 
         <form method="post" class="d-inline-block my-1">
             <input type="hidden" asp-for="CurrentProgressionIndex" />
             <input type="hidden" asp-for="EnableStylizedPlayback" />
             <input type="hidden" asp-for="LoopPlayback" />
-            <button type="submit" asp-page-handler="Last" class="btn btn-secondary btn-lg mx-1">Last</button>
+            <button type="submit" asp-page-handler="Last" class="btn btn-outline-secondary btn-lg mx-1">Last</button> @* Less saturated *@
         </form>
 
-        <a asp-page="/Index" class="btn btn-secondary btn-lg mx-2 my-1">Back to Home</a>
+        <a asp-page="/Index" class="btn btn-outline-secondary btn-lg mx-2 my-1">Back to Home</a> @* Less saturated *@
     </div>
 </div>
 
@@ -135,16 +137,22 @@
     <script src="~/js/chordDisplay.js"></script>
     <script type="text/javascript">
         document.addEventListener('DOMContentLoaded', function () {
-            const playButton = document.getElementById('playButton'); // Changed ID to 'playButton'
-            const pauseButton = document.getElementById('pauseButton'); // NEW
-            const stopButton = document.getElementById('stopButton'); // Changed ID to 'stopButton'
+            const playButton = document.getElementById('playButton');
+            const stopButton = document.getElementById('stopButton');
 
             const loadingMessage = document.getElementById('loadingMessage');
             const loopPlaybackCheckbox = document.getElementById('loopPlaybackCheckbox');
 
+            // Get navigation forms by ID
+            const previousTrackForm = document.getElementById('previousTrackForm');
+            const nextTrackForm = document.getElementById('nextTrackForm');
+            const randomProgressionForm = document.getElementById('randomProgressionForm');
+            const toggleStylizedPlaybackForm = document.querySelector('form[asp-page-handler="ToggleStylizedPlayback"]'); // Get by handler
+            const toggleLoopPlaybackForm = document.querySelector('form[asp-page-handler="ToggleLoopPlayback"]'); // Get by handler
+
             // Prepare data for JavaScript
             const progressionData = @Html.Raw(Json.Serialize(Model.StylizedProgression?.MidiEvents ?? new List<StylizedMidiEvent>()));
-            const displayData = { // Consolidate data for chordDisplay
+            const displayData = {
                 songName: @Html.Raw(Json.Serialize(Model.RandomProgression?.Song)),
                 keysExample: @Html.Raw(Json.Serialize(Model.RandomProgression?.KeysExample)),
                 tonalRomanNumerals: @Html.Raw(Json.Serialize(Model.RandomProgression?.Tonal?.RomanNumerals)),
@@ -158,7 +166,6 @@
                 totalProgressionCount: @Html.Raw(Json.Serialize(Model.ChordService.GetProgressionCount()))
             };
 
-            // Calculate the total duration of the progression once (for looping)
             const totalProgressionDuration = progressionData.length > 0 ?
                 Math.max(...progressionData.map(e => e.startTime + e.duration)) : 0;
 
@@ -170,12 +177,54 @@
                 loopPlaybackCheckbox.checked = @Html.Raw(Json.Serialize(Model.LoopPlayback));
             }
 
-            // Playback logic using midiPlayer.js
+            // Playback state persistence keys
+            const IS_PLAYING_KEY = 'isPlaying';
+            const LOOP_ENABLED_KEY = 'loopEnabled'; // Store loop state explicitly for restart
+            const STYLIZED_ENABLED_KEY = 'stylizedEnabled'; // Store stylized state explicitly for restart
+
+            // --- Intercept form submissions to store playing state ---
+            // List of forms that trigger a page navigation
+            const navigationForms = [
+                previousTrackForm,
+                nextTrackForm,
+                randomProgressionForm,
+                toggleStylizedPlaybackForm,
+                toggleLoopPlaybackForm // If this form changes, we also want to persist playing state
+            ].filter(Boolean); // Filter out any nulls if an ID wasn't found
+
+            navigationForms.forEach(form => {
+                form.addEventListener('submit', () => {
+                    if (midiPlayer.isPlaying()) { // Check current playing status
+                        sessionStorage.setItem(IS_PLAYING_KEY, 'true');
+                        // Store current settings to re-apply them on next page load
+                        sessionStorage.setItem(LOOP_ENABLED_KEY, loopPlaybackCheckbox ? loopPlaybackCheckbox.checked.toString() : 'false');
+                        sessionStorage.setItem(STYLIZED_ENABLED_KEY, (document.getElementById('enableStylizedPlayback')?.checked || false).toString());
+                    } else {
+                        sessionStorage.removeItem(IS_PLAYING_KEY); // Clear if not playing
+                        sessionStorage.removeItem(LOOP_ENABLED_KEY);
+                        sessionStorage.removeItem(STYLIZED_ENABLED_KEY);
+                    }
+                    midiPlayer.stopAllNotes(false); // Stop notes but don't clear session storage from midiPlayer's side
+                });
+            });
+
+            // --- Initial playback on page load if state was persisted ---
+            const shouldResumePlaying = sessionStorage.getItem(IS_PLAYING_KEY) === 'true';
+            // Also retrieve previous settings for consistency
+            const prevLoopEnabled = sessionStorage.getItem(LOOP_ENABLED_KEY) === 'true';
+            const prevStylizedEnabled = sessionStorage.getItem(STYLIZED_ENABLED_KEY) === 'true';
+
+            // Clear session storage flags immediately after reading them
+            sessionStorage.removeItem(IS_PLAYING_KEY);
+            sessionStorage.removeItem(LOOP_ENABLED_KEY);
+            sessionStorage.removeItem(STYLIZED_ENABLED_KEY);
+
+
             if (playButton && progressionData && progressionData.length > 0) {
                 playButton.addEventListener('click', async function () {
                     const instrumentsLoaded = await window.midiPlayer.loadInstruments(loadingMessage, playButton);
                     if (instrumentsLoaded) {
-                        window.midiPlayer.stopAllNotes(); // Stop any current playback
+                        window.midiPlayer.stopAllNotes(true); // Stop existing, clear flags for fresh start
                         const loopEnabledForPlayback = loopPlaybackCheckbox ? loopPlaybackCheckbox.checked : false;
                         window.midiPlayer.playProgression(progressionData, loopEnabledForPlayback, totalProgressionDuration);
                     }
@@ -185,18 +234,31 @@
                 playButton.textContent = "No MIDI to Play";
             }
 
-            // NEW: Pause button listener
-            if (pauseButton) {
-                pauseButton.addEventListener('click', function() {
-                    window.midiPlayer.pausePlayback(); // Call the new pause function
-                });
-            }
-
             // NEW: Stop button listener
             if (stopButton) {
                 stopButton.addEventListener('click', function() {
-                    window.midiPlayer.stopAllNotes(); // Stop is already implemented
+                    window.midiPlayer.stopAllNotes(true); // Stop and clear flags
                 });
+            }
+
+            // --- Auto-play on load if state was persisted from previous page ---
+            if (shouldResumePlaying) {
+                // Ensure UI reflects the previous state before playing
+                // These checkboxes submit forms, but we need to ensure the *current* page's Model state matches what was playing
+                // If Model.EnableStylizedPlayback doesn't match prevStylizedEnabled, or Model.LoopPlayback doesn't match prevLoopEnabled,
+                // the behavior might be unexpected. For now, assume the Model state is passed correctly via asp-route.
+
+                // Trigger play if there's progression data
+                if (playButton && progressionData && progressionData.length > 0) {
+                     window.midiPlayer.loadInstruments(loadingMessage, playButton).then(instrumentsLoaded => {
+                        if (instrumentsLoaded) {
+                            // Ensure the loop state used for auto-play matches what was saved.
+                            // However, the `playProgression` will use the `loopEnabledForPlayback` which is derived from the *current* checkbox state on this page load.
+                            // If the checkbox was changed (and submitted) on the previous page, Model.LoopPlayback (and thus the checkbox state) should already be correct.
+                            window.midiPlayer.playProgression(progressionData, @Html.Raw(Json.Serialize(Model.LoopPlayback)), totalProgressionDuration);
+                        }
+                    });
+                }
             }
         });
     </script>
