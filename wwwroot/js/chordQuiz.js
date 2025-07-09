@@ -271,6 +271,14 @@ function checkAnswers(quizData) {
     const actualAbsoluteMidiPitches = quizData.absoluteMidiPitches;
 
     inputElements.forEach((input, index) => {
+        // Skip the tonic chords as they are pre-revealed and shouldn't be re-evaluated
+        // (index === 0 was the previous logic, now we need to identify by content)
+        const currentChordRoman = actualQuizAnswersRaw[index];
+        if (currentChordRoman.toLowerCase() === 'i') {
+            return; // Skip pre-revealed tonic chords
+        }
+
+
         const guessedRoman = input.value.trim();
         const displayBox = displayBoxes[index];
 
@@ -346,36 +354,30 @@ function revealAnswers(quizData) {
     const actualChordsPlayedKeyElement = document.getElementById('quizInfoActualChordsPlayedKey');
 
     if (playedKeyElement && actualChordsPlayedKeyElement) {
-        const baseKeyString = quizData.actualRelativeTo; // e.g., "C Major"
+        const baseKeyString = quizData.actualRelativeTo;
         const transposeOffset = quizData.globalTransposeOffset;
 
-        // Parse the base key string for its root note and scale type
         const keyParts = baseKeyString.split(' ');
         const keyRootNoteName = keyParts[0].trim();
-        const keyScaleType = keyParts.slice(1).join(' ').trim() || 'Major'; // Default to Major if not specified
+        const keyScaleType = keyParts.slice(1).join(' ').trim() || 'Major';
 
-        // Determine the played key name (e.g., "C Major" + 2 semitones = "D Major")
         const keyRootSemitones = semitonesToNoteName.indexOf(keyRootNoteName);
         if (keyRootSemitones !== -1) {
-            const transposedRootSemitones = (keyRootSemitones + transposeOffset + 12) % 12; // +12 to ensure positive modulo
+            const transposedRootSemitones = (keyRootSemitones + transposeOffset + 12) % 12;
             const transposedRootName = semitonesToNoteName[transposedRootSemitones];
-            const playedKeyName = `${transposedRootName} ${keyScaleType}`; // Reconstruct played key name
+            const playedKeyName = `${transposedRootName} ${keyScaleType}`;
             playedKeyElement.textContent = playedKeyName;
         } else {
             playedKeyElement.textContent = "N/A (Key Parse Error)";
         }
 
-        // Determine the correct relativeToKeyString for chord conversion based on quizAnswerSource
         let relativeToKeyForChordConversion;
         if (quizData.quizAnswerSource === "Modal" && quizData.actualModalRomanNumerals && quizData.actualModalRomanNumerals.length > 0) {
-            // For modal answers, use the relativeTo string of the first modal entry
-            relativeToKeyForChordConversion = quizData.actualModalRomanNumerals[0].RelativeTo; // Access 'RelativeTo' from the modal object
+            relativeToKeyForChordConversion = quizData.actualModalRomanNumerals[0].RelativeTo;
         } else {
-            // Otherwise, use the tonal relativeTo string
             relativeToKeyForChordConversion = quizData.actualRelativeTo;
         }
 
-        // Convert each actual Roman numeral (from the quiz answer source) to its absolute chord name in the played key
         const actualChordsInPlayedKey = quizData.actualQuizAnswers.map(roman => {
             return romanToAbsoluteChordName(roman, relativeToKeyForChordConversion, quizData.globalTransposeOffset);
         });
@@ -384,16 +386,16 @@ function revealAnswers(quizData) {
 
 
     // Also run checkAnswers to ensure coloring happens and populate reveal boxes
+    // Note: checkAnswers will now skip the tonic chords for coloring, which is fine as they're pre-colored.
+    checkAnswers(quizData);
+
     const inputElements = document.querySelectorAll('.chord-guess-input');
     const chordRevealBoxes = document.querySelectorAll('.chord-reveal-box');
-
-    const actualQuizAnswers = quizData.actualQuizAnswers; // Use the preferred answer for individual reveal boxes
+    const actualQuizAnswers = quizData.actualQuizAnswers;
 
     inputElements.forEach((input, index) => {
         const actualRomanForReveal = actualQuizAnswers[index];
         const revealBox = chordRevealBoxes[index];
-
-        checkAnswers(quizData); // Re-run check to ensure colors are applied
 
         // Fill in the reveal box with the actual preferred chord name
         revealBox.textContent = actualRomanForReveal;
@@ -405,3 +407,32 @@ window.chordQuiz = {
     checkAnswers: checkAnswers,
     revealAnswers: revealAnswers
 };
+
+// NEW: Function to reveal all tonic (I or i) chords on page load
+function revealTonicChords(quizData) {
+    if (quizData.actualQuizAnswers && quizData.actualQuizAnswers.length > 0) {
+        const inputElements = document.querySelectorAll('.chord-guess-input');
+        const displayBoxes = document.querySelectorAll('.chord-display-box');
+        const chordRevealBoxes = document.querySelectorAll('.chord-reveal-box');
+
+        quizData.actualQuizAnswers.forEach((actualRoman, index) => {
+            // Check if the current chord is 'I' or 'i' (case-insensitive)
+            if (actualRoman.toLowerCase() === 'i') {
+                const tonicInput = inputElements[index];
+                const tonicDisplayBox = displayBoxes[index];
+                const tonicRevealBox = chordRevealBoxes[index];
+
+                if (tonicInput && tonicDisplayBox && tonicRevealBox) {
+                    tonicInput.value = actualRoman; // Pre-fill input
+                    tonicInput.disabled = true; // Disable input
+                    tonicDisplayBox.textContent = actualRoman; // Show in display box
+                    tonicDisplayBox.classList.add('correct'); // Mark as correct
+                    tonicRevealBox.textContent = actualRoman; // Show in reveal box
+                }
+            }
+        });
+    }
+}
+
+// Add revealTonicChords to the DOMContentLoaded listener in ChordQuiz.cshtml
+// It will be called after quizData is available.
