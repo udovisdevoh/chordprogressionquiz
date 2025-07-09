@@ -221,10 +221,8 @@ function romanToAbsoluteChordName(romanNumeral, relativeToKeyString, globalTrans
     // Parse the relativeToKeyString to get the tonic note name and scale type
     const keyParts = relativeToKeyString.split(' ');
     let keyRootNoteName = keyParts[0].trim();
-    // Reconstruct keyScaleType for consistency, even if not directly used here
-    let keyScaleType = keyParts.length > 1 ? keyParts.slice(1).join(' ').trim() : "Major";
-    if (keyScaleType.includes(',')) keyScaleType = keyScaleType.split(',')[0].trim();
-    if (keyScaleType.includes(" with ")) keyScaleType = keyScaleType.split(" with ")[0].trim();
+    // keyScaleType is not directly used for note calculation here but could be for diatonic logic
+    // let keyScaleType = keyParts.slice(1).join(' ').trim();
 
 
     // Map note name to semitones from C (0-11)
@@ -238,7 +236,8 @@ function romanToAbsoluteChordName(romanNumeral, relativeToKeyString, globalTrans
     }
 
     // Calculate the chord's root semitones relative to C (0-11)
-    // parsedRoman.baseSemitones is already the diatonic degree + accidental relative to the key's tonic (0-11)
+    // parsedRoman.baseSemitones is the diatonic degree + accidental relative to the key's *tonic* (e.g., I=0, ii=2)
+    // So, adding keyRootSemitones correctly positions it absolutely.
     let absoluteChordRootSemitones = (keyRootSemitones + parsedRoman.baseSemitones);
 
     // Apply the global transpose offset
@@ -342,7 +341,7 @@ function revealAnswers(quizData) {
         document.getElementById('quizInfoModalSection').style.display = 'none';
     }
 
-    // NEW: Display Played Key and Actual Chords in Played Key
+    // Display Played Key and Actual Chords in Played Key
     const playedKeyElement = document.getElementById('quizInfoPlayedKey');
     const actualChordsPlayedKeyElement = document.getElementById('quizInfoActualChordsPlayedKey');
 
@@ -350,15 +349,15 @@ function revealAnswers(quizData) {
         const baseKeyString = quizData.actualRelativeTo; // e.g., "C Major"
         const transposeOffset = quizData.globalTransposeOffset;
 
-        // Parse the base key string to get its root and scale type
+        // Parse the base key string for its root note and scale type
         const keyParts = baseKeyString.split(' ');
         const keyRootNoteName = keyParts[0].trim();
-        const keyScaleType = keyParts.slice(1).join(' ').trim() || 'Major'; // Reconstruct scale type
+        const keyScaleType = keyParts.slice(1).join(' ').trim() || 'Major'; // Default to Major if not specified
 
-        // Determine the played key name
+        // Determine the played key name (e.g., "C Major" + 2 semitones = "D Major")
         const keyRootSemitones = semitonesToNoteName.indexOf(keyRootNoteName);
         if (keyRootSemitones !== -1) {
-            const transposedRootSemitones = (keyRootSemitones + transposeOffset + 12) % 12;
+            const transposedRootSemitones = (keyRootSemitones + transposeOffset + 12) % 12; // +12 to ensure positive modulo
             const transposedRootName = semitonesToNoteName[transposedRootSemitones];
             const playedKeyName = `${transposedRootName} ${keyScaleType}`; // Reconstruct played key name
             playedKeyElement.textContent = playedKeyName;
@@ -366,9 +365,19 @@ function revealAnswers(quizData) {
             playedKeyElement.textContent = "N/A (Key Parse Error)";
         }
 
-        // Convert each actual Roman numeral to its absolute chord name in the played key
+        // Determine the correct relativeToKeyString for chord conversion based on quizAnswerSource
+        let relativeToKeyForChordConversion;
+        if (quizData.quizAnswerSource === "Modal" && quizData.actualModalRomanNumerals && quizData.actualModalRomanNumerals.length > 0) {
+            // For modal answers, use the relativeTo string of the first modal entry
+            relativeToKeyForChordConversion = quizData.actualModalRomanNumerals[0].RelativeTo; // Access 'RelativeTo' from the modal object
+        } else {
+            // Otherwise, use the tonal relativeTo string
+            relativeToKeyForChordConversion = quizData.actualRelativeTo;
+        }
+
+        // Convert each actual Roman numeral (from the quiz answer source) to its absolute chord name in the played key
         const actualChordsInPlayedKey = quizData.actualQuizAnswers.map(roman => {
-            return romanToAbsoluteChordName(roman, baseKeyString, quizData.globalTransposeOffset);
+            return romanToAbsoluteChordName(roman, relativeToKeyForChordConversion, quizData.globalTransposeOffset);
         });
         actualChordsPlayedKeyElement.textContent = actualChordsInPlayedKey.join(' ');
     }
