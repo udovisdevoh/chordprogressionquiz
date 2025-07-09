@@ -1,4 +1,4 @@
-﻿// D:\users\Anonymous\Documents\C Sharp\ChordProgressionQuiz\Services\ChordStylingService.cs
+﻿// Services/ChordStylingService.cs
 using ChordProgressionQuiz.Models;
 using System;
 using System.Collections.Generic;
@@ -53,44 +53,36 @@ namespace ChordProgprogressionQuiz.Services
             if (processedChords.Count % 2 != 0) // If odd number of chords
             {
                 var lastChord = processedChords.Last();
-                // Create a deep copy of the last chord to ensure it's a distinct object
-                // This is important so future modifications to the original lastChord don't affect its duplicate,
-                // although in this specific use case, it might not be strictly necessary as StylingService creates new events.
-                // It's good practice for modifying lists of reference types.
-                var duplicatedChord = new MidiChord(lastChord.MidiPitches); // Assuming MidiChord has a constructor for IEnumerable<int>
+                var duplicatedChord = new MidiChord(lastChord.MidiPitches);
                 processedChords.Add(duplicatedChord);
                 Console.WriteLine($"Duplicated last chord '{lastChord}' to make progression even. New count: {processedChords.Count}");
             }
 
             var stylizedEvents = new List<StylizedMidiEvent>();
-            double currentPlaybackTime = 0.0; // Tracks the current time in the overall stylized progression
+            double currentPlaybackTime = 0.0;
 
             // Determine random transposition for the entire progression
-            int globalTransposeOffset = _random.Next(-MaxTransposeSemitones, MaxTransposeSemitones + 1);
+            int globalTransposeOffset = _random.Next(-MaxTransposeSemitones, MaxTransposeSemitones + 1); // This is the value we need to pass
 
-            bool applyFastRepeatedArpeggioGlobally = true; // Always applied now as per previous instruction
+            bool applyFastRepeatedArpeggioGlobally = true;
 
             // Determine globally if arpeggios should move down
-            bool arpeggioDirectionIsDown = _random.NextDouble() < 0.5; // 50% chance for down, 50% for up
+            bool arpeggioDirectionIsDown = _random.NextDouble() < 0.5;
 
-            foreach (var chord in processedChords) // Loop over the potentially modified list
+            foreach (var chord in processedChords)
             {
                 if (!chord.MidiPitches.Any())
                 {
-                    // If a chord is empty, just advance time by a default duration
                     currentPlaybackTime += BaseChordDuration;
                     continue;
                 }
 
                 double allocatedChordDuration = BaseChordDuration;
 
-                // Capture the original pitches (sorted) for the left hand before any inversions/expansions
                 var originalSortedPitches = chord.MidiPitches.OrderBy(p => p).ToList();
 
-                // Add "left hand" notes (String Ensemble)
-                // Get the lowest two notes (or fewer if chord is smaller)
                 var leftHandPitches = originalSortedPitches
-                                        .Take(2) // Take up to two lowest notes
+                                        .Take(2)
                                         .Select(p => AdjustMidiPitchToRange(p + globalTransposeOffset + LeftHandOctaveShift))
                                         .ToList();
 
@@ -100,41 +92,36 @@ namespace ChordProgprogressionQuiz.Services
                     {
                         Pitch = lhPitch,
                         StartTime = currentPlaybackTime,
-                        Duration = allocatedChordDuration * 0.95, // Hold for almost the full chord duration
-                        InstrumentProgram = StringEnsembleProgram // Assign String Ensemble
+                        Duration = allocatedChordDuration * 0.95,
+                        InstrumentProgram = StringEnsembleProgram
                     });
                 }
 
 
-                var pitchesToProcess = originalSortedPitches // Start with original sorted pitches for the right hand as well
+                var pitchesToProcess = originalSortedPitches
                                         .Select(p => p + globalTransposeOffset)
                                         .ToList();
 
-                // Apply MIDI range adjustment *after* transposition but before arpeggiation logic
                 pitchesToProcess = pitchesToProcess.Select(AdjustMidiPitchToRange).ToList();
-                pitchesToProcess.Sort(); // Ensure notes are sorted ascending (root position initially)
+                pitchesToProcess.Sort();
 
                 bool isArpeggiated = pitchesToProcess.Count > 1;
 
                 if (isArpeggiated)
                 {
-                    // Apply random chord inversion if the chord has at least 3 notes
                     if (pitchesToProcess.Count >= 3)
                     {
-                        // 0 = root position, 1 = 1st inversion, 2 = 2nd inversion
-                        int inversionType = _random.Next(0, 3); // Gives 0, 1, or 2
+                        int inversionType = _random.Next(0, 3);
 
                         for (int i = 0; i < inversionType; i++)
                         {
-                            // Move the lowest pitch up an octave
                             int lowestPitch = pitchesToProcess[0];
                             pitchesToProcess.RemoveAt(0);
                             pitchesToProcess.Add(AdjustMidiPitchToRange(lowestPitch + 12));
-                            pitchesToProcess.Sort(); // Re-sort to maintain ascending order after inversion
+                            pitchesToProcess.Sort();
                         }
                     }
 
-                    // Ensure at least 4 notes for arpeggiation, by repeating and octave shifting
                     List<int> arpeggioPitches = new List<int>();
                     int originalNoteCount = pitchesToProcess.Count;
                     const int desiredArpeggioNotes = 4;
@@ -142,15 +129,14 @@ namespace ChordProgprogressionQuiz.Services
                     for (int i = 0; i < desiredArpeggioNotes; i++)
                     {
                         int basePitch = pitchesToProcess[i % originalNoteCount];
-                        int octaveShift = (i / originalNoteCount) * 12; // Add 12 for each full cycle through original notes
-                        arpeggioPitches.Add(AdjustMidiPitchToRange(basePitch + octaveShift)); // Adjust again to stay in range
+                        int octaveShift = (i / originalNoteCount) * 12;
+                        arpeggioPitches.Add(AdjustMidiPitchToRange(basePitch + octaveShift));
                     }
-                    arpeggioPitches.Sort(); // Re-sort to ensure initial ascending order before applying direction
+                    arpeggioPitches.Sort();
 
-                    // Apply global arpeggio direction
                     if (arpeggioDirectionIsDown)
                     {
-                        arpeggioPitches.Reverse(); // Reverse the order for a 'down' arpeggio
+                        arpeggioPitches.Reverse();
                     }
 
                     int numberOfRepetitions = applyFastRepeatedArpeggioGlobally ? 2 : 1;
@@ -178,7 +164,7 @@ namespace ChordProgprogressionQuiz.Services
                                 Pitch = pitch,
                                 StartTime = currentPlaybackTime + currentArpeggioNoteOffset,
                                 Duration = individualNoteDuration,
-                                InstrumentProgram = PianoProgram // Assign Piano
+                                InstrumentProgram = PianoProgram
                             });
                             currentArpeggioNoteOffset += dynamicNoteStartDelay;
                         }
@@ -196,18 +182,17 @@ namespace ChordProgprogressionQuiz.Services
                             Pitch = pitch,
                             StartTime = currentPlaybackTime,
                             Duration = individualNoteDuration,
-                            InstrumentProgram = PianoProgram // Assign Piano
+                            InstrumentProgram = PianoProgram
                         });
                     }
                     currentPlaybackTime += allocatedChordDuration;
                 }
             }
 
-            // Sort all events by StartTime at the very end to ensure correct playback order.
             stylizedEvents.Sort((e1, e2) => e1.StartTime.CompareTo(e2.StartTime));
 
 
-            return new StylizedChordProgression(stylizedEvents, absoluteProgression.Name);
+            return new StylizedChordProgression(stylizedEvents, absoluteProgression.Name, globalTransposeOffset); // NEW: Pass globalTransposeOffset
         }
 
         /// <summary>

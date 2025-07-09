@@ -120,8 +120,11 @@
                     <div id="quizInfoModalSection" style="display:none;">
                         <p><strong>Modal Roman Numerals:</strong> <span id="quizInfoModalRoman"></span></p>
                     </div>
-                    @* NEW: Display the Quiz Answer Source *@
                     <p><strong>Quiz Answer Source:</strong> <span id="quizAnswerSource"></span></p>
+                    <hr />
+                    @* NEW: Played Key and Actual Chords in Played Key *@
+                    <p><strong>Played Key:</strong> <span id="quizInfoPlayedKey"></span></p>
+                    <p><strong>Actual Chords (in Played Key):</strong> <span id="quizInfoActualChordsPlayedKey"></span></p>
                 </div>
 
 
@@ -172,6 +175,7 @@
             const toggleStylizedPlaybackForm = document.getElementById('toggleStylizedPlaybackForm');
             const toggleLoopPlaybackForm = document.getElementById('toggleLoopPlaybackForm');
 
+
             // Data for MIDI Playback (from Model)
             const progressionData = @Html.Raw(Json.Serialize(Model.StylizedProgression?.MidiEvents ?? new List<StylizedMidiEvent>()));
             const totalProgressionDuration = progressionData.length > 0 ?
@@ -179,13 +183,15 @@
 
             // Quiz Data passed directly as a JavaScript object
             const quizData = {
-                actualQuizAnswers: @Html.Raw(Model.ActualQuizAnswersJson), // NEW: Use the preferred answer sequence
+                actualQuizAnswers: @Html.Raw(Model.ActualQuizAnswersJson),
                 actualTonalRomanNumerals: @Html.Raw(Model.ActualTonalRomanNumeralsJson),
                 actualModalRomanNumerals: @Html.Raw(Model.ActualModalRomanNumeralsJson),
                 actualKeysExample: @Html.Raw(Model.ActualKeysExampleJson),
                 actualSongName: @Html.Raw(Model.ActualSongNameJson),
                 actualRelativeTo: @Html.Raw(Model.ActualRelativeToJson),
-                absoluteMidiPitches: @Html.Raw(Json.Serialize(Model.AbsoluteProgression?.Chords.Select(c => c.MidiPitches).ToList() ?? new List<List<int>>()))
+                absoluteMidiPitches: @Html.Raw(Json.Serialize(Model.AbsoluteProgression?.Chords.Select(c => c.MidiPitches).ToList() ?? new List<List<int>>())),
+                // NEW: Pass the transpose offset from the StylizedProgression
+                globalTransposeOffset: @Html.Raw(Json.Serialize(Model.StylizedProgression?.GlobalTransposeOffset ?? 0))
             };
             // Determine the source of the quiz answer for display after reveal
             if (quizData.actualModalRomanNumerals && quizData.actualModalRomanNumerals.length > 0) {

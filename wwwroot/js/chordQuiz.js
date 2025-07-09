@@ -114,12 +114,11 @@ function parseRomanNumeralForQuiz(roman) {
 
     const intervals = qualityMap[finalQualitySuffix];
     if (!intervals) {
-        // console.warn(`Unknown or unhandled quality suffix: '${finalQualitySuffix}' for Roman: '${roman}'`);
         return null;
     }
 
     const chordPitchesRelative = intervals.map(interval => (baseDiatonicSemitones + interval) % 12);
-    chordPitchesRelative.sort((a, b) => a - b); // Ensure pitches are sorted for consistent comparison
+    chordPitchesRelative.sort((a, b) => a - b);
 
     // Calculate base triad pitches
     const baseTriadIntervals = triadQualityMap[inferredTriadQuality];
@@ -150,7 +149,6 @@ function arePitchesExactlyEqual(pitches1, pitches2) {
     if (!pitches1 || !pitches2) return false;
     if (pitches1.length !== pitches2.length) return false;
 
-    // Assumes pitches are already sorted from parseRomanNumeralForQuiz
     for (let i = 0; i < pitches1.length; i++) {
         if (pitches1[i] !== pitches2[i]) return false;
     }
@@ -182,6 +180,86 @@ function arePitchesSimilar(pitches1, pitches2, minIdenticalNotes = 2) {
     return commonNotes >= minIdenticalNotes;
 }
 
+// Map semitone offset from C to note name (sharps preferred for simplicity)
+const semitonesToNoteName = [
+    "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"
+];
+
+// Map Roman numeral quality suffix to its common chord name suffix
+const romanQualityToChordSuffix = {
+    '': '',         // Major Triad (C -> C)
+    'm': 'm',       // Minor Triad (i -> Am)
+    'dim': 'dim',   // Diminished Triad (vii° -> Bdim)
+    'aug': 'aug',   // Augmented Triad (III+ -> Eaug)
+    '7': '7',       // Dominant 7th (V7 -> G7)
+    'm7': 'm7',     // Minor 7th (ii7 -> Dm7)
+    'maj7': 'maj7', // Major 7th (Imaj7 -> Cmaj7)
+    'dim7': 'dim7', // Diminished 7th (vii°7 -> Bdim7)
+    'm7b5': 'm7b5', // Half-diminished 7th (iiø7 -> Dm7b5)
+    'sus2': 'sus2',
+    'sus4': 'sus4',
+    'add9': 'add9',
+    'add#9': 'add#9',
+    'maj7#11': 'maj7#11',
+    'm(maj7)': 'm(maj7)'
+};
+
+/**
+ * Converts a Roman numeral string from a given relative key to its absolute chord name.
+ * This function mimics part of the server-side ChordProgressionService logic.
+ * @param {string} romanNumeral - The Roman numeral string (e.g., "I", "V7", "bIII").
+ * @param {string} relativeToKeyString - The key string (e.g., "C Major", "A Aeolian").
+ * @param {number} globalTransposeOffset - The global MIDI transpose offset applied to the progression.
+ * @returns {string} The absolute chord name (e.g., "C", "G7", "Ebmaj7").
+ */
+function romanToAbsoluteChordName(romanNumeral, relativeToKeyString, globalTransposeOffset) {
+    const parsedRoman = parseRomanNumeralForQuiz(romanNumeral);
+    if (!parsedRoman) {
+        return romanNumeral; // Return original if parsing fails
+    }
+
+    // Parse the relativeToKeyString to get the tonic note name and scale type
+    const keyParts = relativeToKeyString.split(' ');
+    let keyRootNoteName = keyParts[0].trim();
+    // Reconstruct keyScaleType for consistency, even if not directly used here
+    let keyScaleType = keyParts.length > 1 ? keyParts.slice(1).join(' ').trim() : "Major";
+    if (keyScaleType.includes(',')) keyScaleType = keyScaleType.split(',')[0].trim();
+    if (keyScaleType.includes(" with ")) keyScaleType = keyScaleType.split(" with ")[0].trim();
+
+
+    // Map note name to semitones from C (0-11)
+    const noteNameToSemitonesFromC = {
+        "C": 0, "C#": 1, "Db": 1, "D": 2, "D#": 3, "Eb": 3, "E": 4, "F": 5, "F#": 6, "Gb": 6,
+        "G": 7, "G#": 8, "Ab": 8, "A": 9, "A#": 10, "Bb": 10, "B": 11
+    };
+    const keyRootSemitones = noteNameToSemitonesFromC[keyRootNoteName];
+    if (keyRootSemitones === undefined) {
+        return romanNumeral; // Cannot determine absolute root if key root is unknown
+    }
+
+    // Calculate the chord's root semitones relative to C (0-11)
+    // parsedRoman.baseSemitones is already the diatonic degree + accidental relative to the key's tonic (0-11)
+    let absoluteChordRootSemitones = (keyRootSemitones + parsedRoman.baseSemitones);
+
+    // Apply the global transpose offset
+    absoluteChordRootSemitones = (absoluteChordRootSemitones + globalTransposeOffset);
+
+    // Normalize to 0-11 semitones within an octave
+    absoluteChordRootSemitones = (absoluteChordRootSemitones % 12 + 12) % 12;
+
+    // Convert absolute semitones to note name
+    const chordRootNoteName = semitonesToNoteName[absoluteChordRootSemitones];
+
+    // Get the common chord suffix
+    const chordSuffix = romanQualityToChordSuffix[parsedRoman.qualitySuffix];
+    if (chordSuffix === undefined) {
+        return chordRootNoteName + parsedRoman.qualitySuffix; // Use original suffix if not mapped
+    }
+
+    return chordRootNoteName + chordSuffix;
+}
+
+
 /**
  * Checks the user's answers against the actual progression and provides visual feedback.
  * @param {object} quizData - Object containing actual answers (quiz answers, tonal, modal, midi pitches).
@@ -202,25 +280,18 @@ function checkAnswers(quizData) {
         const parsedGuessedChord = parseRomanNumeralForQuiz(guessedRoman);
         const parsedActualChord = parseRomanNumeralForQuiz(actualQuizAnswersRaw[index]); // Parse the actual answer as well
 
-        // console.log(`--- Chord ${index} ---`);
-        // console.log(`Guessed: '${guessedRoman}' Parsed:`, parsedGuessedChord);
-        // console.log(`Actual: '${actualQuizAnswersRaw[index]}' Parsed:`, parsedActualChord);
-
-
         if (parsedGuessedChord && parsedActualChord) {
             // 1. Strict Exact String Match (e.g., "V7" === "V7")
             if (parsedGuessedChord.fullRoman === parsedActualChord.fullRoman) {
                 displayBox.classList.add('correct');
             }
-            // 2. Structural Match (same root, same quality type, same full set of notes)
-            //    e.g., "I" === "I" if both resolve to same Major triad, or "i" === "i"
+            // 2. Full Structural Match (same root, same quality type, same full set of notes)
             else if (parsedGuessedChord.baseSemitones === parsedActualChord.baseSemitones &&
                 parsedGuessedChord.qualitySuffix === parsedActualChord.qualitySuffix &&
                 arePitchesExactlyEqual(parsedGuessedChord.pitchesRelative, parsedActualChord.pitchesRelative)) {
                 displayBox.classList.add('correct');
             }
-            // 3. NEW: Base Chord Match (same root, same inferred TRIAD quality, ignoring 7ths, add9, etc.)
-            //    e.g., "V" correct for "V7", "I" correct for "Imaj7"
+            // 3. Base Chord Match (same root, same inferred TRIAD quality, ignoring 7ths, add9, etc.)
             else if (parsedGuessedChord.baseSemitones === parsedActualChord.baseSemitones &&
                 parsedGuessedChord.inferredTriadQuality === parsedActualChord.inferredTriadQuality &&
                 arePitchesExactlyEqual(parsedGuessedChord.basePitchesRelative, parsedActualChord.basePitchesRelative)) {
@@ -270,6 +341,38 @@ function revealAnswers(quizData) {
     } else {
         document.getElementById('quizInfoModalSection').style.display = 'none';
     }
+
+    // NEW: Display Played Key and Actual Chords in Played Key
+    const playedKeyElement = document.getElementById('quizInfoPlayedKey');
+    const actualChordsPlayedKeyElement = document.getElementById('quizInfoActualChordsPlayedKey');
+
+    if (playedKeyElement && actualChordsPlayedKeyElement) {
+        const baseKeyString = quizData.actualRelativeTo; // e.g., "C Major"
+        const transposeOffset = quizData.globalTransposeOffset;
+
+        // Parse the base key string to get its root and scale type
+        const keyParts = baseKeyString.split(' ');
+        const keyRootNoteName = keyParts[0].trim();
+        const keyScaleType = keyParts.slice(1).join(' ').trim() || 'Major'; // Reconstruct scale type
+
+        // Determine the played key name
+        const keyRootSemitones = semitonesToNoteName.indexOf(keyRootNoteName);
+        if (keyRootSemitones !== -1) {
+            const transposedRootSemitones = (keyRootSemitones + transposeOffset + 12) % 12;
+            const transposedRootName = semitonesToNoteName[transposedRootSemitones];
+            const playedKeyName = `${transposedRootName} ${keyScaleType}`; // Reconstruct played key name
+            playedKeyElement.textContent = playedKeyName;
+        } else {
+            playedKeyElement.textContent = "N/A (Key Parse Error)";
+        }
+
+        // Convert each actual Roman numeral to its absolute chord name in the played key
+        const actualChordsInPlayedKey = quizData.actualQuizAnswers.map(roman => {
+            return romanToAbsoluteChordName(roman, baseKeyString, quizData.globalTransposeOffset);
+        });
+        actualChordsPlayedKeyElement.textContent = actualChordsInPlayedKey.join(' ');
+    }
+
 
     // Also run checkAnswers to ensure coloring happens and populate reveal boxes
     const inputElements = document.querySelectorAll('.chord-guess-input');
