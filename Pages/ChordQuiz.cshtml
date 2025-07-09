@@ -23,7 +23,7 @@
         font-weight: bold;
         margin-bottom: 5px;
         color: #333;
-        font-family: 'Times New Roman', Times, serif; /* NEW: Serif font for distinction */
+        font-family: 'Times New Roman', Times, serif; /* Serif font for distinction */
     }
 
         .chord-display-box.correct {
@@ -45,15 +45,15 @@
         font-size: 0.8em;
         color: #666;
         text-align: center;
-        font-family: 'Times New Roman', Times, serif; /* NEW: Serif font for distinction */
+        font-family: 'Times New Roman', Times, serif; /* Serif font for distinction */
     }
 
     .hidden-info {
         display: none; /* Used to hide info until revealed */
     }
-    /* NEW: Style for revealed Roman numeral spans */
+    /* Style for revealed Roman numeral spans */
     #quizInfoTonalRoman, #quizInfoModalRoman {
-        font-family: 'Times New Roman', Times, serif; /* NEW: Serif font for revealed Roman numerals */
+        font-family: 'Times New Roman', Times, serif; /* Serif font for revealed Roman numerals */
         font-weight: bold; /* Make it bold for emphasis */
     }
 </style>
@@ -74,6 +74,7 @@
                         <input type="hidden" asp-for="CurrentProgressionIndex" />
                         <input type="hidden" asp-for="EnableStylizedPlayback" />
                         <input type="hidden" asp-for="LoopPlayback" />
+                        <input type="hidden" asp-for="PlayArpeggioTwiceAsLong" /> @* NEW: Hidden field to preserve state *@
                         <button type="submit" asp-page-handler="Previous" class="btn btn-outline-primary btn-lg">⏮️ Prev Quiz</button>
                     </form>
 
@@ -84,6 +85,7 @@
                         <input type="hidden" asp-for="CurrentProgressionIndex" />
                         <input type="hidden" asp-for="EnableStylizedPlayback" />
                         <input type="hidden" asp-for="LoopPlayback" />
+                        <input type="hidden" asp-for="PlayArpeggioTwiceAsLong" /> @* NEW: Hidden field to preserve state *@
                         <button type="submit" asp-page-handler="Next" class="btn btn-outline-primary btn-lg">Next Quiz ⏭️</button>
                     </form>
                 </div>
@@ -112,6 +114,7 @@
                     <form method="post" asp-page-handler="Random" class="d-inline-block mx-2">
                         <input type="hidden" name="EnableStylizedPlayback" value="@Model.EnableStylizedPlayback.ToString().ToLowerInvariant()" />
                         <input type="hidden" name="LoopPlayback" value="@Model.LoopPlayback.ToString().ToLowerInvariant()" />
+                        <input type="hidden" name="PlayArpeggioTwiceAsLong" value="@Model.PlayArpeggioTwiceAsLong.ToString().ToLowerInvariant()" /> @* NEW: Hidden field to preserve state *@
                         <button type="submit" class="btn btn-success btn-lg">New Quiz 🎲</button>
                     </form>
                 </div>
@@ -134,11 +137,12 @@
                 </div>
 
 
-                @* Options (Stylized Playback, Loop) *@
+                @* Options (Stylized Playback, Loop, NEW Arpeggio Length) *@
                 <div class="mt-4 d-flex justify-content-center align-items-center flex-wrap">
                     <form method="post" asp-page-handler="ToggleStylizedPlayback" class="d-inline-flex align-items-center mx-2 my-1" id="toggleStylizedPlaybackForm">
                         <input type="hidden" asp-for="CurrentProgressionIndex" />
                         <input type="hidden" asp-for="LoopPlayback" />
+                        <input type="hidden" asp-for="PlayArpeggioTwiceAsLong" /> @* NEW: Hidden field to preserve state *@
                         <input type="checkbox" asp-for="EnableStylizedPlayback" onchange="this.form.submit()" class="form-check-input me-1" />
                         <label asp-for="EnableStylizedPlayback" class="form-check-label">Enable Stylized Playback</label>
                     </form>
@@ -146,8 +150,18 @@
                     <form method="post" asp-page-handler="ToggleLoopPlayback" class="d-inline-flex align-items-center mx-2 my-1" id="toggleLoopPlaybackForm">
                         <input type="hidden" asp-for="CurrentProgressionIndex" />
                         <input type="hidden" asp-for="EnableStylizedPlayback" />
+                        <input type="hidden" asp-for="PlayArpeggioTwiceAsLong" /> @* NEW: Hidden field to preserve state *@
                         <input type="checkbox" asp-for="LoopPlayback" onchange="this.form.submit()" class="form-check-input me-1" id="loopPlaybackCheckbox" />
                         <label asp-for="LoopPlayback" class="form-check-label">Loop Playback</label>
+                    </form>
+
+                    @* NEW: Play Arpeggio Twice As Long Option *@
+                    <form method="post" asp-page-handler="TogglePlayArpeggioTwiceAsLong" class="d-inline-flex align-items-center mx-2 my-1" id="togglePlayArpeggioTwiceAsLongForm">
+                        <input type="hidden" asp-for="CurrentProgressionIndex" />
+                        <input type="hidden" asp-for="EnableStylizedPlayback" />
+                        <input type="hidden" asp-for="LoopPlayback" />
+                        <input type="checkbox" asp-for="PlayArpeggioTwiceAsLong" onchange="this.form.submit()" class="form-check-input me-1" id="playArpeggioTwiceAsLongCheckbox" />
+                        <label asp-for="PlayArpeggioTwiceAsLong" class="form-check-label">Arpeggio 2X Length</label>
                     </form>
                 </div>
 
@@ -171,6 +185,7 @@
             const stopButton = document.getElementById('stopButton');
             const loadingMessage = document.getElementById('loadingMessage');
             const loopPlaybackCheckbox = document.getElementById('loopPlaybackCheckbox');
+            const playArpeggioTwiceAsLongCheckbox = document.getElementById('playArpeggioTwiceAsLongCheckbox'); // NEW
             const checkAnswerButton = document.getElementById('checkAnswerButton');
             const revealAnswerButton = document.getElementById('revealAnswerButton');
 
@@ -180,6 +195,7 @@
             const newQuizForm = document.querySelector('form[asp-page-handler="Random"]');
             const toggleStylizedPlaybackForm = document.getElementById('toggleStylizedPlaybackForm');
             const toggleLoopPlaybackForm = document.getElementById('toggleLoopPlaybackForm');
+            const togglePlayArpeggioTwiceAsLongForm = document.getElementById('togglePlayArpeggioTwiceAsLongForm'); // NEW
 
 
             // Data for MIDI Playback (from Model)
@@ -206,19 +222,24 @@
             }
 
 
-            // Initialize loopPlayback checkbox state from server-side model
+            // Initialize checkbox states from server-side model
             if (loopPlaybackCheckbox) {
                 loopPlaybackCheckbox.checked = @Html.Raw(Json.Serialize(Model.LoopPlayback));
             }
+            if (playArpeggioTwiceAsLongCheckbox) { // NEW: Initialize new checkbox
+                playArpeggioTwiceAsLongCheckbox.checked = @Html.Raw(Json.Serialize(Model.PlayArpeggioTwiceAsLong));
+            }
+
 
             // --- Playback State Persistence ---
             const IS_PLAYING_KEY = 'quizIsPlaying';
             const LOOP_ENABLED_KEY = 'quizLoopEnabled';
             const STYLIZED_ENABLED_KEY = 'quizStylizedEnabled';
+            const ARPEGGIO_2X_LENGTH_KEY = 'quizArpeggio2XLength'; // NEW persistence key
 
             const navigationForms = [
                 previousQuizForm, nextQuizForm, newQuizForm,
-                toggleStylizedPlaybackForm, toggleLoopPlaybackForm
+                toggleStylizedPlaybackForm, toggleLoopPlaybackForm, togglePlayArpeggioTwiceAsLongForm // NEW form to listen
             ].filter(Boolean);
 
             navigationForms.forEach(form => {
@@ -227,19 +248,23 @@
                         sessionStorage.setItem(IS_PLAYING_KEY, 'true');
                         sessionStorage.setItem(LOOP_ENABLED_KEY, loopPlaybackCheckbox ? loopPlaybackCheckbox.checked.toString() : 'false');
                         sessionStorage.setItem(STYLIZED_ENABLED_KEY, (document.querySelector('input[asp-for="EnableStylizedPlayback"]')?.checked || false).toString());
+                        sessionStorage.setItem(ARPEGGIO_2X_LENGTH_KEY, playArpeggioTwiceAsLongCheckbox ? playArpeggioTwiceAsLongCheckbox.checked.toString() : 'false'); // NEW
                     } else {
                         sessionStorage.removeItem(IS_PLAYING_KEY);
                         sessionStorage.removeItem(LOOP_ENABLED_KEY);
                         sessionStorage.removeItem(STYLIZED_ENABLED_KEY);
+                        sessionStorage.removeItem(ARPEGGIO_2X_LENGTH_KEY); // NEW
                     }
                     midiPlayer.stopAllNotes(false);
                 });
             });
 
             const shouldResumePlaying = sessionStorage.getItem(IS_PLAYING_KEY) === 'true';
-            sessionStorage.removeItem(IS_PLAYING_KEY);
+            sessionStorage.removeItem(IS_PLAYING_KEY); // Clear after reading
             sessionStorage.removeItem(LOOP_ENABLED_KEY);
             sessionStorage.removeItem(STYLIZED_ENABLED_KEY);
+            sessionStorage.removeItem(ARPEGGIO_2X_LENGTH_KEY); // NEW
+
 
             // --- Button Event Listeners ---
             if (playButton && progressionData && progressionData.length > 0) {

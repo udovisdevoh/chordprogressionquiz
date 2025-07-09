@@ -32,14 +32,18 @@ namespace ChordProgressionQuiz.Pages
         [BindProperty(SupportsGet = true)]
         public bool LoopPlayback { get; set; } = true;
 
+        [BindProperty(SupportsGet = true)] // NEW: Option to play arpeggio twice as long
+        public bool PlayArpeggioTwiceAsLong { get; set; } = false;
+
+
         // Properties to hold the *actual* answers, serialized to JS as hidden data
-        public string ActualTonalRomanNumeralsJson { get; set; } // Keep for display
-        public string ActualModalRomanNumeralsJson { get; set; } // Keep for display
+        public string ActualTonalRomanNumeralsJson { get; set; }
+        public string ActualModalRomanNumeralsJson { get; set; }
         public string ActualKeysExampleJson { get; set; }
         public string ActualSongNameJson { get; set; }
-        public string ActualRelativeToJson { get; set; } // Tonal relative to
+        public string ActualRelativeToJson { get; set; }
 
-        // NEW: This will hold the preferred answer sequence for the quiz check
+        // This will hold the preferred answer sequence for the quiz check
         public string ActualQuizAnswersJson { get; set; }
 
 
@@ -82,7 +86,8 @@ namespace ChordProgressionQuiz.Pages
 
                 if (EnableStylizedPlayback)
                 {
-                    StylizedProgression = _chordStylingService.ApplyRandomStyling(AbsoluteProgression);
+                    // NEW: Pass PlayArpeggioTwiceAsLong to ChordStylingService
+                    StylizedProgression = _chordStylingService.ApplyRandomStyling(AbsoluteProgression, PlayArpeggioTwiceAsLong);
                 }
                 else
                 {
@@ -106,18 +111,17 @@ namespace ChordProgressionQuiz.Pages
                         }
                         currentTime += defaultNoteDuration;
                     }
-                    StylizedProgression = new StylizedChordProgression(basicStylizedEvents, AbsoluteProgression.Name);
+                    // Constructor now requires globalTransposeOffset (default to 0 if not stylized)
+                    StylizedProgression = new StylizedChordProgression(basicStylizedEvents, AbsoluteProgression.Name, 0);
                 }
 
                 // Serialize all answers for JavaScript to reveal/display later
                 ActualSongNameJson = JsonSerializer.Serialize(QuizProgression.Song);
                 ActualKeysExampleJson = JsonSerializer.Serialize(QuizProgression.KeysExample);
-                ActualRelativeToJson = JsonSerializer.Serialize(QuizProgression.Tonal?.RelativeTo); // Tonal relative to
+                ActualRelativeToJson = JsonSerializer.Serialize(QuizProgression.Tonal?.RelativeTo);
 
-                // Always serialize Tonal Roman Numerals
                 ActualTonalRomanNumeralsJson = JsonSerializer.Serialize(QuizProgression.Tonal?.RomanNumerals?.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
-                // Always serialize Modal Roman Numerals (can be empty list)
                 if (QuizProgression.Modal != null && QuizProgression.Modal.Any())
                 {
                     ActualModalRomanNumeralsJson = JsonSerializer.Serialize(
@@ -129,7 +133,6 @@ namespace ChordProgressionQuiz.Pages
                     ActualModalRomanNumeralsJson = JsonSerializer.Serialize(new List<object>());
                 }
 
-                // NEW: Determine the primary quiz answer sequence
                 string[] quizAnswerNumerals;
                 if (QuizProgression.Modal != null && QuizProgression.Modal.Any())
                 {
@@ -141,7 +144,7 @@ namespace ChordProgressionQuiz.Pages
                 }
                 else
                 {
-                    quizAnswerNumerals = new string[] { }; // Fallback to empty if neither available
+                    quizAnswerNumerals = new string[] { };
                 }
                 ActualQuizAnswersJson = JsonSerializer.Serialize(quizAnswerNumerals);
             }
@@ -153,13 +156,13 @@ namespace ChordProgressionQuiz.Pages
             }
         }
 
-        // Action methods for navigation (similar to ChordPicker)
         public IActionResult OnPostNext()
         {
             int totalProgressions = _chordService.GetProgressionCount();
             if (totalProgressions == 0) return RedirectToPage();
             int nextIndex = (CurrentProgressionIndex + 1) % totalProgressions;
-            return RedirectToPage(new { index = nextIndex, EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback });
+            // NEW: Preserve PlayArpeggioTwiceAsLong on navigation
+            return RedirectToPage(new { index = nextIndex, EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback, PlayArpeggioTwiceAsLong = PlayArpeggioTwiceAsLong });
         }
 
         public IActionResult OnPostPrevious()
@@ -167,38 +170,50 @@ namespace ChordProgressionQuiz.Pages
             int totalProgressions = _chordService.GetProgressionCount();
             if (totalProgressions == 0) return RedirectToPage();
             int previousIndex = (CurrentProgressionIndex - 1 + totalProgressions) % totalProgressions;
-            return RedirectToPage(new { index = previousIndex, EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback });
+            // NEW: Preserve PlayArpeggioTwiceAsLong on navigation
+            return RedirectToPage(new { index = previousIndex, EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback, PlayArpeggioTwiceAsLong = PlayArpeggioTwiceAsLong });
         }
 
         public IActionResult OnPostFirst()
         {
             int totalProgressions = _chordService.GetProgressionCount();
             if (totalProgressions == 0) return RedirectToPage();
-            return RedirectToPage(new { index = 0, EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback });
+            // NEW: Preserve PlayArpeggioTwiceAsLong on navigation
+            return RedirectToPage(new { index = 0, EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback, PlayArpeggioTwiceAsLong = PlayArpeggioTwiceAsLong });
         }
 
         public IActionResult OnPostLast()
         {
             int totalProgressions = _chordService.GetProgressionCount();
             if (totalProgressions == 0) return RedirectToPage();
-            return RedirectToPage(new { index = totalProgressions - 1, EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback });
+            // NEW: Preserve PlayArpeggioTwiceAsLong on navigation
+            return RedirectToPage(new { index = totalProgressions - 1, EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback, PlayArpeggioTwiceAsLong = PlayArpeggioTwiceAsLong });
         }
 
         public IActionResult OnPostRandom()
         {
             int totalProgressions = _chordService.GetProgressionCount();
             if (totalProgressions == 0) return RedirectToPage();
-            return RedirectToPage(new { index = _randomLocal.Next(totalProgressions), EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback });
+            // NEW: Preserve PlayArpeggioTwiceAsLong on navigation
+            return RedirectToPage(new { index = _randomLocal.Next(totalProgressions), EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback, PlayArpeggioTwiceAsLong = PlayArpeggioTwiceAsLong });
         }
 
         public IActionResult OnPostToggleStylizedPlayback()
         {
-            return RedirectToPage(new { index = CurrentProgressionIndex, EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback });
+            // NEW: Preserve PlayArpeggioTwiceAsLong on toggle
+            return RedirectToPage(new { index = CurrentProgressionIndex, EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback, PlayArpeggioTwiceAsLong = PlayArpeggioTwiceAsLong });
         }
 
         public IActionResult OnPostToggleLoopPlayback()
         {
-            return RedirectToPage(new { index = CurrentProgressionIndex, EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback });
+            // NEW: Preserve PlayArpeggioTwiceAsLong on toggle
+            return RedirectToPage(new { index = CurrentProgressionIndex, EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback, PlayArpeggioTwiceAsLong = PlayArpeggioTwiceAsLong });
+        }
+
+        // NEW: Toggle for PlayArpeggioTwiceAsLong
+        public IActionResult OnPostTogglePlayArpeggioTwiceAsLong()
+        {
+            return RedirectToPage(new { index = CurrentProgressionIndex, EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback, PlayArpeggioTwiceAsLong = PlayArpeggioTwiceAsLong });
         }
     }
 }

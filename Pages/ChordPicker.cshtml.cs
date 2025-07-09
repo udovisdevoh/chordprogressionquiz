@@ -1,4 +1,4 @@
-// Pages/ChordPicker.cshtml.cs
+// D:\users\Anonymous\Documents\C Sharp\ChordProgressionQuiz\Pages\ChordPicker.cshtml.cs
 using ChordProgprogressionQuiz.Services;
 using ChordProgressionQuiz.Models;
 using ChordProgressionQuiz.Services;
@@ -29,7 +29,11 @@ namespace ChordProgressionQuiz.Pages
         public bool EnableStylizedPlayback { get; set; } // This will be bound to the checkbox's state
 
         [BindProperty(SupportsGet = true)]
-        public bool LoopPlayback { get; set; } // NEW: For preserving loop state
+        public bool LoopPlayback { get; set; } // For preserving loop state
+
+        [BindProperty(SupportsGet = true)] // NEW: Add PlayArpeggioTwiceAsLong property
+        public bool PlayArpeggioTwiceAsLong { get; set; } = false;
+
 
         public ChordProgressionService ChordService { get; }
 
@@ -73,7 +77,8 @@ namespace ChordProgressionQuiz.Pages
 
                 if (EnableStylizedPlayback)
                 {
-                    StylizedProgression = _chordStylingService.ApplyRandomStyling(AbsoluteProgression);
+                    // FIXED: Pass the new playArpeggioTwiceAsLong parameter to ApplyRandomStyling
+                    StylizedProgression = _chordStylingService.ApplyRandomStyling(AbsoluteProgression, PlayArpeggioTwiceAsLong);
                 }
                 else
                 {
@@ -97,7 +102,8 @@ namespace ChordProgressionQuiz.Pages
                         }
                         currentTime += defaultNoteDuration;
                     }
-                    StylizedProgression = new StylizedChordProgression(basicStylizedEvents, AbsoluteProgression.Name);
+                    // When not stylized, globalTransposeOffset is 0
+                    StylizedProgression = new StylizedChordProgression(basicStylizedEvents, AbsoluteProgression.Name, 0);
                 }
             }
             else
@@ -113,7 +119,8 @@ namespace ChordProgressionQuiz.Pages
             int totalProgressions = _chordService.GetProgressionCount();
             if (totalProgressions == 0) return RedirectToPage();
             int nextIndex = (CurrentProgressionIndex + 1) % totalProgressions;
-            return RedirectToPage(new { index = nextIndex, EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback }); // NEW: Pass LoopPlayback
+            // NEW: Preserve PlayArpeggioTwiceAsLong on navigation
+            return RedirectToPage(new { index = nextIndex, EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback, PlayArpeggioTwiceAsLong = PlayArpeggioTwiceAsLong });
         }
 
         public IActionResult OnPostPrevious()
@@ -121,41 +128,42 @@ namespace ChordProgressionQuiz.Pages
             int totalProgressions = _chordService.GetProgressionCount();
             if (totalProgressions == 0) return RedirectToPage();
             int previousIndex = (CurrentProgressionIndex - 1 + totalProgressions) % totalProgressions;
-            return RedirectToPage(new { index = previousIndex, EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback }); // NEW: Pass LoopPlayback
+            // NEW: Preserve PlayArpeggioTwiceAsLong on navigation
+            return RedirectToPage(new { index = previousIndex, EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback, PlayArpeggioTwiceAsLong = PlayArpeggioTwiceAsLong });
         }
 
         public IActionResult OnPostFirst()
         {
             int totalProgressions = _chordService.GetProgressionCount();
             if (totalProgressions == 0) return RedirectToPage();
-            return RedirectToPage(new { index = 0, EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback }); // NEW: Pass LoopPlayback
+            // NEW: Preserve PlayArpeggioTwiceAsLong on navigation
+            return RedirectToPage(new { index = 0, EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback, PlayArpeggioTwiceAsLong = PlayArpeggioTwiceAsLong });
         }
 
         public IActionResult OnPostLast()
         {
             int totalProgressions = _chordService.GetProgressionCount();
             if (totalProgressions == 0) return RedirectToPage();
-            return RedirectToPage(new { index = totalProgressions - 1, EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback }); // NEW: Pass LoopPlayback
+            // NEW: Preserve PlayArpeggioTwiceAsLong on navigation
+            return RedirectToPage(new { index = totalProgressions - 1, EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback, PlayArpeggioTwiceAsLong = PlayArpeggioTwiceAsLong });
         }
 
-        /// <summary>
-        /// Handles the POST request for toggling stylized playback.
-        /// The EnableStylizedPlayback property will already be bound to the new state of the checkbox.
-        /// </summary>
         public IActionResult OnPostToggleStylizedPlayback()
         {
-            // Simply redirect back, passing the *already bound* EnableStylizedPlayback state.
-            // No need to toggle it with '!' here, as it reflects the checkbox's new state.
-            return RedirectToPage(new { index = CurrentProgressionIndex, EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback }); // NEW: Pass LoopPlayback
+            // NEW: Preserve PlayArpeggioTwiceAsLong on toggle
+            return RedirectToPage(new { index = CurrentProgressionIndex, EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback, PlayArpeggioTwiceAsLong = PlayArpeggioTwiceAsLong });
         }
 
-        // NEW: Handler for toggling LoopPlayback.
-        // This is necessary because the LoopPlayback checkbox is now part of a form,
-        // and we want its state to be persisted via a POST request.
         public IActionResult OnPostToggleLoopPlayback()
         {
-            // LoopPlayback is already bound to the new state of the checkbox by ASP.NET Core
-            return RedirectToPage(new { index = CurrentProgressionIndex, EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback });
+            // NEW: Preserve PlayArpeggioTwiceAsLong on toggle
+            return RedirectToPage(new { index = CurrentProgressionIndex, EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback, PlayArpeggioTwiceAsLong = PlayArpeggioTwiceAsLong });
+        }
+
+        // NEW: Toggle for PlayArpeggioTwiceAsLong (for ChordPicker if feature added later)
+        public IActionResult OnPostTogglePlayArpeggioTwiceAsLong()
+        {
+            return RedirectToPage(new { index = CurrentProgressionIndex, EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback, PlayArpeggioTwiceAsLong = PlayArpeggioTwiceAsLong });
         }
     }
 }
