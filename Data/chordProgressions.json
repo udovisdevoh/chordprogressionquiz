@@ -1024,7 +1024,7 @@
         "song": "Just the two of us",
         "keys_example": "C B7 Em7 Dm7 G7 C B7 Em7",
         "tonal": {
-            "roman_numerals": "I7 VII7 iii7 ii7 V7 I7 VII7 iii7",
+            "roman_numerals": "I VII7 iii7 ii7 V7 I VII7 iii7",
             "relative_to": "C Major"
         }
     },
