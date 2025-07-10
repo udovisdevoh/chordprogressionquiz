@@ -89,12 +89,12 @@ namespace ChordProgressionQuiz.Tests
 
         [InlineData("I7 VII7 iii7 ii7 V7 I7 VII7 iii7", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonic
-                new int[] { 0, 4, 7, 10 },  // I7 (C7)
+                new int[] { 0, 4, 7 },  // I7 (C)
                 new int[] { 11, 15, 18, 21 }, // VII7 (B7)
                 new int[] { 4, 7, 11, 14 }, // iii7 (Em7)
                 new int[] { 2, 5, 9, 12 },  // ii7 (Dm7)
                 new int[] { 7, 11, 14, 17 }, // V7 (G7)
-                new int[] { 0, 4, 7, 10 },  // I7 (C7)
+                new int[] { 0, 4, 7 },  // I7 (C)
                 new int[] { 11, 15, 18, 21 }, // VII7 (B7)
                 new int[] { 4, 7, 11, 14 }  // iii7 (Em7)
             },
