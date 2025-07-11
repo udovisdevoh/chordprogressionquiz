@@ -76,6 +76,20 @@
         "rotation_group": 5
     },
     {
+        "song": "Till the world ends",
+        "keys_example": "Am C F",
+        "tonal": {
+            "roman_numerals": "vi I IV",
+            "relative_to": "C Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "i bIII bVI",
+                "relative_to": "A Aeolian"
+            }
+        ]
+    },
+    {
         "song": "Tyler",
         "keys_example": "F G Am C",
         "tonal": {
