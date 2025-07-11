@@ -6,6 +6,8 @@
     <title>@ViewData["Title"] - Chord Progression Quiz</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" />
+    @* This line is added to render page-specific styles *@
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
     <header>

@@ -6,7 +6,7 @@
     var currentIntervalJson = System.Text.Json.JsonSerializer.Serialize(Model.CurrentInterval);
 }
 
-@* MODIFIED: Hidden divs to store data for JavaScript *@
+@* Hidden divs to store data for JavaScript *@
 <div id="quiz-data" data-current-interval="@currentIntervalJson" data-all-intervals="@Model.AllIntervalsJson"></div>
 
 
@@ -47,13 +47,11 @@
             </div>
         </div>
         <div class="col-auto">
-            @* MODIFIED: "Next" button is no longer a form submission *@
             <button id="next-interval-btn" class="btn btn-info btn-lg">
                 Next <i class="fas fa-arrow-right"></i>
             </button>
         </div>
     </div>
-    @* NEW: Toggle for Prioritizing Weaknesses *@
     <div class="row justify-content-center mt-3">
         <div class="col-auto">
             <div class="form-check form-switch">
@@ -69,9 +67,25 @@
     <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3 justify-content-center" id="answer-buttons-container">
         @foreach (var name in Model.AllIntervalNames)
         {
+            string buttonText = name switch
+            {
+                "Minor Second" => "♭II 🦈 Minor Second",
+                "Major Second" => "II 🥊 Major Second",
+                "Minor Third" => "♭III 😏 Minor Third",
+                "Major Third" => "III 🔔 Major Third",
+                "Perfect Fourth" => "IV 💍 Perfect Fourth",
+                "Tritone" => "♭V/#IV ☁️ Tritone",
+                "Perfect Fifth" => "V 🚀 Perfect Fifth",
+                "Minor Sixth" => "♭VI 🎷♠️🥯 Minor Sixth",
+                "Major Sixth" => "VI 🎄 Major Sixth",
+                "Minor Seventh" => "♭VII 🍉 Minor Seventh",
+                "Major Seventh" => "VII 🟦✏️ Major Seventh",
+                "Octave" => "VIII 🌈 Octave",
+                _ => name
+            };
             <div class="col">
-                <button class="btn btn-outline-dark w-100 p-3 answer-button" data-interval-name="@name">
-                    @name
+                <button class="btn btn-outline-dark w-100 p-3 answer-button interval-button" data-interval-name="@name">
+                    @buttonText
                 </button>
             </div>
         }
@@ -81,7 +95,6 @@
 <div class="container mt-5">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h3 class="text-center mb-0">Statistics</h3>
-        @* NEW: Clear Stats Button *@
         <button id="clear-stats-btn" class="btn btn-sm btn-danger">
             <i class="fas fa-trash-alt"></i> Clear Stats
         </button>
@@ -104,6 +117,15 @@
     </div>
 </div>
 
+
+@section Styles {
+    <style>
+        .interval-button {
+            min-width: 150px;
+            text-align: left;
+        }
+    </style>
+}
 
 @section Scripts {
     <script src="https://kit.fontawesome.com/69115159a6.js" crossorigin="anonymous"></script>
@@ -162,17 +184,18 @@
 
                     allIntervalsData.forEach((interval, index) => {
                         const stat = stats[interval.IntervalName] || { success: 0, attempts: 0 };
-
-                        // **MODIFIED: Squaring the result to make the weighting effect much stronger.**
                         const weight = Math.pow((maxSuccessCount - stat.success) + 1, 2);
-
                         for (let i = 0; i < weight; i++) {
                             weightedList.push(index);
                         }
                     });
 
-                    const randomIndex = Math.floor(Math.random() * weightedList.length);
-                    selectedIndex = weightedList[randomIndex];
+                    if (weightedList.length > 0) {
+                        const randomIndex = Math.floor(Math.random() * weightedList.length);
+                        selectedIndex = weightedList[randomIndex];
+                    } else {
+                        selectedIndex = Math.floor(Math.random() * allIntervalsData.length);
+                    }
 
                 } else {
                     selectedIndex = Math.floor(Math.random() * allIntervalsData.length);
@@ -196,10 +219,7 @@
 
             function getStats() {
                 const statsJson = localStorage.getItem('intervalQuiz_stats');
-                if (statsJson) {
-                    return JSON.parse(statsJson);
-                }
-                return getInitialStats();
+                return statsJson ? JSON.parse(statsJson) : getInitialStats();
             }
 
             let stats = getStats();
@@ -211,7 +231,7 @@
 
                 allIntervalsData.forEach(interval => {
                     const name = interval.IntervalName;
-                    const stat = stats[name] || { success: 0, attempts: 0 }; // Fallback for safety
+                    const stat = stats[name] || { success: 0, attempts: 0 };
                     const successRate = stat.attempts > 0 ? ((stat.success / stat.attempts) * 100).toFixed(0) + '%' : 'N/A';
 
                     const row = `<tr>
@@ -235,15 +255,22 @@
                     </tr>`;
             }
 
+            // **FIXED: This function now uses standard, safe syntax.**
             function updateStats(isCorrect) {
                 const intervalName = correctAnswerName;
-                if (!stats[intervalName]) { // Initialize if somehow missing
+
+                // Ensure the stats object and its interval property exist
+                if (!stats) { stats = {}; }
+                if (!stats[intervalName]) {
                     stats[intervalName] = { success: 0, attempts: 0 };
                 }
+
+                // Now, safely update the properties
                 stats[intervalName].attempts++;
                 if (isCorrect) {
                     stats[intervalName].success++;
                 }
+
                 localStorage.setItem('intervalQuiz_stats', JSON.stringify(stats));
                 updateStatsDisplay();
             }
@@ -282,6 +309,7 @@
 
             // --- PLAYBACK LOGIC ---
             function midiToNoteName(midi) {
+                if (midi === null || midi === undefined) return "";
                 const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
                 const octave = Math.floor(midi / 12) - 1;
                 const noteIndex = midi % 12;
@@ -334,7 +362,7 @@
                         feedbackEl.innerHTML = `Wrong! The correct answer was <strong>${correctAnswerName}</strong>.`;
                         feedbackEl.className = 'text-center h4 mb-3 text-danger';
                         handleWrongAnswer();
-                        const correctButton = document.querySelector(`[data-interval-name="${correctAnswerName}"]`);
+                        const correctButton = document.querySelector(`button.answer-button[data-interval-name="${correctAnswerName}"]`);
                         if (correctButton) {
                             correctButton.classList.replace('btn-outline-dark', 'btn-success');
                         }
@@ -349,6 +377,9 @@
 
             Tone.loaded().then(() => {
                 playInterval();
+            }).catch(function (err) {
+                console.error("Failed to load audio samples:", err);
+                feedbackEl.innerHTML = `<span class="text-danger">Could not load audio. Please check your connection and refresh.</span>`;
             });
         });
     </script>
