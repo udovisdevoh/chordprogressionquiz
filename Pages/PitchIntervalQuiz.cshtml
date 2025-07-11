@@ -69,7 +69,13 @@
 </div>
 
 <div class="container mt-5">
-    <h3 class="text-center">Session Statistics</h3>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="text-center mb-0">Statistics</h3>
+        @* NEW: Clear Stats Button *@
+        <button id="clear-stats-btn" class="btn btn-sm btn-danger">
+            <i class="fas fa-trash-alt"></i> Clear Stats
+        </button>
+    </div>
     <div class="table-responsive">
         <table class="table table-striped table-hover">
             <thead class="table-dark">
@@ -112,6 +118,7 @@
             const loopHiddenInput = document.getElementById('loop-playback-hidden-next');
             const answerButtons = document.querySelectorAll('.answer-button');
             const feedbackEl = document.getElementById('answer-feedback');
+            const clearStatsBtn = document.getElementById('clear-stats-btn'); // NEW
 
             // Score elements and variables
             const currentScoreEl = document.getElementById('current-score');
@@ -127,16 +134,11 @@
                 baseUrl: "https://tonejs.github.io/audio/salamander/",
             }).toDestination();
 
-            // --- NEW: SESSION STATS LOGIC ---
+            // --- STATISTICS LOGIC ---
             const statsTableBody = document.getElementById('stats-table-body');
             const statsTableFoot = document.getElementById('stats-table-foot');
 
-            function getSessionStats() {
-                const statsJson = sessionStorage.getItem('intervalQuiz_sessionStats');
-                if (statsJson) {
-                    return JSON.parse(statsJson);
-                }
-                // Initialize stats if they don't exist
+            function getInitialStats() {
                 const initialStats = {};
                 allIntervalNames.forEach(name => {
                     initialStats[name] = { success: 0, attempts: 0 };
@@ -144,7 +146,16 @@
                 return initialStats;
             }
 
-            let sessionStats = getSessionStats();
+            function getStats() {
+                // MODIFIED: Use localStorage instead of sessionStorage
+                const statsJson = localStorage.getItem('intervalQuiz_stats');
+                if (statsJson) {
+                    return JSON.parse(statsJson);
+                }
+                return getInitialStats();
+            }
+
+            let stats = getStats();
 
             function updateStatsDisplay() {
                 statsTableBody.innerHTML = ''; // Clear previous stats
@@ -152,7 +163,7 @@
                 let totalAttempts = 0;
 
                 allIntervalNames.forEach(name => {
-                    const stat = sessionStats[name];
+                    const stat = stats[name];
                     const successRate = stat.attempts > 0 ? ((stat.success / stat.attempts) * 100).toFixed(0) + '%' : 'N/A';
 
                     const row = `<tr>
@@ -176,14 +187,24 @@
                 </tr>`;
             }
 
-            function updateSessionStats(isCorrect) {
+            function updateStats(isCorrect) {
                 const intervalName = correctAnswerName;
-                sessionStats[intervalName].attempts++;
+                stats[intervalName].attempts++;
                 if (isCorrect) {
-                    sessionStats[intervalName].success++;
+                    stats[intervalName].success++;
                 }
-                sessionStorage.setItem('intervalQuiz_sessionStats', JSON.stringify(sessionStats));
+                // MODIFIED: Use localStorage instead of sessionStorage
+                localStorage.setItem('intervalQuiz_stats', JSON.stringify(stats));
                 updateStatsDisplay();
+            }
+
+            // NEW: Function to clear stats
+            function clearStats() {
+                if (confirm("Are you sure you want to clear all your statistics? This action cannot be undone.")) {
+                    stats = getInitialStats();
+                    localStorage.setItem('intervalQuiz_stats', JSON.stringify(stats));
+                    updateStatsDisplay();
+                }
             }
 
             // --- SCORE LOGIC ---
@@ -200,14 +221,14 @@
                 }
                 localStorage.setItem('intervalQuiz_currentScore', currentScore);
                 updateScoreDisplay();
-                updateSessionStats(true); // NEW
+                updateStats(true);
             }
 
             function handleWrongAnswer() {
                 currentScore = 0;
                 localStorage.setItem('intervalQuiz_currentScore', currentScore);
                 updateScoreDisplay();
-                updateSessionStats(false); // NEW
+                updateStats(false);
             }
 
             // --- PLAYBACK LOGIC ---
@@ -241,6 +262,7 @@
 
             // --- EVENT LISTENERS ---
             playBtn.addEventListener('click', playInterval);
+            clearStatsBtn.addEventListener('click', clearStats); // NEW
 
             loopSwitch.addEventListener('change', (e) => {
                 sequence.loop = e.target.checked;
@@ -288,7 +310,7 @@
 
             // --- INITIALIZATION ---
             updateScoreDisplay();
-            updateStatsDisplay(); // NEW: Render stats on page load
+            updateStatsDisplay();
 
             // Auto-play on load once Tone.js is ready
             Tone.loaded().then(() => {
