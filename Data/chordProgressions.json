@@ -423,7 +423,8 @@
                 "relative_to": "D Dorian"
             }
         ],
-        "palindromic_group": 3
+        "palindromic_group": 3,
+        "substitution_group": 9
     },
     {
         "song": "Creep",
@@ -465,8 +466,7 @@
                 "roman_numerals": "I V bVII IV",
                 "relative_to": "C Mixolydian"
             }
-        ],
-        "substitution_group": 9
+        ]
     },
     {
         "song": "Like a prayer",
@@ -1084,8 +1084,7 @@
                 "roman_numerals": "I bIII bVII IV",
                 "relative_to": "A Mixolydian with borrowed bIII"
             }
-        ],
-        "substitution_group": 9
+        ]
     },
     {
         "song": "Ginette",
@@ -1099,7 +1098,8 @@
                 "roman_numerals": "I vi iv V",
                 "relative_to": "C Ionian with borrowed iv"
             }
-        ]
+        ],
+        "substitution_group": 4
     },
     {
         "song": "Lotus 3 metal machine movement 2",
@@ -1113,7 +1113,8 @@
                 "roman_numerals": "I V bVII IV",
                 "relative_to": "C Mixolydian with modal mixture"
             }
-        ]
+        ],
+        "substitution_group": 9
     },
     {
         "song": "Marcia Baila",
@@ -1225,7 +1226,8 @@
                 "roman_numerals": "I bIII IV V bVII",
                 "relative_to": "A Mixolydian with borrowed bIII"
             }
-        ]
+        ],
+        "substitution_group": 8
     },
     {
         "song": "tmnt theme",
@@ -1239,7 +1241,8 @@
                 "roman_numerals": "I bIII IV bVI bVII",
                 "relative_to": "A Major with significant modal mixture"
             }
-        ]
+        ],
+        "substitution_group": 8
     },
     {
         "song": "bitter sweet symphony",
