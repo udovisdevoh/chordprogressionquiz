@@ -1084,7 +1084,8 @@
                 "roman_numerals": "I bIII bVII IV",
                 "relative_to": "A Mixolydian with borrowed bIII"
             }
-        ]
+        ],
+        "substitution_group": 5
     },
     {
         "song": "Ginette",
@@ -1184,7 +1185,8 @@
                 "roman_numerals": "I bIII IV bVI",
                 "relative_to": "B Major with modal mixture"
             }
-        ]
+        ],
+        "substitution_group": 1
     },
     {
         "song": "hold me trill me kiss me",
@@ -1256,7 +1258,8 @@
                 "roman_numerals": "I v bVII IV",
                 "relative_to": "E Mixolydian"
             }
-        ]
+        ],
+        "substitution_group": 9
     },
     {
         "song": "Corrida",
