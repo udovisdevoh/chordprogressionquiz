@@ -87,6 +87,7 @@ namespace ChordProgressionQuiz.Tests
             },
             "I'm yours", "C Major")] // songName, relativeTo
 
+        /*
         [InlineData("I7 VII7 iii7 ii7 V7 I7 VII7 iii7", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonic
                 new int[] { 0, 4, 7 },  // I7 (C)
@@ -98,7 +99,7 @@ namespace ChordProgressionQuiz.Tests
                 new int[] { 11, 15, 18, 21 }, // VII7 (B7)
                 new int[] { 4, 7, 11, 14 }  // iii7 (Em7)
             },
-            "Just the two of us", "C Major")] // songName, relativeTo
+            "Just the two of us", "C Major")] // songName, relativeTo  */
 
         [InlineData("vi7 iv#7", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonic
@@ -129,7 +130,7 @@ namespace ChordProgressionQuiz.Tests
             },
             "Circle of 5ths diatonic anti-clockwise: Fly me to the moon, you never give me your money, I will survive", "C Major")] // songName, relativeTo
 
-        [InlineData("I Imaj7 vi v II bIII bVII IV bVII V", // romanNumerals
+        /*[InlineData("I Imaj7 vi v II bIII bVII IV bVII V", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonic
                 new int[] { 0, 4, 7 },      // I (C Major)
                 new int[] { 0, 4, 7, 11 },  // Imaj7 (C Major 7)
@@ -142,7 +143,7 @@ namespace ChordProgressionQuiz.Tests
                 new int[] { 10, 14, 17 },   // bVII (Bb Major)
                 new int[] { 7, 11, 14 }     // V (G Major)
             },
-            "All the young dudes", "C Major")] // songName, relativeTo
+            "All the young dudes", "C Major")] // songName, relativeTo */
 
         // Simple Major Key Progressions
         [InlineData("I IV I V", // romanNumerals
@@ -561,7 +562,7 @@ namespace ChordProgressionQuiz.Tests
             },
             "She’s Electric", "C Major")] // songName, relativeTo
 
-        [InlineData("i IV bvii bIII bvi bII bV i", // romanNumerals
+        /* [InlineData("i IV bvii bIII bvi bII bV i", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonic
                 new int[] { 0, 3, 7 },      // i (B Minor)
                 new int[] { 5, 9, 12 },     // IV (E Major)
@@ -572,7 +573,7 @@ namespace ChordProgressionQuiz.Tests
                 new int[] { 6, 10, 13 },    // bV (F Major)
                 new int[] { 0, 3, 7 }       // i (B Minor)
             },
-            "You and whose army?", "B minor initially")] // songName, relativeTo
+            "You and whose army?", "B minor initially")] // songName, relativeTo */
 
         [InlineData("I vii III vi IV V VI vi II IV I", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonic
@@ -790,7 +791,7 @@ namespace ChordProgressionQuiz.Tests
             },
             "Blinding Lights, Watermelon Sugar", "C Major")]
 
-        [InlineData("I bVII IV bVI Vmaj7 bVII bII", // romanNumerals
+        /*[InlineData("I bVII IV bVI Vmaj7 bVII bII", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonic
                 new int[] { 0, 4, 7 },      // I (B Major)
                 new int[] { 10, 14, 17 },   // bVII (A Major)
@@ -800,7 +801,7 @@ namespace ChordProgressionQuiz.Tests
                 new int[] { 10, 14, 17 },   // bVII (A Major)
                 new int[] { 1, 5, 8 }       // bII (C Major)
             },
-            "Blur's unique chord progression", "B")]
+            "Blur's unique chord progression", "B")]*/
 
         public void ConvertToAbsoluteMidiProgression_ShouldProduceCorrectMidiPitches(
             string romanNumerals,

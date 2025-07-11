@@ -511,6 +511,20 @@
         ]
     },
     {
+        "song": "Harmonic minor time lapse",
+        "keys_example": "Am F C E",
+        "tonal": {
+            "roman_numerals": "vi IV I III",
+            "relative_to": "C Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "i bVI bIII V",
+                "relative_to": "A Harmonic Minor"
+            }
+        ]
+    },
+    {
         "song": "Dorian vamp: Oye como va, Uptown funk, Great gig in the sky, Another brick in the wall",
         "keys_example": "Dm G",
         "tonal": {
@@ -847,19 +861,11 @@
         }
     },
     {
-        "song": "You and whose army?",
-        "keys_example": "Bm E Am D Gm C F Am",
+        "song": "You and whose army (first 4 chords)?",
+        "keys_example": "Bm E Am D",
         "tonal": {
-            "roman_numerals": "i IV bvii bIII bvi bII bV i",
+            "roman_numerals": "i IV bvii bIII",
             "relative_to": "B minor initially, then shifting implied tonics due to chromaticism"
-        }
-    },
-    {
-        "song": "All the young dudes",
-        "keys_example": "C Cmaj7 Am Gm D Eb Bb F Bb G",
-        "tonal": {
-            "roman_numerals": "I Imaj7 vi v II bIII bVII IV bVII V",
-            "relative_to": "C Major, with strong chromaticism and modulation"
         }
     },
     {
@@ -1013,19 +1019,11 @@
         ]
     },
     {
-        "song": "Blur's unique chord progression",
-        "keys_example": "B A E G Fmaj7 Bb Db",
+        "song": "Blur's first 4 chords",
+        "keys_example": "B A E G",
         "tonal": {
-            "roman_numerals": "I bVII IV bVI Vmaj7 bVII bII",
+            "roman_numerals": "I bVII IV bVI",
             "relative_to": "B, with significant chromaticism"
-        }
-    },
-    {
-        "song": "Just the two of us",
-        "keys_example": "C B7 Em7 Dm7 G7 C B7 Em7",
-        "tonal": {
-            "roman_numerals": "I VII7 iii7 ii7 V7 I VII7 iii7",
-            "relative_to": "C Major"
         }
     },
     {
