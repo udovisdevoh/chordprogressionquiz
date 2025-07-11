@@ -511,20 +511,6 @@
         ]
     },
     {
-        "song": "Harmonic minor time lapse",
-        "keys_example": "Am F C E",
-        "tonal": {
-            "roman_numerals": "vi IV I III",
-            "relative_to": "C Major"
-        },
-        "modal": [
-            {
-                "roman_numerals": "i bVI bIII V",
-                "relative_to": "A Harmonic Minor"
-            }
-        ]
-    },
-    {
         "song": "Dorian vamp: Oye como va, Uptown funk, Great gig in the sky, Another brick in the wall",
         "keys_example": "Dm G",
         "tonal": {
@@ -697,7 +683,7 @@
         "substitution_group": 2
     },
     {
-        "song": "Harmonic minor axis: Lonely day, (You're welcome (moana))",
+        "song": "Harmonic minor axis: Lonely day, (You're welcome (moana)), time lapse",
         "keys_example": "Am F C E",
         "tonal": {
             "roman_numerals": "vi IV I III",
