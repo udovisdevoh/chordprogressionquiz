@@ -465,7 +465,8 @@
                 "roman_numerals": "I V bVII IV",
                 "relative_to": "C Mixolydian"
             }
-        ]
+        ],
+        "substitution_group": 9
     },
     {
         "song": "Like a prayer",
@@ -1042,5 +1043,384 @@
         "rotation_group": 9,
         "palindromic_group": 5,
         "substitution_group": 6
+    },
+    {
+        "song": "I feel love",
+        "keys_example": "A C D E",
+        "tonal": {
+            "roman_numerals": "I bIII IV V",
+            "relative_to": "A Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "I bIII IV V",
+                "relative_to": "A Mixolydian with modal mixture"
+            }
+        ]
+    },
+    {
+        "song": "Truc de punk",
+        "keys_example": "E C G A",
+        "tonal": {
+            "roman_numerals": "I bVI bIII IV",
+            "relative_to": "E Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "I bVI bIII IV",
+                "relative_to": "E Ionian with modal mixture"
+            }
+        ]
+    },
+    {
+        "song": "I want to get away",
+        "keys_example": "A C G D",
+        "tonal": {
+            "roman_numerals": "I bIII bVII IV",
+            "relative_to": "A Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "I bIII bVII IV",
+                "relative_to": "A Mixolydian with borrowed bIII"
+            }
+        ],
+        "substitution_group": 9
+    },
+    {
+        "song": "Ginette",
+        "keys_example": "C Am Fm G",
+        "tonal": {
+            "roman_numerals": "I vi iv V",
+            "relative_to": "C Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "I vi iv V",
+                "relative_to": "C Ionian with borrowed iv"
+            }
+        ]
+    },
+    {
+        "song": "Lotus 3 metal machine movement 2",
+        "keys_example": "C G Bb F",
+        "tonal": {
+            "roman_numerals": "I V bVII IV",
+            "relative_to": "C Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "I V bVII IV",
+                "relative_to": "C Mixolydian with modal mixture"
+            }
+        ]
+    },
+    {
+        "song": "Marcia Baila",
+        "keys_example": "Am D Bm E",
+        "tonal": {
+            "roman_numerals": "vi II vii III",
+            "relative_to": "C Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "i IV ii V",
+                "relative_to": "A Melodic Minor"
+            }
+        ]
+    },
+    {
+        "song": "Blur Song 2",
+        "keys_example": "E D G A B",
+        "tonal": {
+            "roman_numerals": "I bVII bIII IV V",
+            "relative_to": "E Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "I bVII bIII IV V",
+                "relative_to": "E Mixolydian with borrowed bIII"
+            }
+        ]
+    },
+    {
+        "song": "Smells like teen spirit",
+        "keys_example": "E A G C",
+        "tonal": {
+            "roman_numerals": "I IV bIII bVI",
+            "relative_to": "E Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "I IV bIII bVI",
+                "relative_to": "E with modal mixture"
+            }
+        ]
+    },
+    {
+        "song": "We're the kids, were the kids",
+        "keys_example": "B G E",
+        "tonal": {
+            "roman_numerals": "I bVI IV",
+            "relative_to": "B Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "I bVI IV",
+                "relative_to": "B Mixolydian with modal mixture"
+            }
+        ]
+    },
+    {
+        "song": "Kids in america na--na na na nana",
+        "keys_example": "B D E G",
+        "tonal": {
+            "roman_numerals": "I bIII IV bVI",
+            "relative_to": "B Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "I bIII IV bVI",
+                "relative_to": "B Major with modal mixture"
+            }
+        ]
+    },
+    {
+        "song": "hold me trill me kiss me",
+        "keys_example": "E D B G",
+        "tonal": {
+            "roman_numerals": "I bVII V bIII",
+            "relative_to": "E Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "I bVII V bIII",
+                "relative_to": "E Mixolydian with borrowed bIII"
+            }
+        ]
+    },
+    {
+        "song": "Babooshka Intro",
+        "keys_example": "Am D E",
+        "tonal": {
+            "roman_numerals": "vi II III",
+            "relative_to": "C Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "i IV V",
+                "relative_to": "A Dorian with Harmonic Minor V"
+            }
+        ]
+    },
+    {
+        "song": "knock on wood",
+        "keys_example": "A C D E G",
+        "tonal": {
+            "roman_numerals": "I bIII IV V bVII",
+            "relative_to": "A Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "I bIII IV V bVII",
+                "relative_to": "A Mixolydian with borrowed bIII"
+            }
+        ]
+    },
+    {
+        "song": "tmnt theme",
+        "keys_example": "A C D F G",
+        "tonal": {
+            "roman_numerals": "I bIII IV bVI bVII",
+            "relative_to": "A Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "I bIII IV bVI bVII",
+                "relative_to": "A Major with significant modal mixture"
+            }
+        ]
+    },
+    {
+        "song": "bitter sweet symphony",
+        "keys_example": "E Bm D A",
+        "tonal": {
+            "roman_numerals": "I v bVII IV",
+            "relative_to": "E Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "I v bVII IV",
+                "relative_to": "E Mixolydian"
+            }
+        ]
+    },
+    {
+        "song": "Corrida",
+        "keys_example": "E F G F E",
+        "tonal": {
+            "roman_numerals": "I bII bIII bII I",
+            "relative_to": "E Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "I bII bIII bII I",
+                "relative_to": "E Phrygian Dominant"
+            }
+        ]
+    },
+    {
+        "song": "Petrushka, Alice au pays de merveilles",
+        "keys_example": "E Bb",
+        "tonal": {
+            "roman_numerals": "I bV",
+            "relative_to": "E Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "I bV",
+                "relative_to": "E Major with tritone"
+            }
+        ]
+    },
+    {
+        "song": "Double back pre-chorus",
+        "keys_example": "D G F Bb G C",
+        "tonal": {
+            "roman_numerals": "I IV bIII bVI IV bVII",
+            "relative_to": "D Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "I IV bIII bVI IV bVII",
+                "relative_to": "D Major with significant modal mixture"
+            }
+        ]
+    },
+    {
+        "song": "Hotel Delmano",
+        "keys_example": "C Gm Eb F",
+        "tonal": {
+            "roman_numerals": "I v bIII IV",
+            "relative_to": "C Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "I v bIII IV",
+                "relative_to": "C Mixolydian with modal mixture"
+            }
+        ]
+    },
+    {
+        "song": "I am the walrus intro",
+        "keys_example": "B A G F E D",
+        "tonal": {
+            "roman_numerals": "I bVII bVI bV IV bIII",
+            "relative_to": "B Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "I bVII bVI bV IV bIII",
+                "relative_to": "Descending chromatic scale from B"
+            }
+        ]
+    },
+    {
+        "song": "incense and peppermints",
+        "keys_example": "Am D Am F",
+        "tonal": {
+            "roman_numerals": "vi II vi IV",
+            "relative_to": "C Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "i IV i bVI",
+                "relative_to": "A Dorian with borrowed bVI"
+            }
+        ]
+    },
+    {
+        "song": "Metroid brinstar theme, Na na na hey hey",
+        "keys_example": "A C G A",
+        "tonal": {
+            "roman_numerals": "I bIII bVII I",
+            "relative_to": "A Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "I bIII bVII I",
+                "relative_to": "A Mixolydian with borrowed bIII"
+            }
+        ]
+    },
+    {
+        "song": "Right where it belongs",
+        "keys_example": "D C Bb F",
+        "tonal": {
+            "roman_numerals": "I bVII bVI bIII",
+            "relative_to": "D Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "I bVII bVI bIII",
+                "relative_to": "D Mixolydian b6"
+            }
+        ]
+    },
+    {
+        "song": "Rock et belles oreilles Intro",
+        "keys_example": "D G F",
+        "tonal": {
+            "roman_numerals": "I IV bIII",
+            "relative_to": "D Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "I IV bIII",
+                "relative_to": "D Major with borrowed bIII"
+            }
+        ]
+    },
+    {
+        "song": "still loving you",
+        "keys_example": "Am B E",
+        "tonal": {
+            "roman_numerals": "vi VII III",
+            "relative_to": "C Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "i II V",
+                "relative_to": "A harmonic minor with subdominant"
+            }
+        ]
+    },
+    {
+        "song": "We are all heroes, Lance et compte",
+        "keys_example": "Em C D G F# B",
+        "tonal": {
+            "roman_numerals": "i bVI bVII bIII II V",
+            "relative_to": "E minor"
+        },
+        "modal": [
+            {
+                "roman_numerals": "i bVI bVII bIII II V",
+                "relative_to": "E minor with modal mixture"
+            }
+        ]
+    },
+    {
+        "song": "What a wonderful world",
+        "keys_example": "C Em Am G",
+        "tonal": {
+            "roman_numerals": "I iii vi V",
+            "relative_to": "C Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "I iii vi V",
+                "relative_to": "C Ionian"
+            }
+        ]
     }
 ]
