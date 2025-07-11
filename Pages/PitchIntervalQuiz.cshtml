@@ -1,4 +1,4 @@
-﻿@page "{selectedIndex?}"
+﻿@page "/PitchIntervalQuiz/{selectedIndex?}"
 @model ChordProgressionQuiz.Pages.PitchIntervalQuizModel
 @{
     ViewData["Title"] = "Pitch Interval Quiz";
@@ -165,7 +165,7 @@
                 baseUrl: "https://tonejs.github.io/audio/salamander/",
             }).toDestination();
 
-            // --- INTERVAL SELECTION LOGIC ---
+            // --- INTERVAL SELECTION LOGIC (FIXED) ---
             function selectAndLoadNextInterval() {
                 let selectedIndex;
                 const prioritize = prioritizeSwitch.checked;
@@ -174,18 +174,22 @@
                     const stats = getStats();
                     const weightedList = [];
 
-                    let maxSuccessCount = 0;
-                    allIntervalsData.forEach(interval => {
-                        const stat = stats[interval.IntervalName] || { success: 0, attempts: 0 };
-                        if (stat.success > maxSuccessCount) {
-                            maxSuccessCount = stat.success;
-                        }
-                    });
-
                     allIntervalsData.forEach((interval, index) => {
                         const stat = stats[interval.IntervalName] || { success: 0, attempts: 0 };
-                        const weight = Math.pow((maxSuccessCount - stat.success) + 1, 3);
-                        for (let i = 0; i < weight; i++) {
+
+                        // Calculate success rate, default to a high rate if no attempts to avoid division by zero
+                        // and ensure new intervals get a chance.
+                        const successRate = stat.attempts > 0 ? (stat.success / stat.attempts) : 1.0;
+
+                        // The weight is inversely proportional to the success rate.
+                        // A lower success rate results in a higher weight.
+                        // We use a power function to make the difference more pronounced.
+                        const weight = Math.pow(1.1 - successRate, 3) * 100;
+
+                        // Add the index to the list a number of times proportional to its weight.
+                        // Also add a base value (e.g., 10) to ensure even intervals with 100% success rate
+                        // have a small chance of being selected.
+                        for (let i = 0; i < Math.ceil(weight) + 10; i++) {
                             weightedList.push(index);
                         }
                     });
@@ -194,10 +198,12 @@
                         const randomIndex = Math.floor(Math.random() * weightedList.length);
                         selectedIndex = weightedList[randomIndex];
                     } else {
+                        // Fallback to random selection if the weighted list is somehow empty
                         selectedIndex = Math.floor(Math.random() * allIntervalsData.length);
                     }
 
                 } else {
+                    // Default random selection when "Prioritize Weaknesses" is off
                     selectedIndex = Math.floor(Math.random() * allIntervalsData.length);
                 }
 
@@ -235,11 +241,11 @@
                     const successRate = stat.attempts > 0 ? ((stat.success / stat.attempts) * 100).toFixed(0) + '%' : 'N/A';
 
                     const row = `<tr>
-                            <td>${name}</td>
-                            <td>${stat.success}</td>
-                            <td>${stat.attempts}</td>
-                            <td>${successRate}</td>
-                        </tr>`;
+                                        <td>${name}</td>
+                                        <td>${stat.success}</td>
+                                        <td>${stat.attempts}</td>
+                                        <td>${successRate}</td>
+                                    </tr>`;
                     statsTableBody.innerHTML += row;
 
                     totalSuccess += stat.success;
@@ -248,29 +254,23 @@
 
                 const totalSuccessRate = totalAttempts > 0 ? ((totalSuccess / totalAttempts) * 100).toFixed(0) + '%' : 'N/A';
                 statsTableFoot.innerHTML = `<tr class="table-dark">
-                        <th>Total</th>
-                        <th>${totalSuccess}</th>
-                        <th>${totalAttempts}</th>
-                        <th>${totalSuccessRate}</th>
-                    </tr>`;
+                                        <th>Total</th>
+                                        <th>${totalSuccess}</th>
+                                        <th>${totalAttempts}</th>
+                                        <th>${totalSuccessRate}</th>
+                                    </tr>`;
             }
 
-            // **FIXED: This function now uses standard, safe syntax.**
             function updateStats(isCorrect) {
                 const intervalName = correctAnswerName;
-
-                // Ensure the stats object and its interval property exist
                 if (!stats) { stats = {}; }
                 if (!stats[intervalName]) {
                     stats[intervalName] = { success: 0, attempts: 0 };
                 }
-
-                // Now, safely update the properties
                 stats[intervalName].attempts++;
                 if (isCorrect) {
                     stats[intervalName].success++;
                 }
-
                 localStorage.setItem('intervalQuiz_stats', JSON.stringify(stats));
                 updateStatsDisplay();
             }
