@@ -897,14 +897,6 @@
         ]
     },
     {
-        "song": "Yesterday, Mr Blue Sky",
-        "keys_example": "F Em A Dm Bb C D Dm G Bb F",
-        "tonal": {
-            "roman_numerals": "I vii III vi IV V VI vi II IV I",
-            "relative_to": "F Major"
-        }
-    },
-    {
         "song": "Clocks, speed of sound",
         "keys_example": "G Dm Dm Am",
         "tonal": {

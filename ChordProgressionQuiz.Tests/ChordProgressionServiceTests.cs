@@ -575,7 +575,7 @@ namespace ChordProgressionQuiz.Tests
             },
             "You and whose army?", "B minor initially")] // songName, relativeTo */
 
-        [InlineData("I vii III vi IV V VI vi II IV I", // romanNumerals
+        /* [InlineData("I vii III vi IV V VI vi II IV I", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonic
                 new int[] { 0, 4, 7 },      // I (F Major)
                 new int[] { 11, 14, 18 },   // vii (E Minor)
@@ -589,7 +589,7 @@ namespace ChordProgressionQuiz.Tests
                 new int[] { 5, 9, 12 },     // IV (Bb Major)
                 new int[] { 0, 4, 7 }       // I (F Major)
             },
-            "Yesterday, Mr Blue Sky", "F Major")] // songName, relativeTo
+            "Yesterday, Mr Blue Sky", "F Major")] // songName, relativeTo */
 
         [InlineData("I bVII bVI V", // romanNumerals
             new object[] { // expectedPitchesRelativeToKeyTonic
