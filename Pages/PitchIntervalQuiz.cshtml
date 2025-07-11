@@ -1,11 +1,14 @@
-﻿@page
+﻿@page "{selectedIndex?}"
 @model ChordProgressionQuiz.Pages.PitchIntervalQuizModel
 @{
     ViewData["Title"] = "Pitch Interval Quiz";
+    // Pass the single selected interval to the data attribute
+    var currentIntervalJson = System.Text.Json.JsonSerializer.Serialize(Model.CurrentInterval);
 }
 
-@* Hidden div to store data for JavaScript *@
-<div id="quiz-data" data-interval="@Model.IntervalJson"></div>
+@* MODIFIED: Hidden divs to store data for JavaScript *@
+<div id="quiz-data" data-current-interval="@currentIntervalJson" data-all-intervals="@Model.AllIntervalsJson"></div>
+
 
 <div class="text-center">
     <h1 class="display-4">Pitch Interval Quiz 🎵</h1>
@@ -44,12 +47,19 @@
             </div>
         </div>
         <div class="col-auto">
-            <form method="post" asp-page-handler="Next" id="next-interval-form" class="d-inline">
-                <input type="hidden" asp-for="LoopPlayback" id="loop-playback-hidden-next" />
-                <button type="submit" class="btn btn-info btn-lg">
-                    Next <i class="fas fa-arrow-right"></i>
-                </button>
-            </form>
+            @* MODIFIED: "Next" button is no longer a form submission *@
+            <button id="next-interval-btn" class="btn btn-info btn-lg">
+                Next <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+    @* NEW: Toggle for Prioritizing Weaknesses *@
+    <div class="row justify-content-center mt-3">
+        <div class="col-auto">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="prioritize-weaknesses-switch" asp-for="PrioritizeWeaknesses">
+                <label class="form-check-label" for="prioritize-weaknesses-switch">Prioritize Weaknesses</label>
+            </div>
         </div>
     </div>
 </div>
@@ -107,20 +117,19 @@
                 return;
             }
 
-            const intervalData = JSON.parse(quizDataEl.dataset.interval);
-            const correctAnswerName = intervalData.IntervalName;
-            const notes = [intervalData.StartNoteMidi, intervalData.EndNoteMidi];
-            const allIntervalNames = @Html.Raw(Json.Serialize(Model.AllIntervalNames));
-
+            const currentIntervalData = JSON.parse(quizDataEl.dataset.currentInterval);
+            const allIntervalsData = JSON.parse(quizDataEl.dataset.allIntervals);
+            const correctAnswerName = currentIntervalData.IntervalName;
+            const notes = [currentIntervalData.StartNoteMidi, currentIntervalData.EndNoteMidi];
 
             const playBtn = document.getElementById('play-interval-btn');
+            const nextBtn = document.getElementById('next-interval-btn');
             const loopSwitch = document.getElementById('loop-playback-switch');
-            const loopHiddenInput = document.getElementById('loop-playback-hidden-next');
+            const prioritizeSwitch = document.getElementById('prioritize-weaknesses-switch');
             const answerButtons = document.querySelectorAll('.answer-button');
             const feedbackEl = document.getElementById('answer-feedback');
-            const clearStatsBtn = document.getElementById('clear-stats-btn'); // NEW
+            const clearStatsBtn = document.getElementById('clear-stats-btn');
 
-            // Score elements and variables
             const currentScoreEl = document.getElementById('current-score');
             const maxScoreEl = document.getElementById('max-score');
             let currentScore = parseInt(localStorage.getItem('intervalQuiz_currentScore')) || 0;
@@ -134,20 +143,58 @@
                 baseUrl: "https://tonejs.github.io/audio/salamander/",
             }).toDestination();
 
+            // --- INTERVAL SELECTION LOGIC ---
+            function selectAndLoadNextInterval() {
+                let selectedIndex;
+                const prioritize = prioritizeSwitch.checked;
+
+                if (prioritize) {
+                    const stats = getStats();
+                    const weightedList = [];
+
+                    let maxSuccessCount = 0;
+                    allIntervalsData.forEach(interval => {
+                        const stat = stats[interval.IntervalName] || { success: 0, attempts: 0 };
+                        if (stat.success > maxSuccessCount) {
+                            maxSuccessCount = stat.success;
+                        }
+                    });
+
+                    allIntervalsData.forEach((interval, index) => {
+                        const stat = stats[interval.IntervalName] || { success: 0, attempts: 0 };
+
+                        // **MODIFIED: Squaring the result to make the weighting effect much stronger.**
+                        const weight = Math.pow((maxSuccessCount - stat.success) + 1, 2);
+
+                        for (let i = 0; i < weight; i++) {
+                            weightedList.push(index);
+                        }
+                    });
+
+                    const randomIndex = Math.floor(Math.random() * weightedList.length);
+                    selectedIndex = weightedList[randomIndex];
+
+                } else {
+                    selectedIndex = Math.floor(Math.random() * allIntervalsData.length);
+                }
+
+                const loop = loopSwitch.checked;
+                window.location.href = `/PitchIntervalQuiz/${selectedIndex}?PrioritizeWeaknesses=${prioritize}&LoopPlayback=${loop}`;
+            }
+
             // --- STATISTICS LOGIC ---
             const statsTableBody = document.getElementById('stats-table-body');
             const statsTableFoot = document.getElementById('stats-table-foot');
 
             function getInitialStats() {
                 const initialStats = {};
-                allIntervalNames.forEach(name => {
-                    initialStats[name] = { success: 0, attempts: 0 };
+                allIntervalsData.forEach(interval => {
+                    initialStats[interval.IntervalName] = { success: 0, attempts: 0 };
                 });
                 return initialStats;
             }
 
             function getStats() {
-                // MODIFIED: Use localStorage instead of sessionStorage
                 const statsJson = localStorage.getItem('intervalQuiz_stats');
                 if (statsJson) {
                     return JSON.parse(statsJson);
@@ -158,20 +205,21 @@
             let stats = getStats();
 
             function updateStatsDisplay() {
-                statsTableBody.innerHTML = ''; // Clear previous stats
+                statsTableBody.innerHTML = '';
                 let totalSuccess = 0;
                 let totalAttempts = 0;
 
-                allIntervalNames.forEach(name => {
-                    const stat = stats[name];
+                allIntervalsData.forEach(interval => {
+                    const name = interval.IntervalName;
+                    const stat = stats[name] || { success: 0, attempts: 0 }; // Fallback for safety
                     const successRate = stat.attempts > 0 ? ((stat.success / stat.attempts) * 100).toFixed(0) + '%' : 'N/A';
 
                     const row = `<tr>
-                        <td>${name}</td>
-                        <td>${stat.success}</td>
-                        <td>${stat.attempts}</td>
-                        <td>${successRate}</td>
-                    </tr>`;
+                            <td>${name}</td>
+                            <td>${stat.success}</td>
+                            <td>${stat.attempts}</td>
+                            <td>${successRate}</td>
+                        </tr>`;
                     statsTableBody.innerHTML += row;
 
                     totalSuccess += stat.success;
@@ -180,25 +228,26 @@
 
                 const totalSuccessRate = totalAttempts > 0 ? ((totalSuccess / totalAttempts) * 100).toFixed(0) + '%' : 'N/A';
                 statsTableFoot.innerHTML = `<tr class="table-dark">
-                    <th>Total</th>
-                    <th>${totalSuccess}</th>
-                    <th>${totalAttempts}</th>
-                    <th>${totalSuccessRate}</th>
-                </tr>`;
+                        <th>Total</th>
+                        <th>${totalSuccess}</th>
+                        <th>${totalAttempts}</th>
+                        <th>${totalSuccessRate}</th>
+                    </tr>`;
             }
 
             function updateStats(isCorrect) {
                 const intervalName = correctAnswerName;
+                if (!stats[intervalName]) { // Initialize if somehow missing
+                    stats[intervalName] = { success: 0, attempts: 0 };
+                }
                 stats[intervalName].attempts++;
                 if (isCorrect) {
                     stats[intervalName].success++;
                 }
-                // MODIFIED: Use localStorage instead of sessionStorage
                 localStorage.setItem('intervalQuiz_stats', JSON.stringify(stats));
                 updateStatsDisplay();
             }
 
-            // NEW: Function to clear stats
             function clearStats() {
                 if (confirm("Are you sure you want to clear all your statistics? This action cannot be undone.")) {
                     stats = getInitialStats();
@@ -251,60 +300,46 @@
                 if (Tone.context.state !== 'running') {
                     Tone.context.resume();
                 }
-
                 if (Tone.Transport.state === 'started') {
                     Tone.Transport.stop();
                     Tone.Transport.position = 0;
                 }
-
                 Tone.Transport.start();
             }
 
             // --- EVENT LISTENERS ---
             playBtn.addEventListener('click', playInterval);
-            clearStatsBtn.addEventListener('click', clearStats); // NEW
+            nextBtn.addEventListener('click', selectAndLoadNextInterval);
+            clearStatsBtn.addEventListener('click', clearStats);
 
             loopSwitch.addEventListener('change', (e) => {
                 sequence.loop = e.target.checked;
-                loopHiddenInput.value = e.target.checked;
-                if (!e.target.checked && Tone.Transport.state === 'started') {
-                    Tone.Transport.stop();
-                }
             });
 
             answerButtons.forEach(button => {
-                button.addEventListener('click', function() {
+                button.addEventListener('click', function () {
                     if (hasAnswered) return;
                     hasAnswered = true;
-
                     const userAnswer = this.dataset.intervalName;
-
                     sequence.loop = false;
                     Tone.Transport.stop();
 
                     if (userAnswer === correctAnswerName) {
-                        this.classList.remove('btn-outline-dark');
-                        this.classList.add('btn-success');
+                        this.classList.replace('btn-outline-dark', 'btn-success');
                         feedbackEl.textContent = 'Correct!';
                         feedbackEl.className = 'text-center h4 mb-3 text-success';
                         handleCorrectAnswer();
                     } else {
-                        this.classList.remove('btn-outline-dark');
-                        this.classList.add('btn-danger');
+                        this.classList.replace('btn-outline-dark', 'btn-danger');
                         feedbackEl.innerHTML = `Wrong! The correct answer was <strong>${correctAnswerName}</strong>.`;
                         feedbackEl.className = 'text-center h4 mb-3 text-danger';
                         handleWrongAnswer();
-
                         const correctButton = document.querySelector(`[data-interval-name="${correctAnswerName}"]`);
                         if (correctButton) {
-                            correctButton.classList.remove('btn-outline-dark');
-                            correctButton.classList.add('btn-success');
+                            correctButton.classList.replace('btn-outline-dark', 'btn-success');
                         }
                     }
-
-                     answerButtons.forEach(btn => {
-                        btn.disabled = true;
-                    });
+                    answerButtons.forEach(btn => btn.disabled = true);
                 });
             });
 
@@ -312,7 +347,6 @@
             updateScoreDisplay();
             updateStatsDisplay();
 
-            // Auto-play on load once Tone.js is ready
             Tone.loaded().then(() => {
                 playInterval();
             });

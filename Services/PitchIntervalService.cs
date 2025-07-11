@@ -34,7 +34,7 @@ namespace ChordProgressionQuiz.Services
         }
 
         /// <summary>
-        /// Generates a random interval, including its type, direction, and MIDI notes.
+        /// Generates a single random interval, used for the initial page load.
         /// </summary>
         /// <returns>A PitchInterval object for the quiz.</returns>
         public PitchInterval GetRandomInterval()
@@ -74,6 +74,34 @@ namespace ChordProgressionQuiz.Services
         public List<string> GetAllIntervalNames()
         {
             return _intervalNames.OrderBy(kv => kv.Key).Select(kv => kv.Value).ToList();
+        }
+
+        /// <summary>
+        /// NEW: Generates a list of all 12 possible interval types.
+        /// This is used by the front-end to perform its own weighted random selection.
+        /// </summary>
+        /// <returns>A list containing one of each possible PitchInterval.</returns>
+        public List<PitchInterval> GetAllPossibleIntervals()
+        {
+            var allIntervals = new List<PitchInterval>();
+            int startNote = 60; // Use a consistent C4 for all base notes
+
+            foreach (var kvp in _intervalNames.OrderBy(kv => kv.Key))
+            {
+                int semitones = kvp.Key;
+                bool isAscending = _random.NextDouble() > 0.5;
+                int endNote = isAscending ? (startNote + semitones) : (startNote - semitones);
+
+                allIntervals.Add(new PitchInterval
+                {
+                    StartNoteMidi = startNote,
+                    EndNoteMidi = endNote,
+                    Semitones = semitones,
+                    IntervalName = kvp.Value,
+                    Direction = isAscending ? "Ascending" : "Descending"
+                });
+            }
+            return allIntervals;
         }
     }
 }
