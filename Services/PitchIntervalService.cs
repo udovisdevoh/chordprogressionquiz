@@ -5,9 +5,6 @@ using System.Linq;
 
 namespace ChordProgressionQuiz.Services
 {
-    /// <summary>
-    /// Generates random musical intervals for the pitch interval quiz.
-    /// </summary>
     public class PitchIntervalService
     {
         private readonly Random _random;
@@ -33,27 +30,19 @@ namespace ChordProgressionQuiz.Services
             };
         }
 
-        /// <summary>
-        /// Generates a single random interval, used for the initial page load.
-        /// </summary>
-        /// <returns>A PitchInterval object for the quiz.</returns>
+        // MODIFIED: This function now fully randomizes the base note.
         public PitchInterval GetRandomInterval()
         {
-            // Pick a random interval size from 1 to 12 semitones
-            int semitones = _random.Next(1, 13); // From 1 (m2) to 12 (P8)
-
-            // Pick a random starting note within a comfortable range (C4 to C5)
-            int startNote = _random.Next(60, 73);
-
-            // Pick a random direction
+            int semitones = _random.Next(1, 13);
+            // Use a wider and more random range for the starting note (E3 to B4)
+            int startNote = _random.Next(52, 72);
             bool isAscending = _random.NextDouble() > 0.5;
-
             int endNote = isAscending ? (startNote + semitones) : (startNote - semitones);
 
-            // If the calculated end note goes too far, reset the start note to a safe default.
-            if (endNote < 48 || endNote > 84) // Keep notes roughly between C3 and C6
+            // This ensures the interval doesn't go too high or low.
+            if (endNote < 48 || endNote > 84)
             {
-                startNote = 60; // Reset to a safe C4
+                startNote = 60; // Reset to a safe C4 if out of comfortable range
                 endNote = isAscending ? (startNote + semitones) : (startNote - semitones);
             }
 
@@ -67,30 +56,29 @@ namespace ChordProgressionQuiz.Services
             };
         }
 
-        /// <summary>
-        /// Gets an ordered list of all possible interval names for generating UI buttons.
-        /// </summary>
-        /// <returns>A list of interval name strings.</returns>
         public List<string> GetAllIntervalNames()
         {
             return _intervalNames.OrderBy(kv => kv.Key).Select(kv => kv.Value).ToList();
         }
 
-        /// <summary>
-        /// NEW: Generates a list of all 12 possible interval types.
-        /// This is used by the front-end to perform its own weighted random selection.
-        /// </summary>
-        /// <returns>A list containing one of each possible PitchInterval.</returns>
+        // MODIFIED: This function now also randomizes the base note for each generated interval.
         public List<PitchInterval> GetAllPossibleIntervals()
         {
             var allIntervals = new List<PitchInterval>();
-            int startNote = 60; // Use a consistent C4 for all base notes
 
             foreach (var kvp in _intervalNames.OrderBy(kv => kv.Key))
             {
                 int semitones = kvp.Key;
+                // Use a wider and more random range for the starting note (E3 to B4)
+                int startNote = _random.Next(52, 72);
                 bool isAscending = _random.NextDouble() > 0.5;
                 int endNote = isAscending ? (startNote + semitones) : (startNote - semitones);
+
+                if (endNote < 48 || endNote > 84)
+                {
+                    startNote = 60; // Reset to a safe C4 if out of comfortable range
+                    endNote = isAscending ? (startNote + semitones) : (startNote - semitones);
+                }
 
                 allIntervals.Add(new PitchInterval
                 {
