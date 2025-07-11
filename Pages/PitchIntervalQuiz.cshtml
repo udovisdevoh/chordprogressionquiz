@@ -68,6 +68,27 @@
     </div>
 </div>
 
+<div class="container mt-5">
+    <h3 class="text-center">Session Statistics</h3>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Interval</th>
+                    <th>Success</th>
+                    <th>Attempts</th>
+                    <th>Success Rate</th>
+                </tr>
+            </thead>
+            <tbody id="stats-table-body">
+            </tbody>
+            <tfoot id="stats-table-foot">
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+
 @section Scripts {
     <script src="https://kit.fontawesome.com/69115159a6.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
@@ -83,6 +104,8 @@
             const intervalData = JSON.parse(quizDataEl.dataset.interval);
             const correctAnswerName = intervalData.IntervalName;
             const notes = [intervalData.StartNoteMidi, intervalData.EndNoteMidi];
+            const allIntervalNames = @Html.Raw(Json.Serialize(Model.AllIntervalNames));
+
 
             const playBtn = document.getElementById('play-interval-btn');
             const loopSwitch = document.getElementById('loop-playback-switch');
@@ -90,7 +113,7 @@
             const answerButtons = document.querySelectorAll('.answer-button');
             const feedbackEl = document.getElementById('answer-feedback');
 
-            // NEW: Score elements and variables
+            // Score elements and variables
             const currentScoreEl = document.getElementById('current-score');
             const maxScoreEl = document.getElementById('max-score');
             let currentScore = parseInt(localStorage.getItem('intervalQuiz_currentScore')) || 0;
@@ -104,7 +127,66 @@
                 baseUrl: "https://tonejs.github.io/audio/salamander/",
             }).toDestination();
 
-            // --- NEW: SCORE LOGIC ---
+            // --- NEW: SESSION STATS LOGIC ---
+            const statsTableBody = document.getElementById('stats-table-body');
+            const statsTableFoot = document.getElementById('stats-table-foot');
+
+            function getSessionStats() {
+                const statsJson = sessionStorage.getItem('intervalQuiz_sessionStats');
+                if (statsJson) {
+                    return JSON.parse(statsJson);
+                }
+                // Initialize stats if they don't exist
+                const initialStats = {};
+                allIntervalNames.forEach(name => {
+                    initialStats[name] = { success: 0, attempts: 0 };
+                });
+                return initialStats;
+            }
+
+            let sessionStats = getSessionStats();
+
+            function updateStatsDisplay() {
+                statsTableBody.innerHTML = ''; // Clear previous stats
+                let totalSuccess = 0;
+                let totalAttempts = 0;
+
+                allIntervalNames.forEach(name => {
+                    const stat = sessionStats[name];
+                    const successRate = stat.attempts > 0 ? ((stat.success / stat.attempts) * 100).toFixed(0) + '%' : 'N/A';
+
+                    const row = `<tr>
+                        <td>${name}</td>
+                        <td>${stat.success}</td>
+                        <td>${stat.attempts}</td>
+                        <td>${successRate}</td>
+                    </tr>`;
+                    statsTableBody.innerHTML += row;
+
+                    totalSuccess += stat.success;
+                    totalAttempts += stat.attempts;
+                });
+
+                const totalSuccessRate = totalAttempts > 0 ? ((totalSuccess / totalAttempts) * 100).toFixed(0) + '%' : 'N/A';
+                statsTableFoot.innerHTML = `<tr class="table-dark">
+                    <th>Total</th>
+                    <th>${totalSuccess}</th>
+                    <th>${totalAttempts}</th>
+                    <th>${totalSuccessRate}</th>
+                </tr>`;
+            }
+
+            function updateSessionStats(isCorrect) {
+                const intervalName = correctAnswerName;
+                sessionStats[intervalName].attempts++;
+                if (isCorrect) {
+                    sessionStats[intervalName].success++;
+                }
+                sessionStorage.setItem('intervalQuiz_sessionStats', JSON.stringify(sessionStats));
+                updateStatsDisplay();
+            }
+
+            // --- SCORE LOGIC ---
             function updateScoreDisplay() {
                 currentScoreEl.textContent = currentScore;
                 maxScoreEl.textContent = maxScore;
@@ -118,15 +200,17 @@
                 }
                 localStorage.setItem('intervalQuiz_currentScore', currentScore);
                 updateScoreDisplay();
+                updateSessionStats(true); // NEW
             }
 
             function handleWrongAnswer() {
                 currentScore = 0;
                 localStorage.setItem('intervalQuiz_currentScore', currentScore);
                 updateScoreDisplay();
+                updateSessionStats(false); // NEW
             }
 
-            // --- 2. PLAYBACK LOGIC ---
+            // --- PLAYBACK LOGIC ---
             function midiToNoteName(midi) {
                 const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
                 const octave = Math.floor(midi / 12) - 1;
@@ -155,7 +239,7 @@
                 Tone.Transport.start();
             }
 
-            // --- 3. EVENT LISTENERS ---
+            // --- EVENT LISTENERS ---
             playBtn.addEventListener('click', playInterval);
 
             loopSwitch.addEventListener('change', (e) => {
@@ -167,7 +251,7 @@
             });
 
             answerButtons.forEach(button => {
-                button.addEventListener('click', function () {
+                button.addEventListener('click', function() {
                     if (hasAnswered) return;
                     hasAnswered = true;
 
@@ -181,13 +265,13 @@
                         this.classList.add('btn-success');
                         feedbackEl.textContent = 'Correct!';
                         feedbackEl.className = 'text-center h4 mb-3 text-success';
-                        handleCorrectAnswer(); // NEW
+                        handleCorrectAnswer();
                     } else {
                         this.classList.remove('btn-outline-dark');
                         this.classList.add('btn-danger');
                         feedbackEl.innerHTML = `Wrong! The correct answer was <strong>${correctAnswerName}</strong>.`;
                         feedbackEl.className = 'text-center h4 mb-3 text-danger';
-                        handleWrongAnswer(); // NEW
+                        handleWrongAnswer();
 
                         const correctButton = document.querySelector(`[data-interval-name="${correctAnswerName}"]`);
                         if (correctButton) {
@@ -196,14 +280,15 @@
                         }
                     }
 
-                    answerButtons.forEach(btn => {
+                     answerButtons.forEach(btn => {
                         btn.disabled = true;
                     });
                 });
             });
 
             // --- INITIALIZATION ---
-            updateScoreDisplay(); // NEW: Set initial scores on page load
+            updateScoreDisplay();
+            updateStatsDisplay(); // NEW: Render stats on page load
 
             // Auto-play on load once Tone.js is ready
             Tone.loaded().then(() => {
