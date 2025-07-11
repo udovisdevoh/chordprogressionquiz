@@ -3,15 +3,15 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Chord Progression Picker</title>
+    <title>@ViewData["Title"] - Chord Progression Quiz</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" />
 </head>
 <body>
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container">
-                <a class="navbar-brand" asp-area="" asp-page="/Index">Chord Progression Picker</a>
+                <a class="navbar-brand" asp-area="" asp-page="/Index">ChordProgressionQuiz</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -22,11 +22,16 @@
                             <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/ChordPicker">Get Progression</a>
+                            <a class="nav-link text-dark" asp-area="" asp-page="/ChordPicker">Chord Picker</a>
                         </li>
                         <li class="nav-item">
-                            @* NEW: Link to Chord Quiz *@
                             <a class="nav-link text-dark" asp-area="" asp-page="/ChordQuiz">Chord Quiz</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-page="/PitchIntervalQuiz">Interval Quiz</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Privacy</a>
                         </li>
                     </ul>
                 </div>
@@ -41,7 +46,7 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2025 - Chord Progression Picker
+            &copy; 2025 - ChordProgressionQuiz - <a asp-area="" asp-page="/Privacy">Privacy</a>
         </div>
     </footer>
 

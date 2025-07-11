@@ -26,8 +26,10 @@ namespace ChordProgressionQuiz
 
             // Register the ChordProgressionService as a Singleton.
             services.AddSingleton<ChordProgressionService>();
-            // NEW: Register the ChordStylingService as a Singleton.
+            // Register the ChordStylingService as a Singleton.
             services.AddSingleton<ChordStylingService>();
+            // NEW: Register the PitchIntervalService as a Singleton.
+            services.AddSingleton<PitchIntervalService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
