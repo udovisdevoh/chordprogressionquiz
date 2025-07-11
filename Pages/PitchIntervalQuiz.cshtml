@@ -103,6 +103,7 @@
         <table class="table table-striped table-hover">
             <thead class="table-dark">
                 <tr>
+                    <th class="text-center">Exclude</th>
                     <th>Interval</th>
                     <th>Success</th>
                     <th>Attempts</th>
@@ -139,6 +140,7 @@
                 return;
             }
 
+            const EXCLUDED_INTERVALS_KEY = 'intervalQuiz_excluded';
             const currentIntervalData = JSON.parse(quizDataEl.dataset.currentInterval);
             const allIntervalsData = JSON.parse(quizDataEl.dataset.allIntervals);
             const correctAnswerName = currentIntervalData.IntervalName;
@@ -165,54 +167,59 @@
                 baseUrl: "https://tonejs.github.io/audio/salamander/",
             }).toDestination();
 
-            // --- INTERVAL SELECTION LOGIC (FIXED & STRENGTHENED) ---
+            // --- EXCLUSION & INTERVAL SELECTION LOGIC ---
+            function getExcludedIntervals() {
+                return new Set(JSON.parse(localStorage.getItem(EXCLUDED_INTERVALS_KEY) || '[]'));
+            }
+
+            function saveExcludedIntervals(excludedSet) {
+                localStorage.setItem(EXCLUDED_INTERVALS_KEY, JSON.stringify([...excludedSet]));
+            }
+
             function selectAndLoadNextInterval() {
-                let selectedIndex;
+                const excluded = getExcludedIntervals();
+                let availableIntervals = allIntervalsData
+                    .map((interval, index) => ({ ...interval, originalIndex: index }))
+                    .filter(interval => !excluded.has(interval.IntervalName));
+
+                // Fallback: If all intervals are excluded, use the full list to prevent errors.
+                if (availableIntervals.length === 0) {
+                    alert("All intervals are excluded! Re-enabling all for the next selection.");
+                    availableIntervals = allIntervalsData.map((interval, index) => ({ ...interval, originalIndex: index }));
+                }
+
+                let selectedOriginalIndex;
                 const prioritize = prioritizeSwitch.checked;
 
                 if (prioritize) {
                     const stats = getStats();
                     const weightedList = [];
 
-                    const BASE_CHANCE = 5;       // Base number of "tickets" each interval gets
-                    const FAILURE_PENALTY = 20;  // Extra tickets per failure
-                    const UNATTEMPTED_BONUS = 15;// Extra tickets if never attempted
+                    const BASE_CHANCE = 5;
+                    const FAILURE_PENALTY = 20;
+                    const UNATTEMPTED_BONUS = 15;
 
-                    allIntervalsData.forEach((interval, index) => {
+                    availableIntervals.forEach(interval => {
                         const stat = stats[interval.IntervalName] || { success: 0, attempts: 0 };
                         const failures = stat.attempts - stat.success;
+                        let weight = BASE_CHANCE + (failures * FAILURE_PENALTY);
+                        if (stat.attempts === 0) weight += UNATTEMPTED_BONUS;
 
-                        let weight = BASE_CHANCE;
-
-                        // Add a large weight for each failure
-                        weight += failures * FAILURE_PENALTY;
-
-                        // Add a bonus for intervals that have never been tried
-                        if (stat.attempts === 0) {
-                            weight += UNATTEMPTED_BONUS;
-                        }
-
-                        // Add the interval to the selection pool 'weight' times
                         for (let i = 0; i < weight; i++) {
-                            weightedList.push(index);
+                            weightedList.push(interval.originalIndex);
                         }
                     });
 
-                    if (weightedList.length > 0) {
-                        const randomIndex = Math.floor(Math.random() * weightedList.length);
-                        selectedIndex = weightedList[randomIndex];
-                    } else {
-                        // Fallback to random selection if the weighted list is somehow empty
-                        selectedIndex = Math.floor(Math.random() * allIntervalsData.length);
-                    }
+                    const randomIndex = Math.floor(Math.random() * weightedList.length);
+                    selectedOriginalIndex = weightedList[randomIndex];
 
                 } else {
-                    // Default random selection when "Prioritize Weaknesses" is off
-                    selectedIndex = Math.floor(Math.random() * allIntervalsData.length);
+                    const randomIndex = Math.floor(Math.random() * availableIntervals.length);
+                    selectedOriginalIndex = availableIntervals[randomIndex].originalIndex;
                 }
 
                 const loop = loopSwitch.checked;
-                window.location.href = `/PitchIntervalQuiz/${selectedIndex}?PrioritizeWeaknesses=${prioritize}&LoopPlayback=${loop}`;
+                window.location.href = `/PitchIntervalQuiz/${selectedOriginalIndex}?PrioritizeWeaknesses=${prioritize}&LoopPlayback=${loop}`;
             }
 
             // --- STATISTICS LOGIC ---
@@ -238,17 +245,22 @@
                 statsTableBody.innerHTML = '';
                 let totalSuccess = 0;
                 let totalAttempts = 0;
+                const excludedIntervals = getExcludedIntervals();
 
                 allIntervalsData.forEach(interval => {
                     const name = interval.IntervalName;
                     const stat = stats[name] || { success: 0, attempts: 0 };
                     const successRate = stat.attempts > 0 ? ((stat.success / stat.attempts) * 100).toFixed(0) + '%' : 'N/A';
+                    const isChecked = excludedIntervals.has(name) ? 'checked' : '';
 
                     const row = `<tr>
-                                        <td>${name}</td>
-                                        <td>${stat.success}</td>
-                                        <td>${stat.attempts}</td>
-                                        <td>${successRate}</td>
+                                        <td class="text-center align-middle">
+                                            <input type="checkbox" class="form-check-input exclude-interval-cbx" data-interval-name="${name}" ${isChecked}>
+                                        </td>
+                                        <td class="align-middle">${name}</td>
+                                        <td class="align-middle">${stat.success}</td>
+                                        <td class="align-middle">${stat.attempts}</td>
+                                        <td class="align-middle">${successRate}</td>
                                     </tr>`;
                     statsTableBody.innerHTML += row;
 
@@ -258,6 +270,7 @@
 
                 const totalSuccessRate = totalAttempts > 0 ? ((totalSuccess / totalAttempts) * 100).toFixed(0) + '%' : 'N/A';
                 statsTableFoot.innerHTML = `<tr class="table-dark">
+                                        <th></th>
                                         <th>Total</th>
                                         <th>${totalSuccess}</th>
                                         <th>${totalAttempts}</th>
@@ -346,6 +359,21 @@
 
             loopSwitch.addEventListener('change', (e) => {
                 sequence.loop = e.target.checked;
+            });
+
+            statsTableBody.addEventListener('change', function (e) {
+                if (e.target.classList.contains('exclude-interval-cbx')) {
+                    const checkbox = e.target;
+                    const intervalName = checkbox.dataset.intervalName;
+                    const excluded = getExcludedIntervals();
+
+                    if (checkbox.checked) {
+                        excluded.add(intervalName);
+                    } else {
+                        excluded.delete(intervalName);
+                    }
+                    saveExcludedIntervals(excluded);
+                }
             });
 
             answerButtons.forEach(button => {
