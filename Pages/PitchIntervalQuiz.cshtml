@@ -165,7 +165,7 @@
                 baseUrl: "https://tonejs.github.io/audio/salamander/",
             }).toDestination();
 
-            // --- INTERVAL SELECTION LOGIC (FIXED) ---
+            // --- INTERVAL SELECTION LOGIC (FIXED & STRENGTHENED) ---
             function selectAndLoadNextInterval() {
                 let selectedIndex;
                 const prioritize = prioritizeSwitch.checked;
@@ -174,22 +174,26 @@
                     const stats = getStats();
                     const weightedList = [];
 
+                    const BASE_CHANCE = 5;       // Base number of "tickets" each interval gets
+                    const FAILURE_PENALTY = 20;  // Extra tickets per failure
+                    const UNATTEMPTED_BONUS = 15;// Extra tickets if never attempted
+
                     allIntervalsData.forEach((interval, index) => {
                         const stat = stats[interval.IntervalName] || { success: 0, attempts: 0 };
+                        const failures = stat.attempts - stat.success;
 
-                        // Calculate success rate, default to a high rate if no attempts to avoid division by zero
-                        // and ensure new intervals get a chance.
-                        const successRate = stat.attempts > 0 ? (stat.success / stat.attempts) : 1.0;
+                        let weight = BASE_CHANCE;
 
-                        // The weight is inversely proportional to the success rate.
-                        // A lower success rate results in a higher weight.
-                        // We use a power function to make the difference more pronounced.
-                        const weight = Math.pow(1.1 - successRate, 3) * 100;
+                        // Add a large weight for each failure
+                        weight += failures * FAILURE_PENALTY;
 
-                        // Add the index to the list a number of times proportional to its weight.
-                        // Also add a base value (e.g., 10) to ensure even intervals with 100% success rate
-                        // have a small chance of being selected.
-                        for (let i = 0; i < Math.ceil(weight) + 10; i++) {
+                        // Add a bonus for intervals that have never been tried
+                        if (stat.attempts === 0) {
+                            weight += UNATTEMPTED_BONUS;
+                        }
+
+                        // Add the interval to the selection pool 'weight' times
+                        for (let i = 0; i < weight; i++) {
                             weightedList.push(index);
                         }
                     });
