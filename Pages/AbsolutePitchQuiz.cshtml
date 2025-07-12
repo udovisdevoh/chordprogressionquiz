@@ -1,0 +1,206 @@
+﻿@page
+@model ChordProgressionQuiz.Pages.AbsolutePitchQuizModel
+@{
+    ViewData["Title"] = "Absolute Pitch Quiz";
+}
+
+@* Hidden div to store data for JavaScript *@
+<div id="quiz-data" data-current-note="@Model.CurrentNoteJson"></div>
+
+<div class="text-center">
+    <h1 class="display-4">Absolute Pitch Quiz 🎶</h1>
+    <p class="lead">Listen to the note and guess the pitch.</p>
+</div>
+
+<div class="container text-center mt-4">
+    <div class="row justify-content-center g-3">
+        <div class="col-auto">
+            <div class="stat-box p-3 border rounded">
+                <h5 class="stat-title mb-0">Current Score</h5>
+                <p id="current-score" class="stat-value display-6 mb-0">0</p>
+            </div>
+        </div>
+        <div class="col-auto">
+            <div class="stat-box p-3 border rounded">
+                <h5 class="stat-title mb-0">Max Score</h5>
+                <p id="max-score" class="stat-value display-6 mb-0">0</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container text-center mt-4 mb-4">
+    <div class="row justify-content-center align-items-center g-3">
+        <div class="col-auto">
+            <button id="play-note-btn" class="btn btn-primary btn-lg">
+                <i class="fas fa-play"></i> Play Note
+            </button>
+        </div>
+        <div class="col-auto">
+            <div class="form-check form-switch ps-5">
+                <input class="form-check-input" type="checkbox" role="switch" id="loop-playback-switch" asp-for="LoopPlayback" style="transform: scale(1.5);">
+                <label class="form-check-label ps-2" for="loop-playback-switch">Loop</label>
+            </div>
+        </div>
+        <div class="col-auto">
+            <button id="next-note-btn" class="btn btn-info btn-lg" onclick="location.reload()">
+                Next <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="container mt-4">
+    <div id="answer-feedback" class="text-center h4 mb-3" style="min-height: 1.5em;">&nbsp;</div>
+    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3 justify-content-center" id="answer-buttons-container">
+        @foreach (var name in Model.AllNoteNames)
+        {
+            string buttonText = name switch
+            {
+                "C" => "C 🧊",
+                "C#" => "C# 💎",
+                "D" => "D duck 🦆",
+                "D#" => "D# 🐉",
+                "E" => "E ⚡️",
+                "F" => "F 💃🐃",
+                "F#" => "F# 🔑",
+                "G" => "G 👻",
+                "G#" => "G# 🕹️",
+                "A" => "A 🍎",
+                "A#" => "A# 🚀", // Bb
+                "B" => "B 🐝",
+                _ => name
+            };
+            <div class="col">
+                <button class="btn btn-outline-dark w-100 p-3 answer-button" data-note-name="@name">
+                    @buttonText
+                </button>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://kit.fontawesome.com/69115159a6.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // --- SETUP ---
+            const quizDataEl = document.getElementById('quiz-data');
+            if (!quizDataEl) {
+                console.error('Quiz data element not found!');
+                return;
+            }
+
+            const currentNoteData = JSON.parse(quizDataEl.dataset.currentNote);
+            const correctAnswerName = currentNoteData.NoteName;
+            const midiNote = currentNoteData.MidiValue;
+
+            const playBtn = document.getElementById('play-note-btn');
+            const loopSwitch = document.getElementById('loop-playback-switch');
+            const answerButtons = document.querySelectorAll('.answer-button');
+            const feedbackEl = document.getElementById('answer-feedback');
+
+            const currentScoreEl = document.getElementById('current-score');
+            const maxScoreEl = document.getElementById('max-score');
+            const scoreKeyPrefix = 'absolutePitchQuiz_';
+            let currentScore = parseInt(localStorage.getItem(scoreKeyPrefix + 'currentScore')) || 0;
+            let maxScore = parseInt(localStorage.getItem(scoreKeyPrefix + 'maxScore')) || 0;
+
+            let hasAnswered = false;
+
+            const piano = new Tone.Sampler({
+                urls: { "C4": "C4.mp3", "F#4": "Fs4.mp3", "A4": "A4.mp3" },
+                release: 1,
+                baseUrl: "https://tonejs.github.io/audio/salamander/",
+            }).toDestination();
+
+            // --- SCORE LOGIC ---
+            function updateScoreDisplay() {
+                currentScoreEl.textContent = currentScore;
+                maxScoreEl.textContent = maxScore;
+            }
+
+            function handleCorrectAnswer() {
+                currentScore++;
+                if (currentScore > maxScore) {
+                    maxScore = currentScore;
+                    localStorage.setItem(scoreKeyPrefix + 'maxScore', maxScore);
+                }
+                localStorage.setItem(scoreKeyPrefix + 'currentScore', currentScore);
+                updateScoreDisplay();
+            }
+
+            function handleWrongAnswer() {
+                currentScore = 0;
+                localStorage.setItem(scoreKeyPrefix + 'currentScore', currentScore);
+                updateScoreDisplay();
+            }
+
+            // --- PLAYBACK LOGIC ---
+            function midiToNoteName(midi) {
+                if (midi === null || midi === undefined) return "";
+                const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+                const octave = Math.floor(midi / 12) - 1;
+                const noteIndex = midi % 12;
+                return noteNames[noteIndex] + octave;
+            }
+
+            const noteToPlay = midiToNoteName(midiNote);
+
+            const sequence = new Tone.Sequence((time, note) => {
+                piano.triggerAttackRelease(note, "2n", time);
+            }, [noteToPlay], "1m").start(0);
+            sequence.loop = loopSwitch.checked;
+
+            function playNote() {
+                if (Tone.context.state !== 'running') {
+                    Tone.context.resume();
+                }
+                if (Tone.Transport.state === 'started') {
+                    Tone.Transport.stop();
+                    Tone.Transport.position = 0;
+                }
+                Tone.Transport.start();
+            }
+
+            // --- EVENT LISTENERS ---
+            playBtn.addEventListener('click', playNote);
+            loopSwitch.addEventListener('change', (e) => sequence.loop = e.target.checked);
+
+            answerButtons.forEach(button => {
+                button.addEventListener('click', function () {
+                    if (hasAnswered) return;
+                    hasAnswered = true;
+                    const userAnswer = this.dataset.noteName;
+                    sequence.loop = false;
+                    Tone.Transport.stop();
+
+                    if (userAnswer === correctAnswerName) {
+                        this.classList.replace('btn-outline-dark', 'btn-success');
+                        feedbackEl.textContent = 'Correct!';
+                        feedbackEl.className = 'text-center h4 mb-3 text-success';
+                        handleCorrectAnswer();
+                    } else {
+                        this.classList.replace('btn-outline-dark', 'btn-danger');
+                        feedbackEl.innerHTML = `Wrong! The correct answer was <strong>${correctAnswerName}</strong>.`;
+                        feedbackEl.className = 'text-center h4 mb-3 text-danger';
+                        handleWrongAnswer();
+                        const correctButton = document.querySelector(`button.answer-button[data-note-name="${correctAnswerName}"]`);
+                        if (correctButton) {
+                            correctButton.classList.replace('btn-outline-dark', 'btn-success');
+                        }
+                    }
+                    answerButtons.forEach(btn => btn.disabled = true);
+                });
+            });
+
+            // --- INITIALIZATION ---
+            updateScoreDisplay();
+            Tone.loaded().then(() => playNote()).catch(err => {
+                console.error("Failed to load audio samples:", err);
+                feedbackEl.innerHTML = `<span class="text-danger">Could not load audio. Please refresh.</span>`;
+            });
+        });
+    </script>
+}

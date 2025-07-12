@@ -27,6 +27,7 @@ namespace ChordProgressionQuiz
             services.AddSingleton<ChordProgressionService>();
             services.AddSingleton<ChordStylingService>();
             services.AddSingleton<PitchIntervalService>();
+            services.AddSingleton<AbsolutePitchQuizService>();
 
             // NEW: Add services for session state
             services.AddDistributedMemoryCache();
