@@ -124,7 +124,20 @@
         .interval-button {
             min-width: 150px;
             text-align: left;
+            transition: transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
+            position: relative; /* For z-index */
         }
+
+            .interval-button.hover-primary {
+                transform: scale(1.05);
+                box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.5); /* Bootstrap focus shadow */
+                z-index: 10;
+            }
+
+            .interval-button.hover-secondary {
+                box-shadow: 0 0 0 0.25rem rgba(108, 117, 125, 0.5); /* Secondary color shadow */
+                z-index: 5;
+            }
     </style>
 }
 
@@ -270,12 +283,12 @@
 
                 const totalSuccessRate = totalAttempts > 0 ? ((totalSuccess / totalAttempts) * 100).toFixed(0) + '%' : 'N/A';
                 statsTableFoot.innerHTML = `<tr class="table-dark">
-                                        <th></th>
-                                        <th>Total</th>
-                                        <th>${totalSuccess}</th>
-                                        <th>${totalAttempts}</th>
-                                        <th>${totalSuccessRate}</th>
-                                    </tr>`;
+                                                    <th></th>
+                                                    <th>Total</th>
+                                                    <th>${totalSuccess}</th>
+                                                    <th>${totalAttempts}</th>
+                                                    <th>${totalSuccessRate}</th>
+                                                </tr>`;
             }
 
             function updateStats(isCorrect) {
@@ -375,6 +388,47 @@
                     saveExcludedIntervals(excluded);
                 }
             });
+
+            // NEW: Inversion hover logic
+            const inversionMap = {
+                "Minor Second": "Major Seventh", "Major Seventh": "Minor Second",
+                "Major Second": "Minor Seventh", "Minor Seventh": "Major Second",
+                "Minor Third": "Major Sixth", "Major Sixth": "Minor Third",
+                "Major Third": "Minor Sixth", "Minor Sixth": "Major Third",
+                "Perfect Fourth": "Perfect Fifth", "Perfect Fifth": "Perfect Fourth",
+                "Tritone": "Tritone"
+            };
+
+            answerButtons.forEach(button => {
+                button.addEventListener('mouseover', function () {
+                    const primaryIntervalName = this.dataset.intervalName;
+                    const secondaryIntervalName = inversionMap[primaryIntervalName];
+
+                    this.classList.add('hover-primary');
+
+                    if (secondaryIntervalName) {
+                        const secondaryButton = document.querySelector(`.answer-button[data-interval-name="${secondaryIntervalName}"]`);
+                        if (secondaryButton) {
+                            secondaryButton.classList.add('hover-secondary');
+                        }
+                    }
+                });
+
+                button.addEventListener('mouseout', function () {
+                    const primaryIntervalName = this.dataset.intervalName;
+                    const secondaryIntervalName = inversionMap[primaryIntervalName];
+
+                    this.classList.remove('hover-primary');
+
+                    if (secondaryIntervalName) {
+                        const secondaryButton = document.querySelector(`.answer-button[data-interval-name="${secondaryIntervalName}"]`);
+                        if (secondaryButton) {
+                            secondaryButton.classList.remove('hover-secondary');
+                        }
+                    }
+                });
+            });
+
 
             answerButtons.forEach(button => {
                 button.addEventListener('click', function () {
