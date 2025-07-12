@@ -1,4 +1,5 @@
-﻿using ChordProgressionQuiz.Models;
+﻿// D:\users\Anonymous\Documents\C Sharp\ChordProgressionQuiz\Services\PitchIntervalService.cs
+using ChordProgressionQuiz.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,32 +9,44 @@ namespace ChordProgressionQuiz.Services
     public class PitchIntervalService
     {
         private readonly Random _random;
-        private readonly IReadOnlyDictionary<int, string> _intervalNames;
+        private readonly IReadOnlyList<PitchInterval> _intervalDefinitions;
 
         public PitchIntervalService()
         {
             _random = new Random();
-            _intervalNames = new Dictionary<int, string>
+            // This list is now a static definition of all possible intervals.
+            _intervalDefinitions = new List<PitchInterval>
             {
-                { 1, "Minor Second" },
-                { 2, "Major Second" },
-                { 3, "Minor Third" },
-                { 4, "Major Third" },
-                { 5, "Perfect Fourth" },
-                { 6, "Tritone" },
-                { 7, "Perfect Fifth" },
-                { 8, "Minor Sixth" },
-                { 9, "Major Sixth" },
-                { 10, "Minor Seventh" },
-                { 11, "Major Seventh" },
-                { 12, "Octave" }
-            };
+                new PitchInterval { Semitones = 1, IntervalName = "Minor Second" },
+                new PitchInterval { Semitones = 2, IntervalName = "Major Second" },
+                new PitchInterval { Semitones = 3, IntervalName = "Minor Third" },
+                new PitchInterval { Semitones = 4, IntervalName = "Major Third" },
+                new PitchInterval { Semitones = 5, IntervalName = "Perfect Fourth" },
+                new PitchInterval { Semitones = 6, IntervalName = "Tritone" },
+                new PitchInterval { Semitones = 7, IntervalName = "Perfect Fifth" },
+                new PitchInterval { Semitones = 8, IntervalName = "Minor Sixth" },
+                new PitchInterval { Semitones = 9, IntervalName = "Major Sixth" },
+                new PitchInterval { Semitones = 10, IntervalName = "Minor Seventh" },
+                new PitchInterval { Semitones = 11, IntervalName = "Major Seventh" },
+                new PitchInterval { Semitones = 12, IntervalName = "Octave" }
+            }.AsReadOnly();
         }
 
-        // MODIFIED: This function now fully randomizes the base note.
+        /// <summary>
+        /// Gets a fully randomized interval from all possibilities.
+        /// </summary>
         public PitchInterval GetRandomInterval()
         {
-            int semitones = _random.Next(1, 13);
+            int randomIndex = _random.Next(_intervalDefinitions.Count);
+            int semitones = _intervalDefinitions[randomIndex].Semitones;
+            return GetRandomIntervalOfSemitone(semitones);
+        }
+
+        /// <summary>
+        /// Creates a PitchInterval with a random base note for a specific semitone difference.
+        /// </summary>
+        public PitchInterval GetRandomIntervalOfSemitone(int semitones)
+        {
             // Use a wider and more random range for the starting note (E3 to B4)
             int startNote = _random.Next(52, 72);
             bool isAscending = _random.NextDouble() > 0.5;
@@ -51,45 +64,22 @@ namespace ChordProgressionQuiz.Services
                 StartNoteMidi = startNote,
                 EndNoteMidi = endNote,
                 Semitones = semitones,
-                IntervalName = _intervalNames[semitones],
+                IntervalName = _intervalDefinitions.First(i => i.Semitones == semitones).IntervalName,
                 Direction = isAscending ? "Ascending" : "Descending"
             };
         }
 
         public List<string> GetAllIntervalNames()
         {
-            return _intervalNames.OrderBy(kv => kv.Key).Select(kv => kv.Value).ToList();
+            return _intervalDefinitions.Select(i => i.IntervalName).ToList();
         }
 
-        // MODIFIED: This function now also randomizes the base note for each generated interval.
-        public List<PitchInterval> GetAllPossibleIntervals()
+        /// <summary>
+        /// Returns the static list of all interval definitions (name and semitones).
+        /// </summary>
+        public List<PitchInterval> GetAllIntervalDefinitions()
         {
-            var allIntervals = new List<PitchInterval>();
-
-            foreach (var kvp in _intervalNames.OrderBy(kv => kv.Key))
-            {
-                int semitones = kvp.Key;
-                // Use a wider and more random range for the starting note (E3 to B4)
-                int startNote = _random.Next(52, 72);
-                bool isAscending = _random.NextDouble() > 0.5;
-                int endNote = isAscending ? (startNote + semitones) : (startNote - semitones);
-
-                if (endNote < 48 || endNote > 84)
-                {
-                    startNote = 60; // Reset to a safe C4 if out of comfortable range
-                    endNote = isAscending ? (startNote + semitones) : (startNote - semitones);
-                }
-
-                allIntervals.Add(new PitchInterval
-                {
-                    StartNoteMidi = startNote,
-                    EndNoteMidi = endNote,
-                    Semitones = semitones,
-                    IntervalName = kvp.Value,
-                    Direction = isAscending ? "Ascending" : "Descending"
-                });
-            }
-            return allIntervals;
+            return _intervalDefinitions.ToList();
         }
     }
 }
