@@ -1428,5 +1428,19 @@
                 "relative_to": "C Ionian"
             }
         ]
+    },
+    {
+        "song": "Decorated andalusian cadence",
+        "keys_example": "Em C D Bm C Am B",
+        "tonal": {
+            "roman_numerals": "vi IV V iii IV ii III",
+            "relative_to": "G Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "i bVI bVII v bVI iv V",
+                "relative_to": "E Aeolian"
+            }
+        ]
     }
 ]
