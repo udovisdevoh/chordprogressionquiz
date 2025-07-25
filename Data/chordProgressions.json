@@ -15,7 +15,7 @@
         "substitution_group": 6
     },
     {
-        "song": "Bad touch, counting stars",
+        "song": "Bad touch, Counting stars, Polly, In the end",
         "keys_example": "Am C G F",
         "tonal": {
             "roman_numerals": "vi I V IV",
@@ -1468,6 +1468,20 @@
             {
                 "roman_numerals": "I ii vi IV",
                 "relative_to": "C Ionian"
+            }
+        ]
+    },
+    {
+        "song": "Jolene, Time",
+        "keys_example": "Am C G Am",
+        "tonal": {
+            "roman_numerals": "vi I V vi",
+            "relative_to": "C Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "i bIII bVII i",
+                "relative_to": "A Aeolian"
             }
         ]
     }
