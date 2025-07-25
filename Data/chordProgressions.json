@@ -1442,5 +1442,19 @@
                 "relative_to": "E Aeolian"
             }
         ]
+    },
+    {
+        "song": "She loves you",
+        "keys_example": "C Am Em G",
+        "tonal": {
+            "roman_numerals": "I vi iii V",
+            "relative_to": "C Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "I vi iii V",
+                "relative_to": "C Ionian"
+            }
+        ]
     }
 ]
