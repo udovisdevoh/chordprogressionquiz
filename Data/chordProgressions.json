@@ -1444,7 +1444,7 @@
         ]
     },
     {
-        "song": "She loves you",
+        "song": "She loves you, you got it",
         "keys_example": "C Am Em G",
         "tonal": {
             "roman_numerals": "I vi iii V",
@@ -1453,6 +1453,20 @@
         "modal": [
             {
                 "roman_numerals": "I vi iii V",
+                "relative_to": "C Ionian"
+            }
+        ]
+    },
+    {
+        "song": "Starlight, Adam's song",
+        "keys_example": "C Dm Am F",
+        "tonal": {
+            "roman_numerals": "I ii vi IV",
+            "relative_to": "C Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "I ii vi IV",
                 "relative_to": "C Ionian"
             }
         ]
