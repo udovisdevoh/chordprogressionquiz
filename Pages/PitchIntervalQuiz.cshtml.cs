@@ -1,4 +1,4 @@
-// D:\users\Anonymous\Documents\C Sharp\ChordProgressionQuiz\Pages\PitchIntervalQuiz.cshtml.cs
+// Pages/PitchIntervalQuiz.cshtml.cs
 using ChordProgressionQuiz.Models;
 using ChordProgressionQuiz.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -23,6 +23,10 @@ namespace ChordProgressionQuiz.Pages
         [BindProperty(SupportsGet = true)]
         public bool PrioritizeWeaknesses { get; set; } = false;
 
+        // NEW: Add ReferencePitch property
+        [BindProperty(SupportsGet = true)]
+        public string ReferencePitch { get; set; } = "F";
+
         public PitchIntervalQuizModel(PitchIntervalService intervalService)
         {
             _intervalService = intervalService;
@@ -30,22 +34,20 @@ namespace ChordProgressionQuiz.Pages
 
         public void OnGet(int? selectedIndex)
         {
-            // Get the static definitions of all intervals (name and semitone count)
             var allIntervalDefinitions = _intervalService.GetAllIntervalDefinitions();
             AllIntervalsJson = JsonSerializer.Serialize(allIntervalDefinitions);
             AllIntervalNames = allIntervalDefinitions.Select(i => i.IntervalName).ToList();
 
             if (selectedIndex.HasValue && selectedIndex.Value >= 0 && selectedIndex.Value < allIntervalDefinitions.Count)
             {
-                // Get the definition for the selected interval
                 var selectedIntervalDefinition = allIntervalDefinitions[selectedIndex.Value];
-                // Generate a NEW, random instance of that interval with a random base pitch
-                CurrentInterval = _intervalService.GetRandomIntervalOfSemitone(selectedIntervalDefinition.Semitones);
+                // NEW: Pass the reference pitch to the service
+                CurrentInterval = _intervalService.GetRandomIntervalOfSemitone(selectedIntervalDefinition.Semitones, ReferencePitch);
             }
             else
             {
-                // For the very first visit, or if no index is provided, get a single, truly random interval.
-                CurrentInterval = _intervalService.GetRandomInterval();
+                // NEW: Pass the reference pitch to the service
+                CurrentInterval = _intervalService.GetRandomInterval(ReferencePitch);
             }
         }
     }
