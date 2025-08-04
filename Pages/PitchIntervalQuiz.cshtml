@@ -42,7 +42,7 @@
         <div class="row justify-content-center align-items-center g-3">
             <div class="col-auto">
                 <button id="play-interval-btn" type="button" class="btn btn-primary btn-lg">
-                    <i class="fas fa-play"></i> Play Interval
+                    <i class="fas fa-play"></i> Play
                 </button>
             </div>
             <div class="col-auto">
@@ -73,8 +73,13 @@
                         <option value="@note">@note</option>
                     }
                 </select>
-                @* FIXED: Add display for High/Low position *@
                 <span id="reference-pitch-position-display" class="ms-2 fw-bold"></span>
+            </div>
+            <div class="col-auto">
+                <div class="form-check form-switch" id="play-only-complement-container">
+                    <input class="form-check-input" type="checkbox" role="switch" id="play-only-complement-switch" asp-for="PlayOnlyComplement">
+                    <label class="form-check-label" for="play-only-complement-switch">Play Only Complement</label>
+                </div>
             </div>
         </div>
     </form>
@@ -144,17 +149,17 @@
             min-width: 150px;
             text-align: left;
             transition: transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
-            position: relative; /* For z-index */
+            position: relative;
         }
 
             .interval-button.hover-primary {
                 transform: scale(1.05);
-                box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.5); /* Bootstrap focus shadow */
+                box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.5);
                 z-index: 10;
             }
 
             .interval-button.hover-secondary {
-                box-shadow: 0 0 0 0.25rem rgba(108, 117, 125, 0.5); /* Secondary color shadow */
+                box-shadow: 0 0 0 0.25rem rgba(108, 117, 125, 0.5);
                 z-index: 5;
             }
     </style>
@@ -167,21 +172,14 @@
         document.addEventListener('DOMContentLoaded', function () {
             // --- 1. SETUP ---
             const quizDataEl = document.getElementById('quiz-data');
-            if (!quizDataEl) {
-                console.error('Quiz data element not found!');
-                return;
-            }
-
             const referencePitch = quizDataEl.dataset.referencePitch;
             const noteNameToMidiClass = { "C": 0, "C#": 1, "Db": 1, "D": 2, "D#": 3, "Eb": 3, "E": 4, "F": 5, "F#": 6, "Gb": 6, "G": 7, "G#": 8, "Ab": 8, "A": 9, "A#": 10, "Bb": 10, "B": 11 };
             const midiClassToNoteName = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-
 
             const EXCLUDED_INTERVALS_KEY = 'intervalQuiz_excluded';
             const currentIntervalData = JSON.parse(quizDataEl.dataset.currentInterval);
             const allIntervalsData = JSON.parse(quizDataEl.dataset.allIntervals);
             const correctAnswerName = currentIntervalData.IntervalName;
-            const notes = [currentIntervalData.StartNoteMidi, currentIntervalData.EndNoteMidi];
 
             const playBtn = document.getElementById('play-interval-btn');
             const quizControlsForm = document.getElementById('quiz-controls-form');
@@ -191,68 +189,89 @@
             const answerButtons = document.querySelectorAll('.answer-button');
             const feedbackEl = document.getElementById('answer-feedback');
             const clearStatsBtn = document.getElementById('clear-stats-btn');
-
+            const playOnlyComplementSwitch = document.getElementById('play-only-complement-switch');
+            const playOnlyComplementContainer = document.getElementById('play-only-complement-container');
             const currentScoreEl = document.getElementById('current-score');
             const maxScoreEl = document.getElementById('max-score');
+
             let currentScore = parseInt(localStorage.getItem('intervalQuiz_currentScore')) || 0;
             let maxScore = parseInt(localStorage.getItem('intervalQuiz_maxScore')) || 0;
-
             let hasAnswered = false;
 
-            const piano = new Tone.Sampler({
-                urls: { "C4": "C4.mp3", "F#4": "Fs4.mp3", "A4": "A4.mp3" },
-                release: 1,
-                baseUrl: "https://tonejs.github.io/audio/salamander/",
-            }).toDestination();
+            const piano = new Tone.Sampler({ urls: { "C4": "C4.mp3", "F#4": "Fs4.mp3", "A4": "A4.mp3" }, release: 1, baseUrl: "https://tonejs.github.io/audio/salamander/" }).toDestination();
+
+            // --- PLAYBACK LOGIC ---
+            const note1 = midiToNoteNameWithOctave(currentIntervalData.StartNoteMidi);
+            const note2 = midiToNoteNameWithOctave(currentIntervalData.EndNoteMidi);
+            let sequence;
+
+            function setupSequence() {
+                if (sequence) {
+                    sequence.dispose();
+                }
+
+                const playOnlyComplement = playOnlyComplementSwitch.checked;
+                const refPitchIsRandom = referencePitchSelect.value === 'Random';
+                let notesToPlay = [note1, note2];
+
+                if (playOnlyComplement && !refPitchIsRandom) {
+                    const refMidiClass = noteNameToMidiClass[referencePitch];
+                    const startNoteMidi = currentIntervalData.StartNoteMidi;
+
+                    if (startNoteMidi % 12 === refMidiClass) {
+                        notesToPlay = [note2];
+                    } else {
+                        notesToPlay = [note1];
+                    }
+                }
+
+                sequence = new Tone.Sequence((time, note) => {
+                    piano.triggerAttackRelease(note, "8n", time);
+                }, notesToPlay, "2n").start(0);
+
+                sequence.loop = loopSwitch.checked;
+            }
+
+            function playInterval() {
+                if (Tone.context.state !== 'running') Tone.context.resume();
+                if (Tone.Transport.state === 'started') {
+                    Tone.Transport.stop();
+                    Tone.Transport.position = 0;
+                }
+                Tone.Transport.start();
+            }
 
             // --- EXCLUSION & INTERVAL SELECTION LOGIC ---
-            function getExcludedIntervals() {
-                return new Set(JSON.parse(localStorage.getItem(EXCLUDED_INTERVALS_KEY) || '[]'));
-            }
-
-            function saveExcludedIntervals(excludedSet) {
-                localStorage.setItem(EXCLUDED_INTERVALS_KEY, JSON.stringify([...excludedSet]));
-            }
-
+            function getExcludedIntervals() { return new Set(JSON.parse(localStorage.getItem(EXCLUDED_INTERVALS_KEY) || '[]')); }
+            function saveExcludedIntervals(excludedSet) { localStorage.setItem(EXCLUDED_INTERVALS_KEY, JSON.stringify([...excludedSet]));}
             function handleNextInterval(event) {
                 event.preventDefault();
-
                 const excluded = getExcludedIntervals();
-                let availableIntervals = allIntervalsData
-                    .map((interval, index) => ({ ...interval, originalIndex: index }))
-                    .filter(interval => !excluded.has(interval.IntervalName));
-
+                let availableIntervals = allIntervalsData.map((interval, index) => ({ ...interval, originalIndex: index })).filter(interval => !excluded.has(interval.IntervalName));
                 if (availableIntervals.length === 0) {
                     alert("All intervals are excluded! Re-enabling all for the next selection.");
                     availableIntervals = allIntervalsData.map((interval, index) => ({ ...interval, originalIndex: index }));
                 }
-
                 let selectedOriginalIndex;
-                const prioritize = prioritizeSwitch.checked;
-
-                if (prioritize) {
+                if (prioritizeSwitch.checked) {
                     const stats = getStats();
                     const weightedList = [];
-                    const BASE_CHANCE = 5, FAILURE_PENALTY = 20, UNATTEMPTED_BONUS = 15;
                     availableIntervals.forEach(interval => {
                         const stat = stats[interval.IntervalName] || { success: 0, attempts: 0 };
-                        const failures = stat.attempts - stat.success;
-                        let weight = BASE_CHANCE + (failures * FAILURE_PENALTY);
-                        if (stat.attempts === 0) weight += UNATTEMPTED_BONUS;
-                        for (let i = 0; i < weight; i++) {
-                            weightedList.push(interval.originalIndex);
-                        }
+                        let weight = 5 + ((stat.attempts - stat.success) * 20) + (stat.attempts === 0 ? 15 : 0);
+                        for (let i = 0; i < weight; i++) weightedList.push(interval.originalIndex);
                     });
-                    const randomIndex = Math.floor(Math.random() * weightedList.length);
-                    selectedOriginalIndex = weightedList[randomIndex];
+                    selectedOriginalIndex = weightedList[Math.floor(Math.random() * weightedList.length)];
                 } else {
-                    const randomIndex = Math.floor(Math.random() * availableIntervals.length);
-                    selectedOriginalIndex = availableIntervals[randomIndex].originalIndex;
+                    selectedOriginalIndex = availableIntervals[Math.floor(Math.random() * availableIntervals.length)].originalIndex;
                 }
-
-                const loop = loopSwitch.checked;
-                const refPitch = referencePitchSelect.value;
-                window.location.href = `/PitchIntervalQuiz/${selectedOriginalIndex}?PrioritizeWeaknesses=${prioritize}&LoopPlayback=${loop}&ReferencePitch=${refPitch}`;
+                const params = new URLSearchParams({
+                    PrioritizeWeaknesses: prioritizeSwitch.checked,
+                    LoopPlayback: loopSwitch.checked,
+                    ReferencePitch: referencePitchSelect.value,
+                    PlayOnlyComplement: playOnlyComplementSwitch.checked
+                });
+                window.location.href = `/PitchIntervalQuiz/${selectedOriginalIndex}?${params.toString()}`;
             }
 
             // --- UI UPDATE LOGIC ---
@@ -267,10 +286,7 @@
                 }
 
                 if (referencePitch === 'Random') {
-                    answerButtons.forEach(button => {
-                         const baseText = button.querySelector('.base-text').textContent;
-                         button.querySelector('.display-text').textContent = baseText;
-                    });
+                    answerButtons.forEach(button => { button.querySelector('.display-text').textContent = button.querySelector('.base-text').textContent; });
                     return;
                 }
 
@@ -281,30 +297,28 @@
                     const intervalName = button.dataset.intervalName;
                     const intervalInfo = allIntervalsData.find(i => i.IntervalName === intervalName);
                     if (!intervalInfo) return;
-
                     const semitones = intervalInfo.Semitones;
-                    let complementMidiClass;
-
-                    // FIXED: Correctly calculate complement note based on High/Low position
-                    if (referencePitchPosition === 'High') {
-                        // Reference note is HIGH, so we calculate DOWN to find the complement
-                        complementMidiClass = (refMidiClass - semitones + 12) % 12;
-                    } else {
-                        // Reference note is LOW (default), so we calculate UP
-                        complementMidiClass = (refMidiClass + semitones) % 12;
-                    }
-
+                    let complementMidiClass = (referencePitchPosition === 'High')
+                        ? (refMidiClass - semitones + 12) % 12
+                        : (refMidiClass + semitones) % 12;
                     const complementNoteName = midiClassToNoteName[complementMidiClass];
-                    const baseText = button.querySelector('.base-text').textContent;
-                    button.querySelector('.display-text').textContent = `${baseText}: ${complementNoteName}`;
+                    button.querySelector('.display-text').textContent = `${button.querySelector('.base-text').textContent}: ${complementNoteName}`;
                 });
             }
 
+            function toggleComplementSwitch() {
+                if (referencePitchSelect.value === 'Random') {
+                    playOnlyComplementSwitch.checked = false;
+                    playOnlyComplementSwitch.disabled = true;
+                    playOnlyComplementContainer.style.opacity = '0.5';
+                } else {
+                    playOnlyComplementSwitch.disabled = false;
+                    playOnlyComplementContainer.style.opacity = '1';
+                }
+                setupSequence();
+            }
 
-            // --- STATISTICS LOGIC ---
-            const statsTableBody = document.getElementById('stats-table-body');
-            const statsTableFoot = document.getElementById('stats-table-foot');
-
+            // --- STATISTICS & SCORE LOGIC ---
             function getInitialStats() {
                 const initialStats = {};
                 allIntervalsData.forEach(interval => {
@@ -312,25 +326,22 @@
                 });
                 return initialStats;
             }
-
             function getStats() {
                 const statsJson = localStorage.getItem('intervalQuiz_stats');
                 return statsJson ? JSON.parse(statsJson) : getInitialStats();
             }
-
             let stats = getStats();
-
             function updateStatsDisplay() {
+                const statsTableBody = document.getElementById('stats-table-body');
+                const statsTableFoot = document.getElementById('stats-table-foot');
                 statsTableBody.innerHTML = '';
                 let totalSuccess = 0, totalAttempts = 0;
                 const excludedIntervals = getExcludedIntervals();
-
                 allIntervalsData.forEach(interval => {
                     const name = interval.IntervalName;
                     const stat = stats[name] || { success: 0, attempts: 0 };
                     const successRate = stat.attempts > 0 ? ((stat.success / stat.attempts) * 100).toFixed(0) + '%' : 'N/A';
                     const isChecked = excludedIntervals.has(name) ? 'checked' : '';
-
                     const row = `<tr>
                                     <td class="text-center align-middle"><input type="checkbox" class="form-check-input exclude-interval-cbx" data-interval-name="${name}" ${isChecked}></td>
                                     <td class="align-middle">${name}</td>
@@ -342,24 +353,19 @@
                     totalSuccess += stat.success;
                     totalAttempts += stat.attempts;
                 });
-
                 const totalSuccessRate = totalAttempts > 0 ? ((totalSuccess / totalAttempts) * 100).toFixed(0) + '%' : 'N/A';
                 statsTableFoot.innerHTML = `<tr class="table-dark">
                                                 <th></th><th>Total</th><th>${totalSuccess}</th><th>${totalAttempts}</th><th>${totalSuccessRate}</th>
                                             </tr>`;
             }
-
             function updateStats(isCorrect) {
                 const intervalName = correctAnswerName;
-                if (!stats[intervalName]) {
-                    stats[intervalName] = { success: 0, attempts: 0 };
-                }
+                if (!stats[intervalName]) stats[intervalName] = { success: 0, attempts: 0 };
                 stats[intervalName].attempts++;
                 if (isCorrect) stats[intervalName].success++;
                 localStorage.setItem('intervalQuiz_stats', JSON.stringify(stats));
                 updateStatsDisplay();
             }
-
             function clearStats() {
                 if (confirm("Are you sure you want to clear all your statistics? This action cannot be undone.")) {
                     stats = getInitialStats();
@@ -367,13 +373,10 @@
                     updateStatsDisplay();
                 }
             }
-
-            // --- SCORE LOGIC ---
             function updateScoreDisplay() {
                 currentScoreEl.textContent = currentScore;
                 maxScoreEl.textContent = maxScore;
             }
-
             function handleCorrectAnswer() {
                 currentScore++;
                 if (currentScore > maxScore) {
@@ -384,47 +387,26 @@
                 updateScoreDisplay();
                 updateStats(true);
             }
-
             function handleWrongAnswer() {
                 currentScore = 0;
                 localStorage.setItem('intervalQuiz_currentScore', currentScore);
                 updateScoreDisplay();
                 updateStats(false);
             }
-
-            // --- PLAYBACK LOGIC ---
             function midiToNoteNameWithOctave(midi) {
                 if (midi === null || midi === undefined) return "";
-                const noteNamesWithOctave = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-                const octave = Math.floor(midi / 12) - 1;
-                const noteIndex = midi % 12;
-                return noteNamesWithOctave[noteIndex] + octave;
-            }
-
-            const note1 = midiToNoteNameWithOctave(notes[0]);
-            const note2 = midiToNoteNameWithOctave(notes[1]);
-            const sequence = new Tone.Sequence((time, note) => {
-                piano.triggerAttackRelease(note, "8n", time);
-            }, [note1, note2], "2n").start(0);
-            sequence.loop = loopSwitch.checked;
-
-            function playInterval() {
-                if (Tone.context.state !== 'running') Tone.context.resume();
-                if (Tone.Transport.state === 'started') {
-                    Tone.Transport.stop();
-                    Tone.Transport.position = 0;
-                }
-                Tone.Transport.start();
+                const n = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+                return n[midi % 12] + (Math.floor(midi / 12) - 1);
             }
 
             // --- EVENT LISTENERS ---
             playBtn.addEventListener('click', playInterval);
             quizControlsForm.addEventListener('submit', handleNextInterval);
             clearStatsBtn.addEventListener('click', clearStats);
-
-            loopSwitch.addEventListener('change', (e) => { sequence.loop = e.target.checked; });
-
-            statsTableBody.addEventListener('change', function (e) {
+            loopSwitch.addEventListener('change', () => { if(sequence) sequence.loop = loopSwitch.checked; });
+            referencePitchSelect.addEventListener('change', toggleComplementSwitch);
+            playOnlyComplementSwitch.addEventListener('change', setupSequence);
+            document.getElementById('stats-table-body').addEventListener('change', function (e) {
                 if (e.target.classList.contains('exclude-interval-cbx')) {
                     const checkbox = e.target;
                     const intervalName = checkbox.dataset.intervalName;
@@ -433,9 +415,6 @@
                     saveExcludedIntervals(excluded);
                 }
             });
-
-            referencePitchSelect.addEventListener('change', updateAnswerButtonText);
-
             const inversionMap = { "Minor Second": "Major Seventh", "Major Seventh": "Minor Second", "Major Second": "Minor Seventh", "Minor Seventh": "Major Second", "Minor Third": "Major Sixth", "Major Sixth": "Minor Third", "Major Third": "Minor Sixth", "Minor Sixth": "Major Third", "Perfect Fourth": "Perfect Fifth", "Perfect Fifth": "Perfect Fourth", "Tritone": "Tritone" };
             answerButtons.forEach(button => {
                 button.addEventListener('mouseover', function () {
@@ -456,9 +435,6 @@
                         if (secondaryButton) secondaryButton.classList.remove('hover-secondary');
                     }
                 });
-            });
-
-            answerButtons.forEach(button => {
                 button.addEventListener('click', function () {
                     if (hasAnswered) return;
                     hasAnswered = true;
@@ -486,6 +462,7 @@
             updateScoreDisplay();
             updateStatsDisplay();
             updateAnswerButtonText();
+            toggleComplementSwitch();
 
             Tone.loaded().then(() => {
                 playInterval();

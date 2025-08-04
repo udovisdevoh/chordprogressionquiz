@@ -23,9 +23,12 @@ namespace ChordProgressionQuiz.Pages
         [BindProperty(SupportsGet = true)]
         public bool PrioritizeWeaknesses { get; set; } = false;
 
-        // NEW: Add ReferencePitch property
         [BindProperty(SupportsGet = true)]
         public string ReferencePitch { get; set; } = "F";
+
+        // NEW: Add property for the new checkbox
+        [BindProperty(SupportsGet = true)]
+        public bool PlayOnlyComplement { get; set; } = false;
 
         public PitchIntervalQuizModel(PitchIntervalService intervalService)
         {
@@ -41,12 +44,10 @@ namespace ChordProgressionQuiz.Pages
             if (selectedIndex.HasValue && selectedIndex.Value >= 0 && selectedIndex.Value < allIntervalDefinitions.Count)
             {
                 var selectedIntervalDefinition = allIntervalDefinitions[selectedIndex.Value];
-                // NEW: Pass the reference pitch to the service
                 CurrentInterval = _intervalService.GetRandomIntervalOfSemitone(selectedIntervalDefinition.Semitones, ReferencePitch);
             }
             else
             {
-                // NEW: Pass the reference pitch to the service
                 CurrentInterval = _intervalService.GetRandomInterval(ReferencePitch);
             }
         }
