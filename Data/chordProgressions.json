@@ -373,8 +373,23 @@
         },
         "modal": [
             {
-                "roman_numerals": "i bIII v bVII",
+                "roman_numerals": "i bIII v IV",
                 "relative_to": "D Dorian"
+            }
+        ],
+        "substitution_group": 5
+    },
+    {
+        "song": "Le feu (Bibi Club)",
+        "keys_example": "F Dm Am G",
+        "tonal": {
+            "roman_numerals": "IV ii vi V",
+            "relative_to": "C Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "I bvi iii II",
+                "relative_to": "F Lydian"
             }
         ],
         "substitution_group": 5
