@@ -1175,6 +1175,20 @@
         ]
     },
     {
+        "song": "Gospel Climb",
+        "keys_example": "F F#dim C",
+        "tonal": {
+            "roman_numerals": "IV IV#dim I",
+            "relative_to": "C Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "I I#dim V",
+                "relative_to": "F with modal mixture"
+            }
+        ]
+    },
+    {
         "song": "We're the kids, were the kids",
         "keys_example": "B G E",
         "tonal": {
