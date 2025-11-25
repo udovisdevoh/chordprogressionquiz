@@ -1175,16 +1175,16 @@
         ]
     },
     {
-        "song": "Gospel Climb",
-        "keys_example": "F F#dim C",
+        "song": "Gospel Climb, Georgia, SMB2 theme I IV IV#dim I/V V7 I",
+        "keys_example": "C F F#dim C G C",
         "tonal": {
-            "roman_numerals": "IV IV#dim I",
+            "roman_numerals": "I IV IV#dim I V I",
             "relative_to": "C Major"
         },
         "modal": [
             {
-                "roman_numerals": "I I#dim V",
-                "relative_to": "F with modal mixture"
+                "roman_numerals": "I IV IV#dim I V I",
+                "relative_to": "C with modal mixture"
             }
         ]
     },
