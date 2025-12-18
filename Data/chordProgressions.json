@@ -1487,6 +1487,20 @@
         ]
     },
     {
+        "song": "Where's my mind",
+        "keys_example": "E C#m G# A",
+        "tonal": {
+            "roman_numerals": "I vi III IV",
+            "relative_to": "E Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "I vi III IV",
+                "relative_to": "E Ionian"
+            }
+        ]
+    },
+    {
         "song": "Starlight, Adam's song, 1234",
         "keys_example": "C Dm Am F",
         "tonal": {
