@@ -255,6 +255,20 @@
         ]
     },
     {
+        "song": "Take Me Home (Country Roads) Purple Rain",
+        "keys_example": "D Bm A G",
+        "tonal": {
+            "roman_numerals": "I vi V IV",
+            "relative_to": "D Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "I vi V IV",
+                "relative_to": "D Ionian"
+            }
+        ]
+    },
+    {
         "song": "World hold on, shape of you",
         "keys_example": "Am Dm F G",
         "tonal": {
