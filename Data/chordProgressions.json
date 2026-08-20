@@ -101,8 +101,21 @@
                 "roman_numerals": "bVI bVII i bIII",
                 "relative_to": "A Aeolian"
             }
-        ],
-        "rotation_group": 5
+        ]
+    },
+    {
+        "song": "Caravan, Green Hill Zone, Zelda's Lullaby",
+        "keys_example": "F Em Dm C",
+        "tonal": {
+            "roman_numerals": "IV ii ii I",
+            "relative_to": "C Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "I vii vi V",
+                "relative_to": "F Lydian"
+            }
+        ]
     },
     {
         "song": "Axis of Awesome: Despacito, Kids aren't alright, (C G Am F, F C G Am, G Am F C)",
