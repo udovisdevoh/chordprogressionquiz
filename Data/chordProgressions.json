@@ -149,6 +149,20 @@
         "palindromic_group": 5
     },
     {
+        "song": "Beautiful Things, The Fate of Ophelia, Payphone, Mercy (muse)",
+        "keys_example": "F C Am G",
+        "tonal": {
+            "roman_numerals": "IV I vi V",
+            "relative_to": "C Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "I V iii II",
+                "relative_to": "F Lydian"
+            }
+        ]
+    },
+    {
         "song": "I'm yours, With or without you, Dammit, Song for a winter's night",
         "keys_example": "C G Am F",
         "tonal": {
