@@ -46,6 +46,21 @@
         "rotation_group": 4
     },
     {
+        "song": "Ain't it funny",
+        "keys_example": "Am F G C",
+        "tonal": {
+            "roman_numerals": "vi IV V I",
+            "relative_to": "C Major"
+        },
+        "modal": [
+            {
+                "roman_numerals": "i bVI bVII bIII",
+                "relative_to": "A Aeolian"
+            }
+        ],
+        "rotation_group": 4
+    },
+    {
         "song": "Royal road",
         "keys_example": "F G Em Am",
         "tonal": {
