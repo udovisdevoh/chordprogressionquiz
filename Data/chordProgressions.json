@@ -1304,7 +1304,7 @@
     },
     {
         "song": "Blur Song 2",
-        "mode": "Mixolydian",
+        "mode": "Mixolydian b6",
         "keys_example": "E D G A B",
         "tonal": {
             "roman_numerals": "I bVII bIII IV V",
