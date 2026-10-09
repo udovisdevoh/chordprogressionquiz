@@ -80,10 +80,10 @@
                         <input type="hidden" name="PlayArpeggioTwiceAsLong" value="@Model.PlayArpeggioTwiceAsLong.ToString().ToLowerInvariant()" />
                         <label for="playbackKeySelector" class="form-label me-1">Playback key:</label>
                         <select name="SelectedKey" id="playbackKeySelector" class="form-select w-auto me-2" aria-label="Playback key">
-                            <option value="Random">Random</option>
+                            <option value="Random" selected="@(Model.SelectedKey == "Random" ? "selected" : null)">Random</option>
                         @foreach (var key in ChordQuizModel.AvailableKeys)
                         {
-                            <option value="@key" selected="@(Model.PlayedKey?.Split(' ').FirstOrDefault() == key ? "selected" : null)">@key</option>
+                            <option value="@key" selected="@(Model.SelectedKey == key ? "selected" : null)">@key</option>
                         }
                         </select>
                         <button type="submit" class="btn btn-success">New Quiz 🎲</button>
@@ -234,7 +234,7 @@
                 quizData.quizAnswerSource = "Tonal";
             }
 
-            let currentKeyRoot = playbackKeySelector?.value;
+            let currentKeyRoot = (quizData.playedKey || '').split(' ')[0];
             let liveTransposeOffset = 0;
             const keySemitones = { C: 0, "C#": 1, D: 2, Eb: 3, E: 4, F: 5, "F#": 6, G: 7, Ab: 8, A: 9, Bb: 10, B: 11 };
             const playbackKeys = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
@@ -242,11 +242,11 @@
 
             if (playbackKeySelector) {
                 playbackKeySelector.addEventListener('change', () => {
+                    const randomKeyRequested = playbackKeySelector.value === 'Random';
                     let selectedRoot = playbackKeySelector.value;
-                    if (selectedRoot === 'Random') {
+                    if (randomKeyRequested) {
                         const possibleKeys = playbackKeys.filter(key => key !== currentKeyRoot);
                         selectedRoot = possibleKeys[Math.floor(Math.random() * possibleKeys.length)];
-                        playbackKeySelector.value = selectedRoot;
                     }
                     let semitoneChange = (keySemitones[selectedRoot] - keySemitones[currentKeyRoot] + 12) % 12;
                     if (semitoneChange > 6) semitoneChange -= 12;
@@ -260,7 +260,7 @@
                     quizData.globalTransposeOffset += semitoneChange;
                     quizData.playedKey = `${selectedRoot} ${keyMode}`.trim();
                     document.querySelectorAll('input[name="SelectedKey"]').forEach(input => {
-                        input.value = selectedRoot;
+                        input.value = randomKeyRequested ? 'Random' : selectedRoot;
                     });
 
                     if (window.midiPlayer.isPlaying()) {

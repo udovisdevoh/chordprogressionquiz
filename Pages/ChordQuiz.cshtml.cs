@@ -104,7 +104,6 @@ namespace ChordProgressionQuiz.Pages
                     ? AvailableKeys[_randomLocal.Next(AvailableKeys.Count)]
                     : SelectedKey;
                 PlayedKey = $"{selectedKey} {string.Join(" ", sourceKeyParts.Skip(1))}".TrimEnd();
-                SelectedKey = selectedKey;
 
                 var progressionInPlaybackKey = new ChordProgression
                 {
