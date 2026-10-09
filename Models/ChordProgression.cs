@@ -9,6 +9,9 @@ namespace ChordProgressionQuiz.Models
         [JsonPropertyName("song")]
         public string Song { get; set; }
 
+        [JsonPropertyName("mode")]
+        public string Mode { get; set; }
+
         [JsonPropertyName("keys_example")]
         public string KeysExample { get; set; }
 

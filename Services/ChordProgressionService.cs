@@ -128,6 +128,39 @@ namespace ChordProgressionQuiz.Services
             return _chordProgressions?.Count ?? 0;
         }
 
+        public IReadOnlyList<string> GetAvailableModes()
+        {
+            return _chordProgressions?
+                .Where(progression => !string.IsNullOrWhiteSpace(progression.Mode))
+                .SelectMany(progression => ParseModes(progression.Mode))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(mode => mode, StringComparer.OrdinalIgnoreCase)
+                .ToList() ?? new List<string>();
+        }
+
+        public IReadOnlyList<int> GetProgressionIndicesByModes(IEnumerable<string> modes)
+        {
+            var selectedModes = new HashSet<string>(modes ?? Enumerable.Empty<string>(), StringComparer.OrdinalIgnoreCase);
+            if (_chordProgressions == null)
+            {
+                return new List<int>();
+            }
+
+            return _chordProgressions
+                .Select((progression, index) => new { progression, index })
+                .Where(item => selectedModes.Count == 0 ||
+                    ParseModes(item.progression.Mode).Any(selectedModes.Contains))
+                .Select(item => item.index)
+                .ToList();
+        }
+
+        private static IEnumerable<string> ParseModes(string modes)
+        {
+            return (modes ?? string.Empty)
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Where(mode => !string.IsNullOrWhiteSpace(mode));
+        }
+
         /// <summary>
         /// Converts a Roman numeral chord progression to an AbsoluteChordProgression (MIDI pitches).
         /// Assumes tonal Roman numerals are correct and interprets quality directly from casing/suffix.
@@ -228,15 +261,17 @@ namespace ChordProgressionQuiz.Services
                 // Calculate the diatonic root semitone offset based on the *current scale type*
                 int diatonicRootSemitoneOffset = currentScaleIntervals[degreeIndex]; // Corrected: Use currentScaleIntervals
 
-                // Apply explicit accidentals from the Roman numeral string to this diatonic root
+                // Explicit accidentals are relative to the major-scale degree. Do not flatten
+                // an already-flat modal degree a second time (for example, bIII in Harmonic Minor).
                 int chordRootSemitoneOffset = diatonicRootSemitoneOffset;
+                int majorScaleSemitoneOffset = _scaleIntervals["Major"][degreeIndex];
                 if (leadingAccidental == "b" || trailingAccidental == "b")
                 {
-                    chordRootSemitoneOffset--;
+                    chordRootSemitoneOffset = Math.Min(chordRootSemitoneOffset, majorScaleSemitoneOffset - 1);
                 }
                 else if (leadingAccidental == "#" || trailingAccidental == "#")
                 {
-                    chordRootSemitoneOffset++;
+                    chordRootSemitoneOffset = Math.Max(chordRootSemitoneOffset, majorScaleSemitoneOffset + 1);
                 }
 
                 int chordRootMidiNote = tonicMidiNote + chordRootSemitoneOffset;

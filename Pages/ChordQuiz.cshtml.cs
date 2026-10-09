@@ -38,6 +38,13 @@ namespace ChordProgressionQuiz.Pages
         [BindProperty(SupportsGet = true)]
         public string SelectedKey { get; set; } = "Random";
 
+        [BindProperty]
+        public List<string> SelectedModes { get; set; } = new();
+
+        public IReadOnlyList<string> AvailableModes => _chordService.GetAvailableModes();
+
+        public bool HasProgressions => _chordService.GetProgressionCount() > 0;
+
         public string PlayedKey { get; private set; }
 
         public static IReadOnlyList<string> AvailableKeys { get; } = new[]
@@ -65,13 +72,20 @@ namespace ChordProgressionQuiz.Pages
             _randomLocal = new Random();
         }
 
-        public void OnGet(int? index)
+        public void OnGet(int? index, string modes = null)
         {
-            int totalProgressions = _chordService.GetProgressionCount();
+            SelectedModes = string.IsNullOrWhiteSpace(modes)
+                ? new List<string>()
+                : modes.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
 
-            if (totalProgressions == 0)
+            var eligibleProgressionIndices = GetEligibleProgressionIndices();
+
+            if (eligibleProgressionIndices.Count == 0)
             {
-                _logger.LogWarning("No chord progressions loaded. The JSON file might be empty or missing.");
+                if (_chordService.GetProgressionCount() == 0)
+                {
+                    _logger.LogWarning("No chord progressions loaded. The JSON file might be empty or missing.");
+                }
                 QuizProgression = null;
                 AbsoluteProgression = null;
                 StylizedProgression = null;
@@ -79,13 +93,13 @@ namespace ChordProgressionQuiz.Pages
                 return;
             }
 
-            if (index.HasValue && index.Value >= 0 && index.Value < totalProgressions)
+            if (index.HasValue && eligibleProgressionIndices.Contains(index.Value))
             {
                 CurrentProgressionIndex = index.Value;
             }
             else
             {
-                CurrentProgressionIndex = _randomLocal.Next(totalProgressions);
+                CurrentProgressionIndex = eligibleProgressionIndices[_randomLocal.Next(eligibleProgressionIndices.Count)];
             }
 
             QuizProgression = _chordService.GetChordProgressionByIndex(CurrentProgressionIndex);
@@ -188,64 +202,91 @@ namespace ChordProgressionQuiz.Pages
             }
         }
 
+        private IReadOnlyList<int> GetEligibleProgressionIndices()
+        {
+            var availableModes = _chordService.GetAvailableModes();
+            SelectedModes = (SelectedModes ?? new List<string>())
+                .Where(mode => availableModes.Contains(mode, StringComparer.OrdinalIgnoreCase))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            return _chordService.GetProgressionIndicesByModes(SelectedModes);
+        }
+
+        private object GetQuizRouteValues(int index)
+        {
+            return new
+            {
+                index,
+                EnableStylizedPlayback,
+                LoopPlayback,
+                PlayArpeggioTwiceAsLong,
+                SelectedKey,
+                modes = string.Join(",", SelectedModes ?? new List<string>())
+            };
+        }
+
         public IActionResult OnPostNext()
         {
-            int totalProgressions = _chordService.GetProgressionCount();
-            if (totalProgressions == 0) return RedirectToPage();
-            int nextIndex = (CurrentProgressionIndex + 1) % totalProgressions;
+            var eligibleProgressionIndices = GetEligibleProgressionIndices();
+            if (eligibleProgressionIndices.Count == 0) return RedirectToPage();
+            var currentPosition = eligibleProgressionIndices.ToList().IndexOf(CurrentProgressionIndex);
+            var nextPosition = currentPosition < 0 ? 0 : (currentPosition + 1) % eligibleProgressionIndices.Count;
             // NEW: Preserve PlayArpeggioTwiceAsLong on navigation
-            return RedirectToPage(new { index = nextIndex, EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback, PlayArpeggioTwiceAsLong = PlayArpeggioTwiceAsLong, SelectedKey = SelectedKey });
+            return RedirectToPage(GetQuizRouteValues(eligibleProgressionIndices[nextPosition]));
         }
 
         public IActionResult OnPostPrevious()
         {
-            int totalProgressions = _chordService.GetProgressionCount();
-            if (totalProgressions == 0) return RedirectToPage();
-            int previousIndex = (CurrentProgressionIndex - 1 + totalProgressions) % totalProgressions;
+            var eligibleProgressionIndices = GetEligibleProgressionIndices();
+            if (eligibleProgressionIndices.Count == 0) return RedirectToPage();
+            var currentPosition = eligibleProgressionIndices.ToList().IndexOf(CurrentProgressionIndex);
+            var previousPosition = currentPosition < 0
+                ? eligibleProgressionIndices.Count - 1
+                : (currentPosition - 1 + eligibleProgressionIndices.Count) % eligibleProgressionIndices.Count;
             // NEW: Preserve PlayArpeggioTwiceAsLong on navigation
-            return RedirectToPage(new { index = previousIndex, EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback, PlayArpeggioTwiceAsLong = PlayArpeggioTwiceAsLong, SelectedKey = SelectedKey });
+            return RedirectToPage(GetQuizRouteValues(eligibleProgressionIndices[previousPosition]));
         }
 
         public IActionResult OnPostFirst()
         {
-            int totalProgressions = _chordService.GetProgressionCount();
-            if (totalProgressions == 0) return RedirectToPage();
+            var eligibleProgressionIndices = GetEligibleProgressionIndices();
+            if (eligibleProgressionIndices.Count == 0) return RedirectToPage();
             // NEW: Preserve PlayArpeggioTwiceAsLong on navigation
-            return RedirectToPage(new { index = 0, EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback, PlayArpeggioTwiceAsLong = PlayArpeggioTwiceAsLong, SelectedKey = SelectedKey });
+            return RedirectToPage(GetQuizRouteValues(eligibleProgressionIndices[0]));
         }
 
         public IActionResult OnPostLast()
         {
-            int totalProgressions = _chordService.GetProgressionCount();
-            if (totalProgressions == 0) return RedirectToPage();
+            var eligibleProgressionIndices = GetEligibleProgressionIndices();
+            if (eligibleProgressionIndices.Count == 0) return RedirectToPage();
             // NEW: Preserve PlayArpeggioTwiceAsLong on navigation
-            return RedirectToPage(new { index = totalProgressions - 1, EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback, PlayArpeggioTwiceAsLong = PlayArpeggioTwiceAsLong, SelectedKey = SelectedKey });
+            return RedirectToPage(GetQuizRouteValues(eligibleProgressionIndices[^1]));
         }
 
         public IActionResult OnPostRandom()
         {
-            int totalProgressions = _chordService.GetProgressionCount();
-            if (totalProgressions == 0) return RedirectToPage();
+            var eligibleProgressionIndices = GetEligibleProgressionIndices();
+            if (eligibleProgressionIndices.Count == 0) return RedirectToPage();
             // NEW: Preserve PlayArpeggioTwiceAsLong on navigation
-            return RedirectToPage(new { index = _randomLocal.Next(totalProgressions), EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback, PlayArpeggioTwiceAsLong = PlayArpeggioTwiceAsLong, SelectedKey = SelectedKey });
+            return RedirectToPage(GetQuizRouteValues(eligibleProgressionIndices[_randomLocal.Next(eligibleProgressionIndices.Count)]));
         }
 
         public IActionResult OnPostToggleStylizedPlayback()
         {
             // NEW: Preserve PlayArpeggioTwiceAsLong on toggle
-            return RedirectToPage(new { index = CurrentProgressionIndex, EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback, PlayArpeggioTwiceAsLong = PlayArpeggioTwiceAsLong, SelectedKey = SelectedKey });
+            return RedirectToPage(GetQuizRouteValues(CurrentProgressionIndex));
         }
 
         public IActionResult OnPostToggleLoopPlayback()
         {
             // NEW: Preserve PlayArpeggioTwiceAsLong on toggle
-            return RedirectToPage(new { index = CurrentProgressionIndex, EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback, PlayArpeggioTwiceAsLong = PlayArpeggioTwiceAsLong, SelectedKey = SelectedKey });
+            return RedirectToPage(GetQuizRouteValues(CurrentProgressionIndex));
         }
 
         // NEW: Toggle for PlayArpeggioTwiceAsLong
         public IActionResult OnPostTogglePlayArpeggioTwiceAsLong()
         {
-            return RedirectToPage(new { index = CurrentProgressionIndex, EnableStylizedPlayback = EnableStylizedPlayback, LoopPlayback = LoopPlayback, PlayArpeggioTwiceAsLong = PlayArpeggioTwiceAsLong, SelectedKey = SelectedKey });
+            return RedirectToPage(GetQuizRouteValues(CurrentProgressionIndex));
         }
     }
 }

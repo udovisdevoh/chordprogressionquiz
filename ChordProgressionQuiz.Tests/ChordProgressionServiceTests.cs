@@ -53,6 +53,53 @@ namespace ChordProgressionQuiz.Tests
         }
 
         [Fact]
+        public void GetAvailableModes_ShouldSplitAndDeduplicateModeLists()
+        {
+            var modes = _service.GetAvailableModes();
+
+            Assert.Contains("Aeolian", modes);
+            Assert.DoesNotContain("Aeolian, Dorian", modes);
+            Assert.Equal(modes.Count, modes.Distinct(System.StringComparer.OrdinalIgnoreCase).Count());
+        }
+
+        [Fact]
+        public void GetProgressionIndicesByModes_ShouldMatchAnySelectedMode()
+        {
+            var indices = _service.GetProgressionIndicesByModes(new[] { "Aeolian", "Dorian" });
+            var expectedIndices = _allProgressions
+                .Select((progression, index) => new { progression, index })
+                .Where(item => (item.progression.Mode ?? string.Empty)
+                    .Split(',', System.StringSplitOptions.RemoveEmptyEntries | System.StringSplitOptions.TrimEntries)
+                    .Any(mode => mode == "Aeolian" || mode == "Dorian"))
+                .Select(item => item.index);
+
+            Assert.Equal(expectedIndices, indices);
+            Assert.Equal(_service.GetProgressionCount(), _service.GetProgressionIndicesByModes(Array.Empty<string>()).Count);
+        }
+
+        [Fact]
+        public void ConvertToAbsoluteMidiProgression_ShouldNotDoubleFlattenModalDegrees()
+        {
+            var progression = new ChordProgression
+            {
+                Song = "Harmonic minor modal progression",
+                Tonal = new Tonal
+                {
+                    RomanNumerals = "i V i bVII bIII bVII bVI V",
+                    RelativeTo = "A Harmonic Minor, for the Am-E progression"
+                }
+            };
+
+            var absolute = _service.ConvertToAbsoluteMidiProgression(progression);
+
+            Assert.Equal(new[] { 57, 60, 64 }, absolute.Chords[0].MidiPitches);
+            Assert.Equal(new[] { 64, 68, 71 }, absolute.Chords[1].MidiPitches);
+            Assert.Equal(new[] { 67, 71, 74 }, absolute.Chords[3].MidiPitches);
+            Assert.Equal(new[] { 60, 64, 67 }, absolute.Chords[4].MidiPitches);
+            Assert.Equal(new[] { 65, 69, 72 }, absolute.Chords[6].MidiPitches);
+        }
+
+        [Fact]
         public void GetRandomChordProgression_ShouldReturnNonNull()
         {
             var progression = _service.GetRandomChordProgression();

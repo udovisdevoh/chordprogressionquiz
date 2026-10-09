@@ -761,7 +761,7 @@
     },
     {
         "song": "Welcome to the internet: I want the world to stop",
-        "mode": "Aeolian, Harmonic Minor",
+        "mode": "Harmonic Minor",
         "keys_example": "Am Dm C E",
         "tonal": {
             "roman_numerals": "vi ii I III",
@@ -1067,7 +1067,7 @@
     },
     {
         "song": "Hotel California",
-        "mode": "Harmonic Minor, Melodic Minor, Dorian, Aeolian",
+        "mode": "Harmonic Minor",
         "keys_example": "Am E7 G D F C Dm E7",
         "tonal": {
             "roman_numerals": "vi III7 V II IV I ii III7",
@@ -1082,7 +1082,7 @@
     },
     {
         "song": "Poupée de cire poupée de son",
-        "mode": "Harmonic Minor, Phrygian Dominant, Dorian #4",
+        "mode": "Harmonic Minor, Dorian #4",
         "keys_example": "Am F C Bb Am B E7",
         "tonal": {
             "roman_numerals": "vi IV I bVII vi VII III7",
@@ -1304,7 +1304,7 @@
     },
     {
         "song": "Blur Song 2",
-        "mode": "Dorian",
+        "mode": "Mixolydian",
         "keys_example": "E D G A B",
         "tonal": {
             "roman_numerals": "I bVII bIII IV V",
@@ -1533,7 +1533,7 @@
     },
     {
         "song": "Incense and Peppermints",
-        "mode": "Dorian, Aeolian",
+        "mode": "Dorian",
         "keys_example": "Am D Am F",
         "tonal": {
             "roman_numerals": "vi II vi IV",

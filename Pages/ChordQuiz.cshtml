@@ -70,23 +70,42 @@
                         <input type="hidden" asp-for="LoopPlayback" />
                         <input type="hidden" asp-for="PlayArpeggioTwiceAsLong" />
                         <input type="hidden" asp-for="SelectedKey" />
+                        @foreach (var mode in Model.SelectedModes)
+                        {
+                            <input type="hidden" name="SelectedModes" value="@mode" />
+                        }
                         <button type="submit" asp-page-handler="Previous" class="btn btn-outline-primary btn-lg">⏮️ Prev Quiz</button>
                     </form>
 
                     <button id="playButton" class="btn btn-outline-success btn-lg mx-1">▶️ Play</button>
-                    <form method="post" asp-page-handler="Random" class="d-inline-flex align-items-center mx-2" id="newQuizForm">
+                    <form method="post" asp-page-handler="Random" class="d-flex flex-column align-items-center mx-2" id="newQuizForm">
                         <input type="hidden" name="EnableStylizedPlayback" value="@Model.EnableStylizedPlayback.ToString().ToLowerInvariant()" />
                         <input type="hidden" name="LoopPlayback" value="@Model.LoopPlayback.ToString().ToLowerInvariant()" />
                         <input type="hidden" name="PlayArpeggioTwiceAsLong" value="@Model.PlayArpeggioTwiceAsLong.ToString().ToLowerInvariant()" />
-                        <label for="playbackKeySelector" class="form-label me-1">Playback key:</label>
-                        <select name="SelectedKey" id="playbackKeySelector" class="form-select w-auto me-2" aria-label="Playback key">
-                            <option value="Random" selected="@(Model.SelectedKey == "Random" ? "selected" : null)">Random</option>
-                        @foreach (var key in ChordQuizModel.AvailableKeys)
-                        {
-                            <option value="@key" selected="@(Model.SelectedKey == key ? "selected" : null)">@key</option>
-                        }
-                        </select>
-                        <button type="submit" class="btn btn-success">New Quiz 🎲</button>
+                        <div class="d-flex align-items-center flex-wrap justify-content-center">
+                            <label for="playbackKeySelector" class="form-label me-1">Playback key:</label>
+                            <select name="SelectedKey" id="playbackKeySelector" class="form-select w-auto me-2" aria-label="Playback key">
+                                <option value="Random" selected="@(Model.SelectedKey == "Random" ? "selected" : null)">Random</option>
+                                @foreach (var key in ChordQuizModel.AvailableKeys)
+                                {
+                                    <option value="@key" selected="@(Model.SelectedKey == key ? "selected" : null)">@key</option>
+                                }
+                            </select>
+                            <button type="submit" class="btn btn-success">New Quiz 🎲</button>
+                        </div>
+                        <fieldset class="mt-2">
+                            <legend class="fs-6 mb-1">Modes (optional; none selected = all)</legend>
+                            <div class="d-flex flex-wrap justify-content-center gap-2">
+                                @for (var modeIndex = 0; modeIndex < Model.AvailableModes.Count; modeIndex++)
+                                {
+                                    var mode = Model.AvailableModes[modeIndex];
+                                    <label class="form-check form-check-inline border rounded px-2 py-1 mb-0">
+                                        <input class="form-check-input" type="checkbox" name="SelectedModes" value="@mode" id="modeFilter@(modeIndex)" checked="@(Model.SelectedModes.Contains(mode, StringComparer.OrdinalIgnoreCase) ? "checked" : null)" />
+                                        <span class="form-check-label">@mode</span>
+                                    </label>
+                                }
+                            </div>
+                        </fieldset>
                     </form>
                     <button id="stopButton" class="btn btn-outline-danger btn-lg mx-1">⏹️ Stop</button>
 
@@ -96,6 +115,10 @@
                         <input type="hidden" asp-for="LoopPlayback" />
                         <input type="hidden" asp-for="PlayArpeggioTwiceAsLong" />
                         <input type="hidden" asp-for="SelectedKey" />
+                        @foreach (var mode in Model.SelectedModes)
+                        {
+                            <input type="hidden" name="SelectedModes" value="@mode" />
+                        }
                         <button type="submit" asp-page-handler="Next" class="btn btn-outline-primary btn-lg">Next Quiz ⏭️</button>
                     </form>
                 </div>
@@ -152,6 +175,10 @@
                         <input type="hidden" asp-for="LoopPlayback" />
                         <input type="hidden" asp-for="PlayArpeggioTwiceAsLong" />
                         <input type="hidden" asp-for="SelectedKey" />
+                        @foreach (var mode in Model.SelectedModes)
+                        {
+                            <input type="hidden" name="SelectedModes" value="@mode" />
+                        }
                         <input type="checkbox" asp-for="EnableStylizedPlayback" onchange="this.form.submit()" class="form-check-input me-1" />
                         <label asp-for="EnableStylizedPlayback" class="form-check-label">Enable Stylized Playback</label>
                     </form>
@@ -161,6 +188,10 @@
                         <input type="hidden" asp-for="EnableStylizedPlayback" />
                         <input type="hidden" asp-for="PlayArpeggioTwiceAsLong" />
                         <input type="hidden" asp-for="SelectedKey" />
+                        @foreach (var mode in Model.SelectedModes)
+                        {
+                            <input type="hidden" name="SelectedModes" value="@mode" />
+                        }
                         <input type="checkbox" asp-for="LoopPlayback" onchange="this.form.submit()" class="form-check-input me-1" id="loopPlaybackCheckbox" />
                         <label asp-for="LoopPlayback" class="form-check-label">Loop Playback</label>
                     </form>
@@ -170,6 +201,10 @@
                         <input type="hidden" asp-for="EnableStylizedPlayback" />
                         <input type="hidden" asp-for="LoopPlayback" />
                         <input type="hidden" asp-for="SelectedKey" />
+                        @foreach (var mode in Model.SelectedModes)
+                        {
+                            <input type="hidden" name="SelectedModes" value="@mode" />
+                        }
                         <input type="checkbox" asp-for="PlayArpeggioTwiceAsLong" onchange="this.form.submit()" class="form-check-input me-1" id="playArpeggioTwiceAsLongCheckbox" />
                         <label asp-for="PlayArpeggioTwiceAsLong" class="form-check-label">Arpeggio 2X Length</label>
                     </form>
@@ -180,7 +215,29 @@
     }
     else
     {
-        <p class="alert alert-warning mt-4">No chord progression found for the quiz. Please ensure 'chordProgressions.json' is correctly placed in the 'Data' folder and contains valid data.</p>
+        @if (Model.HasProgressions)
+        {
+            <p class="alert alert-warning mt-4">No progressions match the selected modes. Clear the mode filters or select other modes.</p>
+            <form method="post" asp-page-handler="Random" class="card card-body mx-auto mt-3" style="max-width:600px;">
+                <input type="hidden" asp-for="SelectedKey" />
+                <input type="hidden" asp-for="EnableStylizedPlayback" />
+                <input type="hidden" asp-for="LoopPlayback" />
+                <input type="hidden" asp-for="PlayArpeggioTwiceAsLong" />
+                @for (var modeIndex = 0; modeIndex < Model.AvailableModes.Count; modeIndex++)
+                {
+                    var mode = Model.AvailableModes[modeIndex];
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="SelectedModes" value="@mode" id="emptyModeFilter@(modeIndex)" checked="@(Model.SelectedModes.Contains(mode, StringComparer.OrdinalIgnoreCase) ? "checked" : null)" />
+                        <label class="form-check-label" for="emptyModeFilter@(modeIndex)">@mode</label>
+                    </div>
+                }
+                <button type="submit" class="btn btn-success mt-2">Apply mode filter</button>
+            </form>
+        }
+        else
+        {
+            <p class="alert alert-warning mt-4">No chord progression found for the quiz. Please ensure 'chordProgressions.json' is correctly placed in the 'Data' folder and contains valid data.</p>
+        }
     }
 </div>
 
