@@ -365,7 +365,7 @@ function revealAnswers(quizData) {
         if (keyRootSemitones !== -1) {
             const transposedRootSemitones = (keyRootSemitones + transposeOffset + 12) % 12;
             const transposedRootName = semitonesToNoteName[transposedRootSemitones];
-            const playedKeyName = `${transposedRootName} ${keyScaleType}`;
+            const playedKeyName = quizData.playedKey || `${transposedRootName} ${keyScaleType}`;
             playedKeyElement.textContent = playedKeyName;
         } else {
             playedKeyElement.textContent = "N/A (Key Parse Error)";

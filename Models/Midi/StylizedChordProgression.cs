@@ -25,6 +25,8 @@ namespace ChordProgressionQuiz.Models
         /// </summary>
         public int GlobalTransposeOffset { get; set; } = 0; // NEW: Property to store the transpose offset
 
+        public int TempoBpm { get; set; }
+
         public StylizedChordProgression()
         {
             MidiEvents = new List<StylizedMidiEvent>();

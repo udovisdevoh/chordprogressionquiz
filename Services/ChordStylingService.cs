@@ -25,6 +25,17 @@ namespace ChordProgprogressionQuiz.Services
         private const int PianoProgram = 0; // General MIDI Program 0 is Acoustic Grand Piano (often 1 in DAWs)
         private const int StringEnsembleProgram = 48; // General MIDI Program 48 is String Ensemble 1 (often 49 in DAWs)
 
+        private static readonly int[][] ArpeggioPatterns =
+        {
+            new[] { 0, 1, 2, 3 }, new[] { 3, 2, 1, 0 }, new[] { 0, 1, 2, 1 },
+            new[] { 0, 2, 1, 3 }, new[] { 0, 1, 2, 3, 2, 1 }, new[] { 3, 2, 1, 0, 1, 2 },
+            new[] { 0, 1, 2, 3, 2, 1, 0, 1 }, new[] { 0, 2, 0, 3, 2, 1, 2, 3 },
+            new[] { 3, 1, 2, 0, 3, 2, 1, 0 }, new[] { 0, 0, 1, 2, 3, 2, 1, 0 },
+            new[] { 0, 2, 1, 3, 1, 2, 0, 3 }, new[] { 3, 2, 3, 1, 0, 1, 2, 0 },
+            new[] { 0, 1, 0, 2, 1, 3, 2, 3 }, new[] { 2, 1, 0, 1, 2, 3, 2, 1 },
+            new[] { 0, 3, 1, 2, 0, 2, 1, 3 }, new[] { 1, 2, 3, 2, 1, 0, 1, 2 }
+        };
+
         public ChordStylingService()
         {
             _random = new Random();
@@ -37,7 +48,7 @@ namespace ChordProgprogressionQuiz.Services
         /// If playArpeggioTwiceAsLong is true, the *total duration* for each arpeggiated chord is doubled,
         /// and the arpeggio is repeated more times at its *original speed* to fill this doubled duration.
         /// Random chord inversion is applied per chord.
-        /// Arpeggio direction (up/down) is chosen globally for the entire progression.
+        /// An independent arpeggio pattern is selected for each chord.
         /// A "left hand" accompaniment of the two lowest chord notes (two octaves lower, held, String Ensemble) is added.
         /// The "right hand" arpeggios are played with an Acoustic Grand Piano.
         /// </summary>
@@ -63,24 +74,25 @@ namespace ChordProgprogressionQuiz.Services
 
             var stylizedEvents = new List<StylizedMidiEvent>();
             double currentPlaybackTime = 0.0;
+            int tempoBpm = _random.Next(70, 151);
+            double chordDuration = BaseChordDuration * 120.0 / tempoBpm;
 
             int globalTransposeOffset = _random.Next(-MaxTransposeSemitones, MaxTransposeSemitones + 1);
 
             bool applyFastRepeatedArpeggioGlobally = true; // This makes arpeggios play twice within their original slot duration
-
-            bool arpeggioDirectionIsDown = _random.NextDouble() < 0.5;
+            int previousArpeggioPatternIndex = -1;
 
             foreach (var chord in processedChords)
             {
                 if (!chord.MidiPitches.Any())
                 {
                     // If chord is empty, still advance time appropriately for a chord slot
-                    currentPlaybackTime += BaseChordDuration * (playArpeggioTwiceAsLong ? 2.0 : 1.0); // Account for doubled slot duration
+                    currentPlaybackTime += chordDuration * (playArpeggioTwiceAsLong ? 2.0 : 1.0); // Account for doubled slot duration
                     continue;
                 }
 
                 // Determine the total duration this *chord slot* will occupy
-                double currentChordSlotDuration = BaseChordDuration * (playArpeggioTwiceAsLong ? 2.0 : 1.0);
+                double currentChordSlotDuration = chordDuration * (playArpeggioTwiceAsLong ? 2.0 : 1.0);
 
                 // --- Left Hand (held notes) ---
                 var originalSortedPitches = chord.MidiPitches.OrderBy(p => p).ToList();
@@ -132,24 +144,28 @@ namespace ChordProgprogressionQuiz.Services
                         int octaveShift = (i / originalNoteCount) * 12;
                         arpeggioPitches.Add(AdjustMidiPitchToRange(basePitch + octaveShift));
                     }
-                    arpeggioPitches.Sort();
-
-                    if (arpeggioDirectionIsDown)
+                    int arpeggioPatternIndex;
+                    do
                     {
-                        arpeggioPitches.Reverse();
+                        arpeggioPatternIndex = _random.Next(ArpeggioPatterns.Length);
                     }
+                    while (arpeggioPatternIndex == previousArpeggioPatternIndex);
+                    previousArpeggioPatternIndex = arpeggioPatternIndex;
+
+                    var arpeggioPattern = ArpeggioPatterns[arpeggioPatternIndex];
+                    var patternedPitches = arpeggioPattern.Select(index => arpeggioPitches[index]).ToList();
 
                     // This is the duration for ONE complete pass of the arpeggio (e.g., C-E-G-C')
                     // It's based on the ORIGINAL BaseChordDuration and the applyFastRepeatedArpeggioGlobally flag.
                     // This is what defines the "note speed".
-                    double durationOfOneArpeggioPass = BaseChordDuration / (applyFastRepeatedArpeggioGlobally ? 2.0 : 1.0);
+                    double durationOfOneArpeggioPass = chordDuration / (applyFastRepeatedArpeggioGlobally ? 2.0 : 1.0);
 
                     // Adjust if individual notes become too short
-                    double dynamicNoteStartDelay = durationOfOneArpeggioPass / arpeggioPitches.Count;
+                    double dynamicNoteStartDelay = durationOfOneArpeggioPass / patternedPitches.Count;
                     if (dynamicNoteStartDelay < MinArpeggioNoteDuration)
                     {
                         dynamicNoteStartDelay = MinArpeggioNoteDuration;
-                        durationOfOneArpeggioPass = dynamicNoteStartDelay * arpeggioPitches.Count;
+                        durationOfOneArpeggioPass = dynamicNoteStartDelay * patternedPitches.Count;
                     }
                     double individualNoteDuration = dynamicNoteStartDelay * 0.8;
                     individualNoteDuration = Math.Max(MinArpeggioNoteDuration, individualNoteDuration);
@@ -168,7 +184,7 @@ namespace ChordProgprogressionQuiz.Services
                     {
                         double currentArpeggioNoteOffset = 0.0; // Offset *within* this single pass
 
-                        foreach (var pitch in arpeggioPitches)
+                        foreach (var pitch in patternedPitches)
                         {
                             stylizedEvents.Add(new StylizedMidiEvent
                             {
@@ -205,7 +221,10 @@ namespace ChordProgprogressionQuiz.Services
             stylizedEvents.Sort((e1, e2) => e1.StartTime.CompareTo(e2.StartTime));
 
 
-            return new StylizedChordProgression(stylizedEvents, absoluteProgression.Name, globalTransposeOffset);
+            return new StylizedChordProgression(stylizedEvents, absoluteProgression.Name, globalTransposeOffset)
+            {
+                TempoBpm = tempoBpm
+            };
         }
 
         /// <summary>

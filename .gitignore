@@ -2,9 +2,8 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
-/.vs/ChordProgressionQuiz
 /obj
 /bin
 /ChordProgressionQuiz.Tests/obj
 /ChordProgressionQuiz.Tests/bin
-/.vs/ProjectEvaluation
+/.vs
