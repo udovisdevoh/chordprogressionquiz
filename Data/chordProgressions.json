@@ -434,7 +434,7 @@
     },
     {
         "song": "Picbois",
-        "mode": "Dorian, Aeolian",
+        "mode": "Dorian",
         "keys_example": "Am G F D",
         "tonal": {
             "roman_numerals": "vi V IV II",
@@ -729,7 +729,7 @@
     },
     {
         "song": "Andalusian cadence: Hit the road jack, Genie in a bottle, Géant Beaupré",
-        "mode": "Aeolian, Harmonic Minor",
+        "mode": "Harmonic Minor",
         "keys_example": "Am G F E",
         "tonal": {
             "roman_numerals": "vi V IV III",
@@ -745,7 +745,7 @@
     },
     {
         "song": "Minor climb: House of the rising sun, Ecstacy of Gold, Call me, Talk talk, Birdie, My Sharona",
-        "mode": "Aeolian, Dorian",
+        "mode": "Dorian",
         "keys_example": "Am C D F",
         "tonal": {
             "roman_numerals": "vi I II IV",
@@ -899,7 +899,7 @@
     },
     {
         "song": "Augmented climb",
-        "mode": "Ionian",
+        "mode": "Harmonic Major",
         "keys_example": "C Caug Am A7",
         "tonal": {
             "roman_numerals": "I Iaug vi VI7",
@@ -914,7 +914,7 @@
     },
     {
         "song": "Minor line cliché",
-        "mode": "Aeolian, Melodic Minor, Harmonic Minor",
+        "mode": "Melodic Minor",
         "keys_example": "Am Caug C D",
         "tonal": {
             "roman_numerals": "vi Iaug I II",
@@ -929,7 +929,7 @@
     },
     {
         "song": "Magnolia, Dear Prudence, Magical Mystery Tour (ending) Part of your world, Desperado, Santa Claus is comin' to town, white christmas",
-        "mode": "Ionian, Harmonic Major",
+        "mode": "Harmonic Major",
         "keys_example": "C C7 F Fm",
         "tonal": {
             "roman_numerals": "I I7 IV iv",
@@ -974,7 +974,7 @@
     },
     {
         "song": "Circle of 5ths diatonic anti-clockwise: Fly me to the moon, you never give me your money, I will survive",
-        "mode": "Aeolian, Harmonic Minor",
+        "mode": "Harmonic Minor",
         "keys_example": "Am Dm G C F Bdim E Am",
         "tonal": {
             "roman_numerals": "vi ii V I IV viidim III vi",
@@ -989,7 +989,7 @@
     },
     {
         "song": "Wild world",
-        "mode": "Aeolian, Harmonic Minor, Melodic Minor",
+        "mode": "Harmonic Minor",
         "keys_example": "Am D7 G C F Dm E Am",
         "tonal": {
             "roman_numerals": "vi II7 V I IV ii III vi",
@@ -1022,7 +1022,7 @@
     },
     {
         "song": "James bond",
-        "mode": "Aeolian, Dorian",
+        "mode": "Chromatic",
         "keys_example": "Em C C#dim C",
         "tonal": {
             "roman_numerals": "iii I biidim I",
@@ -1037,7 +1037,7 @@
     },
     {
         "song": "Folia: Oops I did it again, Conquest of paradise, Al la flamenco",
-        "mode": "Aeolian, Harmonic Minor",
+        "mode": "Harmonic Minor",
         "keys_example": "Am E Am G C G F E",
         "tonal": {
             "roman_numerals": "vi III vi V I V IV III",
@@ -1082,7 +1082,7 @@
     },
     {
         "song": "Poupée de cire poupée de son",
-        "mode": "Harmonic Minor, Dorian #4",
+        "mode": "Harmonic Minor",
         "keys_example": "Am F C Bb Am B E7",
         "tonal": {
             "roman_numerals": "vi IV I bVII vi VII III7",
@@ -1097,7 +1097,7 @@
     },
     {
         "song": "Toxic",
-        "mode": "Harmonic Minor, Dorian #4",
+        "mode": "Dorian #4",
         "keys_example": "Am C E7 Am B",
         "tonal": {
             "roman_numerals": "vi I III7 vi VII",
@@ -1112,7 +1112,7 @@
     },
     {
         "song": "Deewani Mastani",
-        "mode": "Harmonic Minor, Dorian #4",
+        "mode": "Dorian #4",
         "keys_example": "Am B C B Am B C E7",
         "tonal": {
             "roman_numerals": "vi VII I VII vi VII I III7",
@@ -1136,7 +1136,7 @@
     },
     {
         "song": "Zelda overworld (first 4 chords only)",
-        "mode": "Mixolydian b6, Harmonic Major",
+        "mode": "Mixolydian b6",
         "keys_example": "A G F E",
         "tonal": {
             "roman_numerals": "I bVII bVI V",
@@ -1184,7 +1184,7 @@
     },
     {
         "song": "Just the two of us (first 3 chords)",
-        "mode": "Aeolian",
+        "mode": "Harmonic Minor",
         "keys_example": "C B Em",
         "tonal": {
             "roman_numerals": "bVI V i",
@@ -1379,7 +1379,7 @@
         "substitution_group": 1
     },
     {
-        "song": "hold me trill me kiss me",
+        "song": "Hold me trill me kiss me",
         "mode": "Mixolydian b6",
         "keys_example": "E D B G",
         "tonal": {
@@ -1458,7 +1458,7 @@
     },
     {
         "song": "Corrida",
-        "mode": "Phrygian Dominant, Double Harmonic Major",
+        "mode": "Phrygian Dominant",
         "keys_example": "E F G F E",
         "tonal": {
             "roman_numerals": "I bII bIII bII I",
@@ -1593,7 +1593,7 @@
     },
     {
         "song": "Still Loving You",
-        "mode": "Harmonic Minor, Dorian #4",
+        "mode": "Harmonic Minor",
         "keys_example": "Am B E",
         "tonal": {
             "roman_numerals": "vi VII III",
@@ -1608,7 +1608,7 @@
     },
     {
         "song": "We are all heroes, Lance et compte",
-        "mode": "Aeolian, Harmonic Minor, Dorian #4",
+        "mode": "Harmonic Minor",
         "keys_example": "Em C D G F# B",
         "tonal": {
             "roman_numerals": "i bVI bVII bIII II V",
@@ -1638,7 +1638,7 @@
     },
     {
         "song": "Decorated andalusian cadence",
-        "mode": "Aeolian, Harmonic Minor",
+        "mode": "Harmonic Minor",
         "keys_example": "Em C D Bm C Am B",
         "tonal": {
             "roman_numerals": "vi IV V iii IV ii III",
