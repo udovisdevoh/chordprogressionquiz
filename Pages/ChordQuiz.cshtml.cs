@@ -92,27 +92,35 @@ namespace ChordProgressionQuiz.Pages
 
             if (QuizProgression != null)
             {
-                var sourceKeyParts = QuizProgression.Tonal?.RelativeTo?.Split(' ', StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
-                var sourceKey = sourceKeyParts.FirstOrDefault() ?? "C";
+                var useModalAnswers = QuizProgression.Modal != null && QuizProgression.Modal.Any();
+                var answerRomanNumerals = useModalAnswers
+                    ? QuizProgression.Modal.First().RomanNumerals
+                    : QuizProgression.Tonal?.RomanNumerals ?? string.Empty;
+                var answerKey = useModalAnswers
+                    ? QuizProgression.Modal.First().RelativeTo
+                    : QuizProgression.Tonal?.RelativeTo;
+                var sourceKeyParts = answerKey?.Split(' ', StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
                 var selectedKey = SelectedKey == "Random" || !AvailableKeys.Contains(SelectedKey)
                     ? AvailableKeys[_randomLocal.Next(AvailableKeys.Count)]
                     : SelectedKey;
                 PlayedKey = $"{selectedKey} {string.Join(" ", sourceKeyParts.Skip(1))}".TrimEnd();
-                var keyTransposeOffset = GetKeySemitones(selectedKey) - GetKeySemitones(sourceKey);
+                SelectedKey = selectedKey;
 
-                AbsoluteProgression = _chordService.ConvertToAbsoluteMidiProgression(QuizProgression, 4);
-                foreach (var chord in AbsoluteProgression.Chords)
+                var progressionInPlaybackKey = new ChordProgression
                 {
-                    chord.MidiPitches = chord.MidiPitches
-                        .Select(pitch => Math.Clamp(pitch + keyTransposeOffset, 0, 127))
-                        .ToList();
-                }
+                    Song = QuizProgression.Song,
+                    Tonal = new Tonal
+                    {
+                        RomanNumerals = answerRomanNumerals,
+                        RelativeTo = PlayedKey
+                    }
+                };
+                AbsoluteProgression = _chordService.ConvertToAbsoluteMidiProgression(progressionInPlaybackKey, 4);
 
                 if (EnableStylizedPlayback)
                 {
                     // NEW: Pass PlayArpeggioTwiceAsLong to ChordStylingService
-                    StylizedProgression = _chordStylingService.ApplyRandomStyling(AbsoluteProgression, PlayArpeggioTwiceAsLong);
-                    StylizedProgression.GlobalTransposeOffset += keyTransposeOffset;
+                    StylizedProgression = _chordStylingService.ApplyRandomStyling(AbsoluteProgression, PlayArpeggioTwiceAsLong, false);
                 }
                 else
                 {
@@ -137,7 +145,7 @@ namespace ChordProgressionQuiz.Pages
                         currentTime += defaultNoteDuration;
                     }
                     // Constructor now requires globalTransposeOffset (default to 0 if not stylized)
-                    StylizedProgression = new StylizedChordProgression(basicStylizedEvents, AbsoluteProgression.Name, keyTransposeOffset);
+                    StylizedProgression = new StylizedChordProgression(basicStylizedEvents, AbsoluteProgression.Name, 0);
                 }
 
                 // Serialize all answers for JavaScript to reveal/display later
@@ -179,17 +187,6 @@ namespace ChordProgressionQuiz.Pages
                 CurrentProgressionIndex = -1;
                 StylizedProgression = null;
             }
-        }
-
-        private static int GetKeySemitones(string key)
-        {
-            return key switch
-            {
-                "C" => 0, "C#" or "Db" => 1, "D" => 2, "D#" or "Eb" => 3,
-                "E" => 4, "F" => 5, "F#" or "Gb" => 6, "G" => 7,
-                "G#" or "Ab" => 8, "A" => 9, "A#" or "Bb" => 10, "B" => 11,
-                _ => 0
-            };
         }
 
         public IActionResult OnPostNext()

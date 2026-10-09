@@ -371,12 +371,7 @@ function revealAnswers(quizData) {
             playedKeyElement.textContent = "N/A (Key Parse Error)";
         }
 
-        let relativeToKeyForChordConversion;
-        if (quizData.quizAnswerSource === "Modal" && quizData.actualModalRomanNumerals && quizData.actualModalRomanNumerals.length > 0) {
-            relativeToKeyForChordConversion = quizData.actualModalRomanNumerals[0].RelativeTo;
-        } else {
-            relativeToKeyForChordConversion = quizData.actualRelativeTo;
-        }
+        const relativeToKeyForChordConversion = quizData.playedKey || quizData.actualRelativeTo;
 
         const actualChordsInPlayedKey = quizData.actualQuizAnswers.map(roman => {
             return romanToAbsoluteChordName(roman, relativeToKeyForChordConversion, quizData.globalTransposeOffset);

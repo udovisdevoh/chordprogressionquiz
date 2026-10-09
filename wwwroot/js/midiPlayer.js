@@ -124,6 +124,8 @@ function playProgression(stylizedMidiEvents, loopPlayback, totalProgressionDurat
             gainToApply = PIANO_GAIN;
         }
 
+        gainToApply *= (event.velocity ?? 127) / 127;
+
         if (playerToUse) {
             playerToUse.play(safePitch, currentAudioTime + event.startTime, { duration: event.duration, gain: gainToApply });
         }

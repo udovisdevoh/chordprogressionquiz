@@ -74,6 +74,20 @@
                     </form>
 
                     <button id="playButton" class="btn btn-outline-success btn-lg mx-1">▶️ Play</button>
+                    <form method="post" asp-page-handler="Random" class="d-inline-flex align-items-center mx-2" id="newQuizForm">
+                        <input type="hidden" name="EnableStylizedPlayback" value="@Model.EnableStylizedPlayback.ToString().ToLowerInvariant()" />
+                        <input type="hidden" name="LoopPlayback" value="@Model.LoopPlayback.ToString().ToLowerInvariant()" />
+                        <input type="hidden" name="PlayArpeggioTwiceAsLong" value="@Model.PlayArpeggioTwiceAsLong.ToString().ToLowerInvariant()" />
+                        <label for="playbackKeySelector" class="form-label me-1">Playback key:</label>
+                        <select name="SelectedKey" id="playbackKeySelector" class="form-select w-auto me-2" aria-label="Playback key">
+                            <option value="Random">Random</option>
+                        @foreach (var key in ChordQuizModel.AvailableKeys)
+                        {
+                            <option value="@key" selected="@(Model.PlayedKey?.Split(' ').FirstOrDefault() == key ? "selected" : null)">@key</option>
+                        }
+                        </select>
+                        <button type="submit" class="btn btn-success">New Quiz 🎲</button>
+                    </form>
                     <button id="stopButton" class="btn btn-outline-danger btn-lg mx-1">⏹️ Stop</button>
 
                     <form method="post" class="d-inline-block mx-1 my-1" id="nextQuizForm">
@@ -111,20 +125,6 @@
                 <div class="mt-4">
                     <button id="checkAnswerButton" class="btn btn-primary btn-lg mx-2">Check Answers</button>
                     <button id="revealAnswerButton" class="btn btn-info btn-lg mx-2">Reveal Answers</button>
-                    <form method="post" asp-page-handler="Random" class="d-inline-block mx-2">
-                        <input type="hidden" name="EnableStylizedPlayback" value="@Model.EnableStylizedPlayback.ToString().ToLowerInvariant()" />
-                        <input type="hidden" name="LoopPlayback" value="@Model.LoopPlayback.ToString().ToLowerInvariant()" />
-                        <input type="hidden" name="PlayArpeggioTwiceAsLong" value="@Model.PlayArpeggioTwiceAsLong.ToString().ToLowerInvariant()" />
-                        <label for="selectedKey" class="form-label me-1">Key:</label>
-                        <select asp-for="SelectedKey" class="form-select d-inline-block w-auto me-2" id="selectedKey">
-                            <option value="Random">Random</option>
-                            @foreach (var key in ChordQuizModel.AvailableKeys)
-                            {
-                                <option value="@key">@key</option>
-                            }
-                        </select>
-                        <button type="submit" class="btn btn-success btn-lg">New Quiz 🎲</button>
-                    </form>
                 </div>
 
                 @* Revealed Answer Info Section *@
@@ -198,11 +198,12 @@
             const playArpeggioTwiceAsLongCheckbox = document.getElementById('playArpeggioTwiceAsLongCheckbox');
             const checkAnswerButton = document.getElementById('checkAnswerButton');
             const revealAnswerButton = document.getElementById('revealAnswerButton');
+            const playbackKeySelector = document.getElementById('playbackKeySelector');
 
             // Get navigation forms by ID (for persistence)
             const previousQuizForm = document.getElementById('previousQuizForm');
             const nextQuizForm = document.getElementById('nextQuizForm');
-            const newQuizForm = document.querySelector('form[asp-page-handler="Random"]');
+            const newQuizForm = document.getElementById('newQuizForm');
             const toggleStylizedPlaybackForm = document.getElementById('toggleStylizedPlaybackForm');
             const toggleLoopPlaybackForm = document.getElementById('toggleLoopPlaybackForm');
             const togglePlayArpeggioTwiceAsLongForm = document.getElementById('togglePlayArpeggioTwiceAsLongForm');
@@ -210,6 +211,7 @@
 
             // Data for MIDI Playback (from Model)
             const progressionData = @Html.Raw(Json.Serialize(Model.StylizedProgression?.MidiEvents ?? new List<StylizedMidiEvent>()));
+            let currentProgressionData = progressionData;
             const totalProgressionDuration = progressionData.length > 0 ?
                 Math.max(...progressionData.map(e => e.startTime + e.duration)) : 0;
 
@@ -230,6 +232,42 @@
                 quizData.quizAnswerSource = "Modal";
             } else {
                 quizData.quizAnswerSource = "Tonal";
+            }
+
+            let currentKeyRoot = playbackKeySelector?.value;
+            let liveTransposeOffset = 0;
+            const keySemitones = { C: 0, "C#": 1, D: 2, Eb: 3, E: 4, F: 5, "F#": 6, G: 7, Ab: 8, A: 9, Bb: 10, B: 11 };
+            const playbackKeys = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
+            const keyMode = (quizData.playedKey || '').split(' ').slice(1).join(' ');
+
+            if (playbackKeySelector) {
+                playbackKeySelector.addEventListener('change', () => {
+                    let selectedRoot = playbackKeySelector.value;
+                    if (selectedRoot === 'Random') {
+                        const possibleKeys = playbackKeys.filter(key => key !== currentKeyRoot);
+                        selectedRoot = possibleKeys[Math.floor(Math.random() * possibleKeys.length)];
+                        playbackKeySelector.value = selectedRoot;
+                    }
+                    let semitoneChange = (keySemitones[selectedRoot] - keySemitones[currentKeyRoot] + 12) % 12;
+                    if (semitoneChange > 6) semitoneChange -= 12;
+
+                    liveTransposeOffset += semitoneChange;
+                    currentKeyRoot = selectedRoot;
+                    currentProgressionData = progressionData.map(event => ({
+                        ...event,
+                        pitch: Math.max(0, Math.min(127, event.pitch + liveTransposeOffset))
+                    }));
+                    quizData.globalTransposeOffset += semitoneChange;
+                    quizData.playedKey = `${selectedRoot} ${keyMode}`.trim();
+                    document.querySelectorAll('input[name="SelectedKey"]').forEach(input => {
+                        input.value = selectedRoot;
+                    });
+
+                    if (window.midiPlayer.isPlaying()) {
+                        window.midiPlayer.stopAllNotes(false);
+                        window.midiPlayer.playProgression(currentProgressionData, loopPlaybackCheckbox?.checked ?? false, totalProgressionDuration);
+                    }
+                });
             }
 
 
@@ -285,7 +323,7 @@
                         window.midiPlayer.stopAllNotes(true);
                         const loopEnabledForPlayback = loopPlaybackCheckbox ? loopPlaybackCheckbox.checked : false;
                         const arpeggio2XLengthForPlayback = playArpeggioTwiceAsLongCheckbox ? playArpeggioTwiceAsLongCheckbox.checked : false; // Get state from checkbox
-                        window.midiPlayer.playProgression(progressionData, loopEnabledForPlayback, totalProgressionDuration, arpeggio2XLengthForPlayback);
+                        window.midiPlayer.playProgression(currentProgressionData, loopEnabledForPlayback, totalProgressionDuration, arpeggio2XLengthForPlayback);
                     }
                 });
             } else if (playButton) {
@@ -319,7 +357,7 @@
                         if (instrumentsLoaded) {
                             // Use the persisted loop and stylized settings for auto-play
                             // The Model's LoopPlayback/EnableStylizedPlayback/PlayArpeggioTwiceAsLong already reflect this if passed via URL
-                            window.midiPlayer.playProgression(progressionData, @Html.Raw(Json.Serialize(Model.LoopPlayback)), totalProgressionDuration, @Html.Raw(Json.Serialize(Model.PlayArpeggioTwiceAsLong)));
+                            window.midiPlayer.playProgression(currentProgressionData, @Html.Raw(Json.Serialize(Model.LoopPlayback)), totalProgressionDuration, @Html.Raw(Json.Serialize(Model.PlayArpeggioTwiceAsLong)));
                         }
                     });
                 }

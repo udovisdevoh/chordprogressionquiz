@@ -22,6 +22,8 @@ namespace ChordProgressionQuiz.Models
         /// </summary>
         public double Duration { get; set; }
 
+        public int Velocity { get; set; } = 127;
+
         /// <summary>
         /// The General MIDI Program Change number for this note's instrument (0-127).
         /// </summary>

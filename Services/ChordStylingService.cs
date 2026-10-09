@@ -25,15 +25,26 @@ namespace ChordProgprogressionQuiz.Services
         private const int PianoProgram = 0; // General MIDI Program 0 is Acoustic Grand Piano (often 1 in DAWs)
         private const int StringEnsembleProgram = 48; // General MIDI Program 48 is String Ensemble 1 (often 49 in DAWs)
 
-        private static readonly int[][] ArpeggioPatterns =
+        private sealed record ArpeggioPattern(string TimeSignature, (int PitchIndex, double Units)[] Steps);
+
+        private static readonly ArpeggioPattern[] ArpeggioPatterns =
         {
-            new[] { 0, 1, 2, 3 }, new[] { 3, 2, 1, 0 }, new[] { 0, 1, 2, 1 },
-            new[] { 0, 2, 1, 3 }, new[] { 0, 1, 2, 3, 2, 1 }, new[] { 3, 2, 1, 0, 1, 2 },
-            new[] { 0, 1, 2, 3, 2, 1, 0, 1 }, new[] { 0, 2, 0, 3, 2, 1, 2, 3 },
-            new[] { 3, 1, 2, 0, 3, 2, 1, 0 }, new[] { 0, 0, 1, 2, 3, 2, 1, 0 },
-            new[] { 0, 2, 1, 3, 1, 2, 0, 3 }, new[] { 3, 2, 3, 1, 0, 1, 2, 0 },
-            new[] { 0, 1, 0, 2, 1, 3, 2, 3 }, new[] { 2, 1, 0, 1, 2, 3, 2, 1 },
-            new[] { 0, 3, 1, 2, 0, 2, 1, 3 }, new[] { 1, 2, 3, 2, 1, 0, 1, 2 }
+            new("3/4", new[] { (0, 2.0), (1, 2.0), (2, 2.0) }),
+            new("3/4", new[] { (0, 1.0), (2, 1.0), (1, 2.0), (3, 2.0) }),
+            new("3/4", new[] { (3, 2.0), (2, 2.0), (1, 2.0) }),
+            new("3/4", new[] { (0, 4.0), (2, 2.0) }),
+            new("3/4", new[] { (0, 2.0), (1, 1.0), (2, 1.0), (3, 2.0) }),
+            new("3/4", new[] { (0, 1.0), (1, 1.0), (2, 1.0), (3, 1.0), (2, 1.0), (1, 1.0) }),
+            new("3/4", new[] { (0, 2.0), (2, 1.0), (1, 1.0), (3, 2.0) }),
+            new("3/4", new[] { (3, 4.0), (1, 1.0), (2, 1.0) }),
+            new("6/8", new[] { (0, 1.0), (1, 1.0), (2, 1.0), (3, 1.0), (2, 1.0), (1, 1.0) }),
+            new("6/8", new[] { (0, 3.0), (2, 1.0), (1, 2.0) }),
+            new("6/8", new[] { (0, 2.0), (2, 1.0), (1, 1.0), (3, 2.0) }),
+            new("6/8", new[] { (3, 1.0), (2, 1.0), (1, 1.0), (0, 1.0), (1, 1.0), (2, 1.0) }),
+            new("6/8", new[] { (0, 2.0), (1, 2.0), (2, 2.0) }),
+            new("6/8", new[] { (0, 1.0), (2, 2.0), (1, 1.0), (3, 2.0) }),
+            new("6/8", new[] { (3, 3.0), (1, 1.0), (2, 2.0) }),
+            new("6/8", new[] { (0, 1.0), (1, 1.0), (0, 1.0), (2, 1.0), (1, 1.0), (3, 1.0) })
         };
 
         public ChordStylingService()
@@ -55,7 +66,7 @@ namespace ChordProgprogressionQuiz.Services
         /// <param name="absoluteProgression">The raw progression with absolute MIDI pitches.</param>
         /// <param name="playArpeggioTwiceAsLong">If true, each arpeggio's total playback duration is doubled, with more repetitions at original speed.</param>
         /// <returns>A StylizedChordProgression ready for playback.</returns>
-        public StylizedChordProgression ApplyRandomStyling(AbsoluteChordProgression absoluteProgression, bool playArpeggioTwiceAsLong)
+        public StylizedChordProgression ApplyRandomStyling(AbsoluteChordProgression absoluteProgression, bool playArpeggioTwiceAsLong, bool randomTransposition = true)
         {
             if (absoluteProgression == null || !absoluteProgression.Chords.Any())
             {
@@ -77,9 +88,8 @@ namespace ChordProgprogressionQuiz.Services
             int tempoBpm = _random.Next(70, 151);
             double chordDuration = BaseChordDuration * 120.0 / tempoBpm;
 
-            int globalTransposeOffset = _random.Next(-MaxTransposeSemitones, MaxTransposeSemitones + 1);
+            int globalTransposeOffset = randomTransposition ? _random.Next(-MaxTransposeSemitones, MaxTransposeSemitones + 1) : 0;
 
-            bool applyFastRepeatedArpeggioGlobally = true; // This makes arpeggios play twice within their original slot duration
             int previousArpeggioPatternIndex = -1;
 
             foreach (var chord in processedChords)
@@ -153,23 +163,10 @@ namespace ChordProgprogressionQuiz.Services
                     previousArpeggioPatternIndex = arpeggioPatternIndex;
 
                     var arpeggioPattern = ArpeggioPatterns[arpeggioPatternIndex];
-                    var patternedPitches = arpeggioPattern.Select(index => arpeggioPitches[index]).ToList();
 
-                    // This is the duration for ONE complete pass of the arpeggio (e.g., C-E-G-C')
-                    // It's based on the ORIGINAL BaseChordDuration and the applyFastRepeatedArpeggioGlobally flag.
-                    // This is what defines the "note speed".
-                    double durationOfOneArpeggioPass = chordDuration / (applyFastRepeatedArpeggioGlobally ? 2.0 : 1.0);
-
-                    // Adjust if individual notes become too short
-                    double dynamicNoteStartDelay = durationOfOneArpeggioPass / patternedPitches.Count;
-                    if (dynamicNoteStartDelay < MinArpeggioNoteDuration)
-                    {
-                        dynamicNoteStartDelay = MinArpeggioNoteDuration;
-                        durationOfOneArpeggioPass = dynamicNoteStartDelay * patternedPitches.Count;
-                    }
-                    double individualNoteDuration = dynamicNoteStartDelay * 0.8;
-                    individualNoteDuration = Math.Max(MinArpeggioNoteDuration, individualNoteDuration);
-
+                    double durationOfOneArpeggioPass = chordDuration;
+                    const double totalPatternUnits = 6.0;
+                    double durationPerUnit = durationOfOneArpeggioPass / totalPatternUnits;
 
                     // Calculate the total number of times the fixed-speed arpeggio pass needs to repeat
                     // This fills the 'currentChordSlotDuration' at the 'durationOfOneArpeggioPass' speed.
@@ -182,22 +179,24 @@ namespace ChordProgprogressionQuiz.Services
 
                     for (int rep = 0; rep < totalArpeggioRepetitions; rep++)
                     {
-                        double currentArpeggioNoteOffset = 0.0; // Offset *within* this single pass
-
-                        foreach (var pitch in patternedPitches)
+                        double currentPatternUnit = 0.0;
+                        foreach (var step in arpeggioPattern.Steps)
                         {
+                            double noteDuration = Math.Max(MinArpeggioNoteDuration, durationPerUnit * step.Units * 0.85);
                             stylizedEvents.Add(new StylizedMidiEvent
                             {
-                                Pitch = pitch,
-                                StartTime = currentPlaybackTime + currentArpeggioNoteOffset,
-                                Duration = individualNoteDuration,
-                                InstrumentProgram = PianoProgram
+                                Pitch = arpeggioPitches[step.PitchIndex],
+                                StartTime = currentPlaybackTime + currentPatternUnit * durationPerUnit,
+                                Duration = noteDuration,
+                                InstrumentProgram = PianoProgram,
+                                Velocity = GetPatternVelocity(arpeggioPattern.TimeSignature, currentPatternUnit)
                             });
-                            currentArpeggioNoteOffset += dynamicNoteStartDelay;
+                            currentPatternUnit += step.Units;
                         }
                         // Advance currentPlaybackTime by the duration of one pass for the next repetition
                         currentPlaybackTime += durationOfOneArpeggioPass;
                     }
+
                 }
                 else // Block chord playback (or single note)
                 {
@@ -225,6 +224,22 @@ namespace ChordProgprogressionQuiz.Services
             {
                 TempoBpm = tempoBpm
             };
+        }
+
+        private static int GetPatternVelocity(string timeSignature, double startUnit)
+        {
+            int unitPosition = (int)Math.Round(startUnit) % 6;
+            if (Math.Abs(startUnit - Math.Round(startUnit)) > 0.001)
+            {
+                return 72;
+            }
+
+            if (timeSignature == "3/4")
+            {
+                return unitPosition % 2 == 0 ? (unitPosition == 0 ? 118 : 96) : 76;
+            }
+
+            return unitPosition == 0 ? 118 : unitPosition == 3 ? 98 : 74;
         }
 
         /// <summary>
