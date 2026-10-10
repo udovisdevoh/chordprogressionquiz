@@ -18,6 +18,9 @@ namespace ChordProgressionQuiz.Pages
         [BindProperty(SupportsGet = true)]
         public bool LoopPlayback { get; set; } = true;
 
+        [BindProperty(SupportsGet = true)]
+        public bool PlayContinuous { get; set; } = false;
+
         public AbsolutePitchQuizModel(AbsolutePitchQuizService pitchService)
         {
             _pitchService = pitchService;

@@ -1083,14 +1083,14 @@
     {
         "song": "Poupée de cire poupée de son",
         "mode": "Harmonic Minor",
-        "keys_example": "Am F C Bb Am B E7",
+        "keys_example": "Am C F C Bb Am B E7",
         "tonal": {
-            "roman_numerals": "vi IV I bVII vi VII III7",
+            "roman_numerals": "vi I IV I bVII vi VII III7",
             "relative_to": "C Major"
         },
         "modal": [
             {
-                "roman_numerals": "i bVI bIII bVII i II V7",
+                "roman_numerals": "i bIII bVI bIII bII i II V7",
                 "relative_to": "A Aeolian with modal mixture"
             }
         ]

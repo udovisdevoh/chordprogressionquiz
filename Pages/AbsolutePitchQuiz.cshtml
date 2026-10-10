@@ -43,7 +43,13 @@
             </div>
         </div>
         <div class="col-auto">
-            <button id="next-note-btn" class="btn btn-info btn-lg" onclick="location.reload()">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="play-continuous-switch" asp-for="PlayContinuous">
+                <label class="form-check-label" for="play-continuous-switch">Continuous MIDI String Sound</label>
+            </div>
+        </div>
+        <div class="col-auto">
+            <button id="next-note-btn" type="button" class="btn btn-info btn-lg">
                 Next <i class="fas fa-arrow-right"></i>
             </button>
         </div>
@@ -81,6 +87,7 @@
 </div>
 
 @section Scripts {
+    <script src="~/js/soundfont-player.min.js"></script>
     <script src="https://kit.fontawesome.com/69115159a6.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
     <script>
@@ -98,6 +105,8 @@
 
             const playBtn = document.getElementById('play-note-btn');
             const loopSwitch = document.getElementById('loop-playback-switch');
+            const continuousSwitch = document.getElementById('play-continuous-switch');
+            const nextNoteBtn = document.getElementById('next-note-btn');
             const answerButtons = document.querySelectorAll('.answer-button');
             const feedbackEl = document.getElementById('answer-feedback');
 
@@ -114,6 +123,18 @@
                 release: 1,
                 baseUrl: "https://tonejs.github.io/audio/salamander/",
             }).toDestination();
+            let stringInstrument;
+            const stringInstrumentPromise = Soundfont.instrument(Tone.context.rawContext, 'string_ensemble_1', {
+                format: 'mp3',
+                nameToUrl: name => `/soundfonts/MusyngKite/${name}-mp3.js`
+            }).then(instrument => {
+                stringInstrument = instrument;
+                return instrument;
+            });
+
+            function stopContinuousNote() {
+                if (stringInstrument) stringInstrument.stop();
+            }
 
             // --- SCORE LOGIC ---
             function updateScoreDisplay() {
@@ -148,12 +169,32 @@
 
             const noteToPlay = midiToNoteName(midiNote);
 
-            const sequence = new Tone.Sequence((time, note) => {
-                piano.triggerAttackRelease(note, "2n", time);
-            }, [noteToPlay], "1m").start(0);
-            sequence.loop = loopSwitch.checked;
+            let sequence;
 
-            function playNote() {
+            function setupSequence() {
+                if (sequence) sequence.dispose();
+                stopContinuousNote();
+
+                if (continuousSwitch.checked) {
+                    loopSwitch.disabled = true;
+                    loopSwitch.parentElement.style.opacity = '0.5';
+                    sequence = new Tone.Part((time) => {
+                        stringInstrument.play(midiNote, time, { duration: 3600, gain: 0.65, loop: true });
+                    }, [[0, true]]).start(0);
+                    sequence.loop = false;
+                } else {
+                    loopSwitch.disabled = false;
+                    loopSwitch.parentElement.style.opacity = '1';
+                    sequence = new Tone.Sequence((time, note) => {
+                        piano.triggerAttackRelease(note, "2n", time);
+                    }, [noteToPlay], "1m").start(0);
+                    sequence.loop = loopSwitch.checked;
+                }
+            }
+            setupSequence();
+
+            async function playNote() {
+                if (continuousSwitch.checked && !stringInstrument) await stringInstrumentPromise;
                 if (Tone.context.state !== 'running') {
                     Tone.context.resume();
                 }
@@ -161,12 +202,31 @@
                     Tone.Transport.stop();
                     Tone.Transport.position = 0;
                 }
+                stopContinuousNote();
                 Tone.Transport.start();
             }
 
             // --- EVENT LISTENERS ---
             playBtn.addEventListener('click', playNote);
-            loopSwitch.addEventListener('change', (e) => sequence.loop = e.target.checked);
+            loopSwitch.addEventListener('change', (e) => {
+                if (!continuousSwitch.checked) sequence.loop = e.target.checked;
+            });
+            continuousSwitch.addEventListener('change', () => {
+                const wasPlaying = Tone.Transport.state === 'started';
+                if (wasPlaying) {
+                    Tone.Transport.stop();
+                    Tone.Transport.position = 0;
+                }
+                setupSequence();
+                if (wasPlaying) playNote();
+            });
+            nextNoteBtn.addEventListener('click', () => {
+                const params = new URLSearchParams({
+                    LoopPlayback: loopSwitch.checked,
+                    PlayContinuous: continuousSwitch.checked
+                });
+                window.location.href = `${window.location.pathname}?${params.toString()}`;
+            });
 
             answerButtons.forEach(button => {
                 button.addEventListener('click', function () {
@@ -175,6 +235,7 @@
                     const userAnswer = this.dataset.noteName;
                     sequence.loop = false;
                     Tone.Transport.stop();
+                    stopContinuousNote();
 
                     if (userAnswer === correctAnswerName) {
                         this.classList.replace('btn-outline-dark', 'btn-success');
@@ -197,9 +258,9 @@
 
             // --- INITIALIZATION ---
             updateScoreDisplay();
-            Tone.loaded().then(() => playNote()).catch(err => {
-                console.error("Failed to load audio samples:", err);
-                feedbackEl.innerHTML = `<span class="text-danger">Could not load audio. Please refresh.</span>`;
+            Promise.all([Tone.loaded(), stringInstrumentPromise]).then(() => playNote()).catch(err => {
+                console.error("Failed to load quiz instruments:", err);
+                feedbackEl.innerHTML = `<span class="text-danger">Could not load instruments. Please refresh.</span>`;
             });
         });
     </script>
