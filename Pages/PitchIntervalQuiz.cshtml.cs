@@ -30,6 +30,9 @@ namespace ChordProgressionQuiz.Pages
         [BindProperty(SupportsGet = true)]
         public bool PlayOnlyComplement { get; set; } = false;
 
+        [BindProperty(SupportsGet = true)]
+        public bool PlaySimultaneously { get; set; } = false;
+
         public PitchIntervalQuizModel(PitchIntervalService intervalService)
         {
             _intervalService = intervalService;
